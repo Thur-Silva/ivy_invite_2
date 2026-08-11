@@ -1,36 +1,146 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 👑🐸 Convite da Ivy — 2 anos
 
-## Getting Started
+Convite digital, mobile-first, para o aniversário de 2 anos da Ivy. Tema: **A
+Princesa e o Sapo**.
 
-First, run the development server:
+Uma página, quatro atos: lago encantado → introdução e data → confirmação de
+presença → como chegar.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+Next.js 16 · React 19 · TypeScript strict · Tailwind CSS v4
+React Three Fiber + GLSL · Motion · Lenis
+Neon Postgres + Drizzle ORM · Vitest
+Arquitetura: DDD + Hexagonal (ports & adapters)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Começando
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev          # http://localhost:3000
+```
 
-## Learn More
+Funciona **sem configurar nada**: sem `DATABASE_URL`, as confirmações vão para um
+repositório em memória (com aviso no console) e se perdem ao reiniciar. Bom para
+desenvolver a interface.
 
-To learn more about Next.js, take a look at the following resources:
+### Com banco de verdade
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+cp .env.example .env.local     # e preencha DATABASE_URL com a string do Neon
+npm run db:migrate             # aplica drizzle/0000_create_rsvps.sql
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+A connection string sai do [console do Neon](https://console.neon.tech) →
+projeto → _Connection string_ → modo **Pooled connection**.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## ⚠️ Antes de publicar: confirmar os dados da festa
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Um arquivo, e é o único que um não-programador precisa tocar:
+
+**`src/contexts/celebration/infrastructure/celebration.config.ts`**
+
+Todos os valores marcados com `[PLACEHOLDER]` são chute e precisam ser
+confirmados:
+
+| Campo                          | O que é                                  |
+| ------------------------------ | ---------------------------------------- |
+| `schedule.startsAt` / `endsAt` | início e fim da festa, com fuso `-03:00` |
+| `venue.name`                   | nome do salão ou casa                    |
+| `venue.streetAddress`          | rua, número e complemento                |
+| `venue.locality`               | bairro, cidade e estado                  |
+| `venue.latitude` / `longitude` | coordenadas da entrada                   |
+
+**Como pegar as coordenadas:** abra o Google Maps, clique com o botão direito no
+ponto exato da entrada e copie os dois números do topo do menu.
+
+Depois de editar, rode `npm run test` — há testes que quebram se a data estiver
+invertida, o endereço vazio ou a coordenada fora do Brasil.
+
+---
+
+## Scripts
+
+| Comando               | O que faz                                                                |
+| --------------------- | ------------------------------------------------------------------------ |
+| `npm run dev`         | servidor de desenvolvimento                                              |
+| `npm run build`       | build de produção                                                        |
+| `npm run verify`      | **typecheck + lint + testes** — rode antes de todo commit                |
+| `npm run typecheck`   | `tsc --noEmit`                                                           |
+| `npm run lint`        | ESLint, incluindo a Regra da Dependência entre camadas                   |
+| `npm run test`        | Vitest (32 testes, ~1s, sem banco)                                       |
+| `npm run test:watch`  | Vitest em watch                                                          |
+| `npm run format`      | Prettier                                                                 |
+| `npm run db:generate` | gera migração a partir do schema Drizzle                                 |
+| `npm run db:migrate`  | aplica migrações no Neon                                                 |
+| `npm run db:studio`   | abre o Drizzle Studio — **é aqui que se lê a lista de confirmados hoje** |
+
+---
+
+## Deploy na Vercel
+
+1. Importe o repositório na Vercel (o preset Next.js é detectado automaticamente).
+2. Em _Settings → Environment Variables_, adicione **`DATABASE_URL`** com a
+   string do Neon, nos três ambientes.
+3. Deploy.
+
+Sem `DATABASE_URL`, a aplicação **falha ao subir em produção** de propósito —
+melhor um erro de deploy que um convite que aceita respostas e joga fora.
+
+O convite é publicado com `robots: noindex`: é privado, feito para circular por
+WhatsApp.
+
+---
+
+## Arquitetura
+
+O código não está organizado por tipo de arquivo, e sim por **Bounded Context** e
+depois por **camada**. Dependências apontam sempre para dentro, e isso é
+verificado pelo ESLint — não é convenção, é build.
+
+```
+src/
+├── app/                    Next.js App Router — só composição de página
+├── contexts/
+│   ├── rsvp/               ◀ CORE: domain · application · infrastructure · presentation
+│   └── celebration/        ◀ SUPPORTING: dados da festa (config + ACL de mapas)
+├── shared/                 kernel DDD, portas técnicas, adapters, dublês de teste
+├── graphics/               cena WebGL do lago (R3F + GLSL)
+└── ui/                     cn, Reveal, hooks de ambiente, ornamentos SVG
+```
+
+Leitura recomendada, nesta ordem:
+
+| Documento                                                         |                                                                    |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [Arquitetura](./docs/architecture/README.md)                      | contextos, camadas, fluxo de uma confirmação, estratégia de testes |
+| [Ubiquitous Language](./docs/architecture/ubiquitous-language.md) | glossário PT-BR ↔ código                                           |
+| [Agregados e invariantes](./docs/architecture/aggregates.md)      | Event Storming e as 12 invariantes                                 |
+| [ADRs](./docs/architecture/adr)                                   | as 10 decisões que sustentam o resto                               |
+| [Processo Agile](./docs/agile/README.md)                          | visão, personas, backlog, DoR, DoD, Sprint 1                       |
+
+### Em uma frase, por camada
+
+- **domain** — regras. Não sabe que existe React, Next, Postgres ou Zod.
+- **application** — casos de uso. Orquestra o domínio através de portas.
+- **infrastructure** — adapters. Neon, config da festa, links de mapa, e o
+  Composition Root (único lugar com `new` de implementação concreta).
+- **presentation** — React, Server Actions, CSS. Traduz intenção do usuário em
+  comando e resultado em pixel.
+
+---
+
+## Acessibilidade e performance (o que já está garantido)
+
+- funciona **sem JavaScript**: o RSVP é um `<form>` real com Server Action
+- `prefers-reduced-motion` respeitado em CSS, Motion, confete **e** WebGL
+- WebGL não monta em aparelho fraco; o gradiente CSS é o estado base
+- alvos de toque ≥ 52px, coluna única, `100svh`, safe areas de notch
+- pinch-zoom nunca bloqueado
+- página estática; mapa e confete carregam sob demanda
+- nenhuma API key exposta ao navegador
