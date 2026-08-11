@@ -80,8 +80,9 @@ function TrailSpark({
  *
  *  1. **Trilha** (espaço de documento) — caminho sinuoso que se desenha conforme
  *     a leitura avança, via `pathLength` ligado ao progresso de scroll;
- *  2. **Marcadores** (espaço de documento) — acendem e disparam um anel ao serem
- *     ultrapassados, mais uma coroa como recompensa no fim;
+ *  2. **Marcadores + jacaré** (espaço de documento) — as vitórias-régias acendem
+ *     e disparam um anel ao serem ultrapassadas; no fim, o jacaré emerge e engole
+ *     o vaga-lume;
  *  3. **Vaga-lume + rastro** (espaço de viewport) — desce junto com a rolagem,
  *     exatamente sobre a trilha (ver a dedução em `trail-path.ts`).
  *
@@ -105,31 +106,52 @@ export function ScrollJourney() {
   const fireflyLeft = useTransform(lead, (value) => `${curveX(value)}%`);
 
   /**
-   * O bote do jacaré, todo derivado do mesmo `lead` que move o vaga-lume — é o
-   * que garante que a boca feche no quadro exato em que a luz chega.
+   * Mola própria do jacaré, bem mais mole que a do vaga-lume: ele emerge e se
+   * acomoda com peso, em vez de acompanhar a rolagem colado.
    *
-   *   0,81 → 0,86   emerge da água
-   *   0,86 → 0,947  abre a boca cada vez mais
-   *   0,947 → 0,965 fecha de uma vez: a mordida
-   *   0,965 →       engole, a barriga acende e o trompete comemora
+   * A **mordida** não usa esta mola — usa `lead`, a mesma do vaga-lume. É o que
+   * garante que a boca feche no quadro exato em que a luz chega; qualquer
+   * defasagem aqui apareceria como a luz atravessando o dente.
    */
-  const gatorOpacity = useTransform(lead, [GATOR_APPROACH - 0.05, GATOR_APPROACH], [0, 1]);
-  const gatorRise = useTransform(lead, [GATOR_APPROACH - 0.05, GATOR_APPROACH + 0.04], [80, 0]);
-  const jawRotate = useTransform(
-    lead,
-    [GATOR_APPROACH, TRAIL_FINALE - 0.018, TRAIL_FINALE],
-    [-4, -34, -2],
+  const gatorEase = useSpring(scrollYProgress, { stiffness: 26, damping: 22, mass: 1.1 });
+
+  /**
+   * A coreografia, espalhada por 40% da rolagem:
+   *
+   *   0,52 → 0,64  emerge da água, devagar
+   *   0,64 → 0,86  abre a boca progressivamente
+   *   0,86 → 0,90  fecha de uma vez: a mordida
+   *   0,90 → 1,00  engole, a barriga acende forte e o trompete comemora
+   */
+  const gatorOpacity = useTransform(
+    gatorEase,
+    [GATOR_APPROACH - 0.08, GATOR_APPROACH + 0.04],
+    [0, 1],
   );
+  const gatorRise = useTransform(
+    gatorEase,
+    [GATOR_APPROACH - 0.08, GATOR_APPROACH + 0.14],
+    [130, 0],
+  );
+
+  /** 0 = boca fechada, 1 = escancarada. O fechamento é rápido: é uma mordida. */
+  const jawOpen = useTransform(
+    lead,
+    [GATOR_APPROACH + 0.04, TRAIL_FINALE - 0.04, TRAIL_FINALE],
+    [0.08, 1, 0.02],
+  );
+
   const gulp = useTransform(
     lead,
-    [TRAIL_FINALE, TRAIL_FINALE + 0.008, TRAIL_FINALE + 0.022],
-    [1, 1.07, 1],
+    [TRAIL_FINALE, TRAIL_FINALE + 0.025, TRAIL_FINALE + 0.06],
+    [1, 1.08, 1],
   );
-  const bellyGlow = useTransform(lead, [TRAIL_FINALE, TRAIL_FINALE + 0.012, 1], [0, 1, 0.65]);
-  const notesOpacity = useTransform(lead, [TRAIL_FINALE + 0.004, TRAIL_FINALE + 0.02], [0, 1]);
+  /** Acende forte e assim permanece — o vaga-lume continua aceso lá dentro. */
+  const bellyGlow = useTransform(lead, [TRAIL_FINALE, TRAIL_FINALE + 0.045], [0, 1]);
+  const notesOpacity = useTransform(lead, [TRAIL_FINALE + 0.03, TRAIL_FINALE + 0.07], [0, 1]);
 
   /** 1 enquanto o vaga-lume voa; some no instante da mordida. */
-  const fireflyAlive = useTransform(lead, [TRAIL_FINALE - 0.008, TRAIL_FINALE], [1, 0]);
+  const fireflyAlive = useTransform(lead, [TRAIL_FINALE - 0.012, TRAIL_FINALE], [1, 0]);
 
   // Quem pediu menos movimento não recebe um bicho perseguindo a rolagem.
   if (prefersReducedMotion) return null;
@@ -196,10 +218,10 @@ export function ScrollJourney() {
         >
           <motion.div
             style={{ opacity: gatorOpacity, y: gatorRise }}
-            className="w-[210px] sm:w-[260px]"
+            className="w-[250px] sm:w-[310px]"
           >
             <TrumpetGator
-              jawRotate={jawRotate}
+              jawOpen={jawOpen}
               bellyGlow={bellyGlow}
               gulp={gulp}
               notesOpacity={notesOpacity}

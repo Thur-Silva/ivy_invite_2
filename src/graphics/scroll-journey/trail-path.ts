@@ -63,7 +63,14 @@ export const TRAIL_STOPS = [0.22, 0.42, 0.62, 0.8] as const;
  * `top: p·100vh`) ocupam exatamente a mesma coordenada de tela. A boca fecha no
  * pixel certo sem medir nada.
  */
-export const TRAIL_FINALE = 0.965;
+export const TRAIL_FINALE = 0.9;
 
-/** A partir de onde o jacaré emerge e começa a abrir a boca. */
-export const GATOR_APPROACH = 0.86;
+/**
+ * A partir de onde o jacaré emerge.
+ *
+ * Bem antes da mordida de propósito: entre emergir e abocanhar há ~30% da
+ * rolagem, e depois da mordida ainda sobram 10% para engolir, acender a barriga
+ * e tocar. Comprimir isso faz o bicho parecer um pop-up; espalhado, ele parece
+ * um bicho.
+ */
+export const GATOR_APPROACH = 0.6;
