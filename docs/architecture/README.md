@@ -152,8 +152,11 @@ src/
 │   ├── config/                   server-env (validado com Zod, server-only)
 │   └── testing/                  dublês: FixedClock, SequentialIdGenerator…
 │
-├── graphics/enchanted-pond/      cena WebGL (R3F + GLSL) — puramente decorativa
-└── ui/                           cn, Reveal, hooks de ambiente, ornamentos SVG
+├── graphics/
+│   ├── enchanted-pond/           lago WebGL (R3F + GLSL) — fundo fixo
+│   └── scroll-journey/           trilha, marcadores, vaga-lume e pétalas (ADR-0011)
+└── ui/                           cn, Reveal, HeroTitle, hooks de ambiente,
+                                  ornamentos e glifos SVG (ADR-0012)
 ```
 
 ## 4. Fluxo de uma confirmação
@@ -210,6 +213,8 @@ Dois pontos que definem o desenho:
 | 8   | Invariante lança no domínio; `Result` na aplicação   | [0008](./adr/0008-invariantes-lancam-result-na-aplicacao.md)    |
 | 9   | `guest_key` como chave natural do convidado          | [0009](./adr/0009-chave-natural-do-convidado.md)                |
 | 10  | Ubiquitous Language em inglês no código              | [0010](./adr/0010-ubiquitous-language-em-ingles.md)             |
+| 11  | Camada de cena que acompanha o scroll                | [0011](./adr/0011-cena-que-acompanha-o-scroll.md)               |
+| 12  | Nenhum emoji de teclado na interface                 | [0012](./adr/0012-sem-emoji-de-teclado-na-interface.md)         |
 
 ## 6. Estratégia de testes
 

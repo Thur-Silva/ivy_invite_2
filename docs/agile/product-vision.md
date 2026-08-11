@@ -15,7 +15,7 @@
 
 **Frente da caixa**
 
-> 👑🐸 **O Convite da Ivy**
+> **O Convite da Ivy**
 > _Era uma vez… um lago encantado no seu celular._
 >
 > - Abre em 2 segundos, funciona até com internet ruim

@@ -1,4 +1,4 @@
-# 👑🐸 Convite da Ivy — 2 anos
+# Convite da Ivy — 2 anos
 
 Convite digital, mobile-first, para o aniversário de 2 anos da Ivy. Tema: **A
 Princesa e o Sapo**.
@@ -110,8 +110,8 @@ src/
 │   ├── rsvp/               ◀ CORE: domain · application · infrastructure · presentation
 │   └── celebration/        ◀ SUPPORTING: dados da festa (config + ACL de mapas)
 ├── shared/                 kernel DDD, portas técnicas, adapters, dublês de teste
-├── graphics/               cena WebGL do lago (R3F + GLSL)
-└── ui/                     cn, Reveal, hooks de ambiente, ornamentos SVG
+├── graphics/               lago WebGL (R3F + GLSL) e a cena que acompanha o scroll
+└── ui/                     cn, Reveal, HeroTitle, hooks de ambiente, glifos SVG
 ```
 
 Leitura recomendada, nesta ordem:
@@ -121,7 +121,7 @@ Leitura recomendada, nesta ordem:
 | [Arquitetura](./docs/architecture/README.md)                      | contextos, camadas, fluxo de uma confirmação, estratégia de testes |
 | [Ubiquitous Language](./docs/architecture/ubiquitous-language.md) | glossário PT-BR ↔ código                                           |
 | [Agregados e invariantes](./docs/architecture/aggregates.md)      | Event Storming e as 12 invariantes                                 |
-| [ADRs](./docs/architecture/adr)                                   | as 10 decisões que sustentam o resto                               |
+| [ADRs](./docs/architecture/adr)                                   | as 12 decisões que sustentam o resto                               |
 | [Processo Agile](./docs/agile/README.md)                          | visão, personas, backlog, DoR, DoD, Sprint 1                       |
 
 ### Em uma frase, por camada
@@ -138,8 +138,11 @@ Leitura recomendada, nesta ordem:
 ## Acessibilidade e performance (o que já está garantido)
 
 - funciona **sem JavaScript**: o RSVP é um `<form>` real com Server Action
-- `prefers-reduced-motion` respeitado em CSS, Motion, confete **e** WebGL
+- `prefers-reduced-motion` respeitado em CSS, Motion, confete, WebGL **e** na cena
+  de scroll (trilha, vaga-lume e pétalas nem são montados)
 - WebGL não monta em aparelho fraco; o gradiente CSS é o estado base
+- nenhum emoji de teclado: todo ícone é SVG do tema, `aria-hidden`, sempre
+  acompanhado de rótulo em texto
 - alvos de toque ≥ 52px, coluna única, `100svh`, safe areas de notch
 - pinch-zoom nunca bloqueado
 - página estática; mapa e confete carregam sob demanda

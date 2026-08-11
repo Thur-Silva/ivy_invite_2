@@ -22,12 +22,21 @@ ponta no próprio celular, a sprint teve sucesso.
 | PBI-01 | Ver o convite (intro, tema, data)  |      5 | ✅               |
 | PBI-03 | Saber onde é e como chegar         |      5 | ✅               |
 | PBI-04 | Mudar de ideia                     |      3 | ✅               |
-|        | **Total**                          | **29** | **29 entregues** |
+| PBI-17 | Cena que acompanha a leitura       |      5 | ✅ _adicionado_  |
+|        | **Total**                          | **34** | **34 entregues** |
 
 Ordem de execução deliberada: **PBI-00 primeiro** como _walking skeleton_
 (formulário → Server Action → caso de uso → agregado → Postgres), depois PBI-02,
 que é o coração do produto. As duas histórias de leitura vieram por último — se a
 sprint estourasse, o que sobraria inacabado seria enfeite, não função.
+
+**PBI-17 entrou no meio da sprint**, o que contraria a regra 2 do
+[processo](./README.md#regras-que-o-time-se-impôs) ("escopo não cresce dentro da
+sprint"). A exceção foi consciente e é registrada aqui em vez de maquiada: veio de
+feedback direto da PO sobre o incremento demonstrado, o Sprint Goal já estava
+atingido, e a história não tocava em nenhuma camada de negócio — só na de
+apresentação. Uma exceção justificada continua sendo exceção; se virar hábito, a
+regra deixou de existir.
 
 ## Incremento entregue
 
@@ -40,12 +49,18 @@ sprint estourasse, o que sobraria inacabado seria enfeite, não função.
 - 8 Value Objects, 2 Aggregate Roots, 3 Domain Events, 2 portas de repositório,
   3 portas técnicas
 - 1 Composition Root por contexto
-- **10 ADRs**
+- **12 ADRs**
 
 **Produto**
 
 - Convite de página única, mobile-first, em quatro atos
 - Lago encantado em WebGL (R3F + GLSL) com degradação em 3 níveis
+- Cena que acompanha a leitura: trilha que se desenha, vaga-lume com rastro de
+  três faíscas, vitórias-régias que acendem e disparam anéis de água ao serem
+  ultrapassadas, coroa de recompensa no fim e pétalas com parallax
+- Nome entrando letra por letra, divisores que se desenham, anéis de água atrás da
+  coroa, reflexo atravessando o ouro e o sapo piscando
+- Zero emoji de teclado na interface: 5 glifos SVG autorais que reagem a estado
 - Formulário RSVP com progressive enhancement (funciona sem JS), selo real,
   confete e "mudar minha resposta"
 - Endereço, prévia de mapa e deep links Google Maps + Waze, sem API key
@@ -61,7 +76,7 @@ sprint estourasse, o que sobraria inacabado seria enfeite, não função.
 
 | Métrica                          | Valor                            |
 | -------------------------------- | -------------------------------- |
-| Pontos comprometidos / entregues | 29 / 29                          |
+| Pontos comprometidos / entregues | 29 / 34 (PBI-17 adicionado)      |
 | Testes                           | 32 ✅                            |
 | Duração da suíte                 | 0,88s                            |
 | Erros de tipo                    | 0                                |

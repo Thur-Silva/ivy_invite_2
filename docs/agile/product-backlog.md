@@ -39,7 +39,7 @@ Cenário: regra de negócio testável sem infraestrutura
   E a suíte completa roda em menos de 5 segundos
 ```
 
-**Entregue:** 2 Bounded Contexts, 4 camadas, 10 ADRs, 32 testes (<1s),
+**Entregue:** 2 Bounded Contexts, 4 camadas, 12 ADRs, 32 testes (<1s),
 `no-restricted-imports` por zona, migração Drizzle versionada.
 
 ---
@@ -177,6 +177,43 @@ anfitriões confirmarem — ver risco R1 da [visão](./product-vision.md).
 
 ---
 
+### ✅ PBI-17 — Cena que acompanha a leitura
+
+> **Como** Rafa, **quero** que a página tenha vida enquanto eu rolo, **para** que
+> o convite pareça um conto de fadas e não um formulário bonito.
+
+`SHOULD` · **5 pts** — puxado após feedback da PO no meio do Sprint 1
+
+```gherkin
+Cenário: algo me acompanha do início ao fim
+  Dado que abro o convite e começo a rolar
+  Então um vaga-lume desce junto comigo sobre uma trilha luminosa
+  E a trilha se desenha conforme eu avanço
+  E ele chega ao fim da página junto comigo
+
+Cenário: eventos durante a rolagem
+  Quando eu passo pelo início de cada seção
+  Então uma vitória-régia acende e gira naquele ponto da trilha
+  E um anel de água se abre e desaparece
+  E ao chegar no encerramento uma coroa aparece no fim da trilha
+
+Cenário: nenhum emoji de teclado na interface
+  Quando eu inspeciono as opções do formulário e os botões de mapa
+  Então todo ícone é SVG do próprio tema, e não emoji do sistema
+  E o ícone da opção escolhida cresce e se inclina
+
+Cenário: quem prefere menos movimento
+  Dado que meu sistema tem "prefers-reduced-motion: reduce"
+  Então a trilha, o vaga-lume e as pétalas não são montados
+  E o convite continua completo e legível
+```
+
+**Notas técnicas:** ver [ADR-0011](../architecture/adr/0011-cena-que-acompanha-o-scroll.md)
+(o alinhamento vaga-lume/trilha é dedução matemática, sem medição em runtime) e
+[ADR-0012](../architecture/adr/0012-sem-emoji-de-teclado-na-interface.md).
+
+---
+
 ## Sprint 2 (candidato)
 
 ### 📋 PBI-05 — Painel do anfitrião
@@ -282,7 +319,7 @@ convidado, internacionalização, app nativo — ver
 
 ## Velocidade
 
-| Sprint | Comprometido | Entregue   | Observação                                                    |
-| ------ | ------------ | ---------- | ------------------------------------------------------------- |
-| 1      | 29 pts       | **29 pts** | primeira sprint; velocidade ainda sem histórico para projeção |
-| 2      | —            | —          | capacidade planejada: ~25 pts                                 |
+| Sprint | Comprometido | Entregue   | Observação                                                   |
+| ------ | ------------ | ---------- | ------------------------------------------------------------ |
+| 1      | 29 pts       | **34 pts** | 29 comprometidos + PBI-17 (5 pts) puxado após feedback da PO |
+| 2      | —            | —          | capacidade planejada: ~25 pts                                |
