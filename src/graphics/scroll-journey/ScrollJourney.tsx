@@ -3,8 +3,8 @@
 import { motion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import { usePrefersReducedMotion } from '@/ui/hooks/use-environment';
 import { LilyGlyph } from '@/ui/ornaments/Glyphs';
-import { buildTrailPath, curveX, GATOR_APPROACH, TRAIL_FINALE, TRAIL_STOPS } from './trail-path';
-import { GATOR_MOUTH_OFFSET, TrumpetGator } from './TrumpetGator';
+import { useGatorStage } from './gator-stage';
+import { buildTrailPath, curveX, TRAIL_STOPS } from './trail-path';
 
 /** Calculada uma vez na carga do módulo — a curva nunca muda. */
 const TRAIL_PATH = buildTrailPath();
@@ -96,62 +96,34 @@ function TrailSpark({
 export function ScrollJourney() {
   const prefersReducedMotion = usePrefersReducedMotion();
   const { scrollYProgress } = useScroll();
+  const { biteProgress } = useGatorStage();
 
   const lead = useSpring(scrollYProgress, { stiffness: 140, damping: 26, mass: 0.4 });
   const tail1 = useSpring(scrollYProgress, { stiffness: 80, damping: 22, mass: 0.5 });
   const tail2 = useSpring(scrollYProgress, { stiffness: 48, damping: 18, mass: 0.6 });
   const tail3 = useSpring(scrollYProgress, { stiffness: 30, damping: 16, mass: 0.7 });
 
-  const fireflyTop = useTransform(lead, (value) => `${value * 100}vh`);
-  const fireflyLeft = useTransform(lead, (value) => `${curveX(value)}%`);
-
   /**
-   * Mola própria do jacaré, bem mais mole que a do vaga-lume: ele emerge e se
-   * acomoda com peso, em vez de acompanhar a rolagem colado.
+   * Aproximação final: o vaga-lume abandona a trilha e mergulha na boca.
    *
-   * A **mordida** não usa esta mola — usa `lead`, a mesma do vaga-lume. É o que
-   * garante que a boca feche no quadro exato em que a luz chega; qualquer
-   * defasagem aqui apareceria como a luz atravessando o dente.
+   * `biteProgress` chega a 1 quando o centro do palco do jacaré alinha com o
+   * centro da viewport — e é exatamente lá que a boca está. Então o destino é
+   * sempre `(50%, 50vh)`, qualquer que seja a altura da página ou o número de
+   * seções. Quem garante o encontro é a seção medida, não uma fração adivinhada.
    */
-  const gatorEase = useSpring(scrollYProgress, { stiffness: 26, damping: 22, mass: 1.1 });
-
-  /**
-   * A coreografia, espalhada por 40% da rolagem:
-   *
-   *   0,52 → 0,64  emerge da água, devagar
-   *   0,64 → 0,86  abre a boca progressivamente
-   *   0,86 → 0,90  fecha de uma vez: a mordida
-   *   0,90 → 1,00  engole, a barriga acende forte e o trompete comemora
-   */
-  const gatorOpacity = useTransform(
-    gatorEase,
-    [GATOR_APPROACH - 0.08, GATOR_APPROACH + 0.04],
-    [0, 1],
-  );
-  const gatorRise = useTransform(
-    gatorEase,
-    [GATOR_APPROACH - 0.08, GATOR_APPROACH + 0.14],
-    [130, 0],
-  );
-
-  /** 0 = boca fechada, 1 = escancarada. O fechamento é rápido: é uma mordida. */
-  const jawOpen = useTransform(
-    lead,
-    [GATOR_APPROACH + 0.04, TRAIL_FINALE - 0.04, TRAIL_FINALE],
-    [0.08, 1, 0.02],
-  );
-
-  const gulp = useTransform(
-    lead,
-    [TRAIL_FINALE, TRAIL_FINALE + 0.025, TRAIL_FINALE + 0.06],
-    [1, 1.08, 1],
-  );
-  /** Acende forte e assim permanece — o vaga-lume continua aceso lá dentro. */
-  const bellyGlow = useTransform(lead, [TRAIL_FINALE, TRAIL_FINALE + 0.045], [0, 1]);
-  const notesOpacity = useTransform(lead, [TRAIL_FINALE + 0.03, TRAIL_FINALE + 0.07], [0, 1]);
+  const veer = useTransform(biteProgress, [0.5, 1], [0, 1]);
 
   /** 1 enquanto o vaga-lume voa; some no instante da mordida. */
-  const fireflyAlive = useTransform(lead, [TRAIL_FINALE - 0.012, TRAIL_FINALE], [1, 0]);
+  const fireflyAlive = useTransform(biteProgress, [0.96, 1], [1, 0]);
+
+  const fireflyTop = useTransform([lead, veer], ([progress = 0, pull = 0]: number[]) => {
+    const onTrail = progress * 100;
+    return `${onTrail + (50 - onTrail) * pull}vh`;
+  });
+  const fireflyLeft = useTransform([lead, veer], ([progress = 0, pull = 0]: number[]) => {
+    const onTrail = curveX(progress);
+    return `${onTrail + (50 - onTrail) * pull}%`;
+  });
 
   // Quem pediu menos movimento não recebe um bicho perseguindo a rolagem.
   if (prefersReducedMotion) return null;
@@ -204,30 +176,10 @@ export function ScrollJourney() {
         ))}
 
         {/*
-          O jacaré é ancorado pela BOCA, não pelo centro do desenho: o
-          deslocamento vem de `GATOR_MOUTH_OFFSET`, calculado a partir do próprio
-          viewBox. É o que faz o vaga-lume entrar na boca e não na barriga.
+          O jacaré NÃO mora aqui. Ele vive em `GatorStageSection`, uma seção de
+          verdade no fluxo do documento — foi a lição do cartão do mapa passando
+          por cima dele. Esta camada é só cenário; nada nela reserva espaço.
         */}
-        <div
-          className="absolute"
-          style={{
-            top: `${TRAIL_FINALE * 100}%`,
-            left: `${curveX(TRAIL_FINALE)}%`,
-            transform: `translate(-${GATOR_MOUTH_OFFSET.x}, -${GATOR_MOUTH_OFFSET.y})`,
-          }}
-        >
-          <motion.div
-            style={{ opacity: gatorOpacity, y: gatorRise }}
-            className="w-[250px] sm:w-[310px]"
-          >
-            <TrumpetGator
-              jawOpen={jawOpen}
-              bellyGlow={bellyGlow}
-              gulp={gulp}
-              notesOpacity={notesOpacity}
-            />
-          </motion.div>
-        </div>
       </div>
 
       {/* Camada em espaço de viewport: vaga-lume e rastro */}

@@ -38,6 +38,10 @@ export const invitationCopy = {
     subtitle: 'Toque no botão e o mapa abre direto no seu aplicativo de navegação.',
   },
 
+  gator: {
+    caption: 'No lago, o jacaré agradece o lanche.',
+  },
+
   closing: {
     line: 'Um beijo de princesa,',
     signature: 'Ivy',

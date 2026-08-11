@@ -55,22 +55,13 @@ export function buildTrailPath(samples = 180): string {
  */
 export const TRAIL_STOPS = [0.22, 0.42, 0.62, 0.8] as const;
 
-/**
- * Onde o jacaré espera — e onde ele engole o vaga-lume.
+/*
+ * Nota histórica: aqui havia uma constante `TRAIL_FINALE` que plantava o jacaré
+ * numa fração fixa da altura do documento. A dedução era exata, mas assumia o
+ * layout — bastou a página ganhar a seção do traje para o cartão do mapa cair em
+ * cima dele.
  *
- * Vale a mesma dedução do topo do arquivo: quando o progresso de scroll chega a
- * este valor, o ponto do documento nesta fração e o vaga-lume (posicionado em
- * `top: p·100vh`) ocupam exatamente a mesma coordenada de tela. A boca fecha no
- * pixel certo sem medir nada.
+ * O jacaré passou a viver em `GatorStageSection`, uma seção real que reserva o
+ * próprio espaço, e o instante da mordida vem da medição dessa seção
+ * (`gator-stage.tsx`). Não recrie uma fração mágica aqui.
  */
-export const TRAIL_FINALE = 0.9;
-
-/**
- * A partir de onde o jacaré emerge.
- *
- * Bem antes da mordida de propósito: entre emergir e abocanhar há ~30% da
- * rolagem, e depois da mordida ainda sobram 10% para engolir, acender a barriga
- * e tocar. Comprimir isso faz o bicho parecer um pop-up; espalhado, ele parece
- * um bicho.
- */
-export const GATOR_APPROACH = 0.6;
