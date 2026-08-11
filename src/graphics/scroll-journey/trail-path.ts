@@ -55,5 +55,15 @@ export function buildTrailPath(samples = 180): string {
  */
 export const TRAIL_STOPS = [0.22, 0.42, 0.62, 0.8] as const;
 
-/** Onde a coroa de recompensa aparece, no fim da jornada. */
-export const TRAIL_FINALE = 0.97;
+/**
+ * Onde o jacaré espera — e onde ele engole o vaga-lume.
+ *
+ * Vale a mesma dedução do topo do arquivo: quando o progresso de scroll chega a
+ * este valor, o ponto do documento nesta fração e o vaga-lume (posicionado em
+ * `top: p·100vh`) ocupam exatamente a mesma coordenada de tela. A boca fecha no
+ * pixel certo sem medir nada.
+ */
+export const TRAIL_FINALE = 0.965;
+
+/** A partir de onde o jacaré emerge e começa a abrir a boca. */
+export const GATOR_APPROACH = 0.86;

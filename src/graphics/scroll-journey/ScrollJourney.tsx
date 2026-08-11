@@ -2,9 +2,9 @@
 
 import { motion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import { usePrefersReducedMotion } from '@/ui/hooks/use-environment';
-import { CrownIcon } from '@/ui/ornaments/CrownIcon';
 import { LilyGlyph } from '@/ui/ornaments/Glyphs';
-import { buildTrailPath, curveX, TRAIL_FINALE, TRAIL_STOPS } from './trail-path';
+import { buildTrailPath, curveX, GATOR_APPROACH, TRAIL_FINALE, TRAIL_STOPS } from './trail-path';
+import { GATOR_MOUTH_OFFSET, TrumpetGator } from './TrumpetGator';
 
 /** Calculada uma vez na carga do módulo — a curva nunca muda. */
 const TRAIL_PATH = buildTrailPath();
@@ -53,17 +53,21 @@ function TrailSpark({
   progress,
   size,
   opacity,
+  alive,
 }: {
   progress: MotionValue<number>;
   size: number;
   opacity: number;
+  /** 1 enquanto o vaga-lume voa, 0 depois de engolido. */
+  alive: MotionValue<number>;
 }) {
   const top = useTransform(progress, (value) => `${value * 100}vh`);
   const left = useTransform(progress, (value) => `${curveX(value)}%`);
+  const sparkOpacity = useTransform(alive, (value) => value * opacity);
 
   return (
     <motion.span
-      style={{ top, left, width: size, height: size, opacity }}
+      style={{ top, left, width: size, height: size, opacity: sparkOpacity }}
       className="bg-gold-300 absolute -translate-x-1/2 -translate-y-1/2 rounded-full blur-[1px]"
     />
   );
@@ -100,8 +104,32 @@ export function ScrollJourney() {
   const fireflyTop = useTransform(lead, (value) => `${value * 100}vh`);
   const fireflyLeft = useTransform(lead, (value) => `${curveX(value)}%`);
 
-  const finaleOpacity = useTransform(scrollYProgress, [0.86, TRAIL_FINALE], [0, 1]);
-  const finaleScale = useTransform(scrollYProgress, [0.86, TRAIL_FINALE], [0.5, 1]);
+  /**
+   * O bote do jacaré, todo derivado do mesmo `lead` que move o vaga-lume — é o
+   * que garante que a boca feche no quadro exato em que a luz chega.
+   *
+   *   0,81 → 0,86   emerge da água
+   *   0,86 → 0,947  abre a boca cada vez mais
+   *   0,947 → 0,965 fecha de uma vez: a mordida
+   *   0,965 →       engole, a barriga acende e o trompete comemora
+   */
+  const gatorOpacity = useTransform(lead, [GATOR_APPROACH - 0.05, GATOR_APPROACH], [0, 1]);
+  const gatorRise = useTransform(lead, [GATOR_APPROACH - 0.05, GATOR_APPROACH + 0.04], [80, 0]);
+  const jawRotate = useTransform(
+    lead,
+    [GATOR_APPROACH, TRAIL_FINALE - 0.018, TRAIL_FINALE],
+    [-4, -34, -2],
+  );
+  const gulp = useTransform(
+    lead,
+    [TRAIL_FINALE, TRAIL_FINALE + 0.008, TRAIL_FINALE + 0.022],
+    [1, 1.07, 1],
+  );
+  const bellyGlow = useTransform(lead, [TRAIL_FINALE, TRAIL_FINALE + 0.012, 1], [0, 1, 0.65]);
+  const notesOpacity = useTransform(lead, [TRAIL_FINALE + 0.004, TRAIL_FINALE + 0.02], [0, 1]);
+
+  /** 1 enquanto o vaga-lume voa; some no instante da mordida. */
+  const fireflyAlive = useTransform(lead, [TRAIL_FINALE - 0.008, TRAIL_FINALE], [1, 0]);
 
   // Quem pediu menos movimento não recebe um bicho perseguindo a rolagem.
   if (prefersReducedMotion) return null;
@@ -153,29 +181,41 @@ export function ScrollJourney() {
           <TrailStop key={stop} at={stop} progress={scrollYProgress} />
         ))}
 
-        <motion.div
+        {/*
+          O jacaré é ancorado pela BOCA, não pelo centro do desenho: o
+          deslocamento vem de `GATOR_MOUTH_OFFSET`, calculado a partir do próprio
+          viewBox. É o que faz o vaga-lume entrar na boca e não na barriga.
+        */}
+        <div
+          className="absolute"
           style={{
             top: `${TRAIL_FINALE * 100}%`,
             left: `${curveX(TRAIL_FINALE)}%`,
-            opacity: finaleOpacity,
-            scale: finaleScale,
+            transform: `translate(-${GATOR_MOUTH_OFFSET.x}, -${GATOR_MOUTH_OFFSET.y})`,
           }}
-          className="absolute w-11 -translate-x-1/2 -translate-y-1/2"
         >
-          <div className="animate-float">
-            <CrownIcon />
-          </div>
-        </motion.div>
+          <motion.div
+            style={{ opacity: gatorOpacity, y: gatorRise }}
+            className="w-[210px] sm:w-[260px]"
+          >
+            <TrumpetGator
+              jawRotate={jawRotate}
+              bellyGlow={bellyGlow}
+              gulp={gulp}
+              notesOpacity={notesOpacity}
+            />
+          </motion.div>
+        </div>
       </div>
 
       {/* Camada em espaço de viewport: vaga-lume e rastro */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-[1]">
-        <TrailSpark progress={tail3} size={4} opacity={0.18} />
-        <TrailSpark progress={tail2} size={6} opacity={0.3} />
-        <TrailSpark progress={tail1} size={8} opacity={0.45} />
+        <TrailSpark progress={tail3} size={4} opacity={0.18} alive={fireflyAlive} />
+        <TrailSpark progress={tail2} size={6} opacity={0.3} alive={fireflyAlive} />
+        <TrailSpark progress={tail1} size={8} opacity={0.45} alive={fireflyAlive} />
 
         <motion.span
-          style={{ top: fireflyTop, left: fireflyLeft }}
+          style={{ top: fireflyTop, left: fireflyLeft, opacity: fireflyAlive }}
           className="absolute -translate-x-1/2 -translate-y-1/2"
         >
           <span className="animate-float block">
