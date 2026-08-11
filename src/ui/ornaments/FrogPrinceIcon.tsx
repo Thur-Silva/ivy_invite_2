@@ -1,6 +1,14 @@
 import { cn } from '@/ui/cn';
 
-/** The frog prince, crown included — the other half of the theme. */
+/**
+ * O sapo príncipe, coroa inclusa — a outra metade do tema.
+ *
+ * A piscada é feita achatando o **próprio grupo dos olhos** em `scaleY`, com
+ * duas linhas escuras por trás para o olho fechado ler como um traço. É como
+ * desenho animado faz, e sobrevive a `prefers-reduced-motion`: o keyframe termina
+ * em `scaleY(1)`, então quando o navegador salta para o último quadro o sapo fica
+ * com os olhos abertos, não com a pálpebra travada no meio.
+ */
 export function FrogPrinceIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -21,25 +29,32 @@ export function FrogPrinceIcon({ className }: { className?: string }) {
         </linearGradient>
       </defs>
 
-      {/* Back legs resting on the lily pad */}
+      {/* Patas traseiras apoiadas na vitória-régia */}
       <ellipse cx="26" cy="92" rx="17" ry="8" fill="#1f6349" />
       <ellipse cx="94" cy="92" rx="17" ry="8" fill="#1f6349" />
 
-      {/* Body */}
       <ellipse cx="60" cy="70" rx="38" ry="28" fill="url(#frog-skin)" />
-
-      {/* Head */}
       <ellipse cx="60" cy="46" rx="32" ry="24" fill="url(#frog-skin)" />
 
-      {/* Eyes */}
-      <circle cx="46" cy="34" r="11" fill="#fff6e8" />
-      <circle cx="74" cy="34" r="11" fill="#fff6e8" />
-      <circle cx="47.5" cy="35.5" r="5" fill="#04140f" />
-      <circle cx="72.5" cy="35.5" r="5" fill="#04140f" />
-      <circle cx="49.5" cy="33" r="1.8" fill="#fff6e8" />
-      <circle cx="74.5" cy="33" r="1.8" fill="#fff6e8" />
+      {/* Olho fechado: o traço que aparece quando o grupo acima achata */}
+      <path
+        d="M38 34 H54 M66 34 H82"
+        stroke="#0b2e23"
+        strokeOpacity="0.65"
+        strokeWidth="2.6"
+        strokeLinecap="round"
+      />
 
-      {/* Smile */}
+      <g className="animate-blink" style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
+        <circle cx="46" cy="34" r="11" fill="#fff6e8" />
+        <circle cx="74" cy="34" r="11" fill="#fff6e8" />
+        <circle cx="47.5" cy="35.5" r="5" fill="#04140f" />
+        <circle cx="72.5" cy="35.5" r="5" fill="#04140f" />
+        <circle cx="49.5" cy="33" r="1.8" fill="#fff6e8" />
+        <circle cx="74.5" cy="33" r="1.8" fill="#fff6e8" />
+      </g>
+
+      {/* Sorriso */}
       <path
         d="M44 54 Q60 66 76 54"
         fill="none"
@@ -49,10 +64,9 @@ export function FrogPrinceIcon({ className }: { className?: string }) {
         strokeLinecap="round"
       />
 
-      {/* Belly */}
       <ellipse cx="60" cy="78" rx="21" ry="14" fill="#ffd9e1" fillOpacity="0.35" />
 
-      {/* Tiny crown */}
+      {/* Coroa miúda */}
       <path
         d="M44 16 L48 4 L55 11 L60 0 L65 11 L72 4 L76 16 Z"
         fill="url(#frog-crown)"

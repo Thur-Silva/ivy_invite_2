@@ -44,6 +44,9 @@
   --animate-sway: sway 9s ease-in-out infinite;
   --animate-twinkle: twinkle 3.5s ease-in-out infinite;
   --animate-shimmer: shimmer 6s linear infinite;
+  --animate-ripple: ripple 3.9s ease-out infinite;
+  --animate-blink: blink 5.5s ease-in-out infinite;
+  --animate-glint: glint 4.5s ease-in-out infinite;
 
   @keyframes float {
     0%,
@@ -80,6 +83,51 @@
   @keyframes shimmer {
     to {
       background-position: 200% center;
+    }
+  }
+
+  /* Anel de água se abrindo na superfície do lago. */
+  @keyframes ripple {
+    0% {
+      transform: scale(0.45);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(2.3);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * Piscada do sapo. Termina em scaleY(1) de propósito: com
+   * prefers-reduced-motion, o navegador salta para o último keyframe, e o
+   * resultado precisa ser "olhos abertos", não uma pálpebra travada no meio.
+   */
+  @keyframes blink {
+    0%,
+    90%,
+    100% {
+      transform: scaleY(1);
+    }
+    94% {
+      transform: scaleY(0.04);
+    }
+  }
+
+  /* Brilho que atravessa a coroa, como luz de vela batendo no ouro. */
+  @keyframes glint {
+    0%,
+    72%,
+    100% {
+      opacity: 0;
+      transform: translateX(-120%) skewX(-18deg);
+    }
+    82% {
+      opacity: 0.7;
+    }
+    92% {
+      opacity: 0;
+      transform: translateX(120%) skewX(-18deg);
     }
   }
 }
