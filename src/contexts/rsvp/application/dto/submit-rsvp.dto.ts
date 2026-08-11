@@ -1,3 +1,4 @@
+import type { RespondentSignals } from '@/shared/application/ports/respondent-identifier';
 import type { AttendanceDecisionValue } from '../../domain/value-objects/attendance-decision';
 
 /**
@@ -10,6 +11,14 @@ import type { AttendanceDecisionValue } from '../../domain/value-objects/attenda
 export interface SubmitRsvpCommand {
   readonly guestName: string;
   readonly decision: string;
+  /**
+   * Sinais crus de quem está respondendo — IP, user agent, idioma, traços do
+   * navegador e token de sessão — como o adapter de entrada os viu.
+   *
+   * Viram `RespondentIdentity` dentro do caso de uso e **nunca** são persistidos
+   * crus: o que chega ao banco são três digests irreversíveis.
+   */
+  readonly respondent: RespondentSignals;
 }
 
 /** What happened to the guest's answer. */
@@ -38,6 +47,20 @@ export type SubmitRsvpFailure =
       readonly code: string;
       readonly message: string;
       readonly field: SubmitRsvpField;
+    }
+  | {
+      /** Este aparelho já respondeu por outra pessoa. Não há o que corrigir. */
+      readonly kind: 'DEVICE_LIMIT';
+      readonly code: 'DEVICE_ALREADY_RESPONDED';
+      readonly message: string;
+      /** Nome já registrado por este aparelho, para a mensagem ser útil. */
+      readonly registeredGuestName: string;
+    }
+  | {
+      /** Este nome já respondeu, de outro aparelho. */
+      readonly kind: 'NAME_TAKEN';
+      readonly code: 'GUEST_ALREADY_RESPONDED';
+      readonly message: string;
     }
   | {
       readonly kind: 'UNAVAILABLE';

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rsvp } from './rsvp.aggregate';
 import { AttendanceDecision } from './value-objects/attendance-decision';
+import { RespondentIdentity } from './value-objects/respondent-identity';
 import { GuestName } from './value-objects/guest-name';
 import { RsvpId } from './value-objects/rsvp-id';
 
@@ -8,11 +9,18 @@ const ID = RsvpId.fromString('rsvp-1');
 const RESPONDED_AT = new Date('2026-08-11T14:00:00Z');
 const LATER = new Date('2026-08-12T09:30:00Z');
 
+const IDENTITY = RespondentIdentity.fromDigests({
+  token: 'a'.repeat(64),
+  device: 'b'.repeat(64),
+  network: 'c'.repeat(64),
+});
+
 function submit(decision: AttendanceDecision, name = 'Maria Clara'): Rsvp {
   return Rsvp.submit({
     id: ID,
     guestName: GuestName.create(name),
     decision,
+    identity: IDENTITY,
     respondedAt: RESPONDED_AT,
   });
 }
@@ -55,6 +63,7 @@ describe('Rsvp', () => {
       rsvp.reconsider({
         guestName: GuestName.create('Maria Clara'),
         decision: AttendanceDecision.NOT_ATTENDING,
+        identity: IDENTITY,
         changedAt: LATER,
       });
 
@@ -76,6 +85,7 @@ describe('Rsvp', () => {
       rsvp.reconsider({
         guestName: GuestName.create('Maria Clara'),
         decision: AttendanceDecision.ATTENDING,
+        identity: IDENTITY,
         changedAt: LATER,
       });
 
@@ -90,6 +100,7 @@ describe('Rsvp', () => {
       rsvp.reconsider({
         guestName: GuestName.create('Maria Clara'),
         decision: AttendanceDecision.ATTENDING,
+        identity: IDENTITY,
         changedAt: LATER,
       });
 
@@ -105,11 +116,26 @@ describe('Rsvp', () => {
       id: ID,
       guestName: GuestName.create('Maria Clara'),
       decision: AttendanceDecision.ATTENDING,
+      identity: IDENTITY,
       respondedAt: RESPONDED_AT,
       updatedAt: LATER,
     });
 
     expect(rsvp.pullDomainEvents()).toHaveLength(0);
     expect(rsvp.updatedAt).toEqual(LATER);
+  });
+
+  it('keeps the originating device when the guest changes their mind', () => {
+    const rsvp = submit(AttendanceDecision.ATTENDING);
+
+    rsvp.reconsider({
+      guestName: GuestName.create('Maria Clara'),
+      decision: AttendanceDecision.NOT_ATTENDING,
+      identity: IDENTITY,
+      changedAt: LATER,
+    });
+
+    // A resposta pertence a quem a criou: mudar de ideia não transfere a posse.
+    expect(rsvp.identity.equals(IDENTITY)).toBe(true);
   });
 });

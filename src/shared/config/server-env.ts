@@ -13,11 +13,20 @@ import { z } from 'zod';
  */
 const serverEnvSchema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
+  /**
+   * Salt do hash que identifica o aparelho de quem responde.
+   *
+   * Opcional para o projeto rodar em clone limpo, mas o padrão está no
+   * repositório: em produção, defina o seu, senão o digest deixa de ser secreto
+   * e o espaço de IPv4 é pequeno o bastante para força bruta.
+   */
+  RSVP_DEVICE_SALT: z.string().min(16).optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 
 const parsed = serverEnvSchema.safeParse({
   DATABASE_URL: process.env.DATABASE_URL,
+  RSVP_DEVICE_SALT: process.env.RSVP_DEVICE_SALT,
   NODE_ENV: process.env.NODE_ENV,
 });
 

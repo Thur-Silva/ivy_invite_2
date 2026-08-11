@@ -1,12 +1,86 @@
 'use server';
 
-import { makeSubmitRsvp } from '../../infrastructure/composition-root';
+import { cookies, headers } from 'next/headers';
+import type { RespondentSignals } from '@/shared/application/ports/respondent-identifier';
+import {
+  RSVP_SESSION_COOKIE,
+  SignedSessionToken,
+} from '@/shared/infrastructure/signed-session-token';
+import { makeSubmitRsvp, resolveDeviceSalt } from '../../infrastructure/composition-root';
 import {
   RSVP_FIELD_NAMES,
   rsvpFormSchema,
   type RsvpFormState,
   type RsvpFormValues,
 } from '../rsvp-form.contract';
+
+/** O cookie precisa sobreviver até bem depois da festa. */
+const SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 180;
+
+/**
+ * Coleta os três sinais de identificação e garante o cookie de sessão.
+ *
+ * **Token (cookie assinado)** — o sinal mais forte: sobrevive a troca de rede,
+ * de Wi-Fi para 4G e de operadora. Se não existir ou vier adulterado, emite um
+ * novo. Assinado com HMAC para que ninguém escreva à mão o token de outra pessoa
+ * e assuma a resposta dela.
+ *
+ * **Aparelho** — `user-agent` e `accept-language`, lidos pelo servidor, mais os
+ * traços que o navegador reporta no campo oculto (resolução, densidade, fuso,
+ * plataforma). Sem JavaScript o campo vem vazio e a assinatura fica mais fraca,
+ * porém estável — que é o que a regra exige.
+ *
+ * **Rede** — `x-forwarded-for`, só confiável atrás de um proxy que o
+ * *sobrescreve*. A Vercel faz isso, então o primeiro item é o cliente real e o
+ * navegador não consegue forjá-lo. Fora desse cenário a leitura vira palpite.
+ *
+ * Nenhum desses valores é persistido cru: viram digest na porta
+ * `RespondentIdentifier` antes de qualquer coisa.
+ */
+async function collectRespondentSignals(clientTraits: string): Promise<RespondentSignals> {
+  const [headerList, cookieStore] = await Promise.all([headers(), cookies()]);
+  const secret = resolveDeviceSalt();
+
+  const existingToken = SignedSessionToken.verify(
+    cookieStore.get(RSVP_SESSION_COOKIE)?.value,
+    secret,
+  );
+  const sessionToken = existingToken ?? SignedSessionToken.issue(secret);
+
+  if (existingToken === null) {
+    cookieStore.set(RSVP_SESSION_COOKIE, sessionToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: SESSION_COOKIE_MAX_AGE_SECONDS,
+      path: '/',
+    });
+  }
+
+  return {
+    sessionToken,
+    userAgent: headerList.get('user-agent') ?? '',
+    acceptLanguage: headerList.get('accept-language') ?? '',
+    clientTraits,
+    networkAddress: resolveNetworkAddress(
+      headerList.get('x-forwarded-for'),
+      headerList.get('x-real-ip'),
+    ),
+  };
+}
+
+function resolveNetworkAddress(forwardedFor: string | null, realIp: string | null): string {
+  const client = forwardedFor?.split(',')[0]?.trim();
+  if (client !== undefined && client.length > 0) return client;
+
+  const fallback = realIp?.trim();
+  if (fallback !== undefined && fallback.length > 0) return fallback;
+
+  // `next dev` local não tem proxy: todo mundo cai no mesmo endereço fictício.
+  // Proposital — permite testar o bloqueio. Para destravar, apague a linha em
+  // `npm run db:studio`.
+  return 'endereco-nao-identificado';
+}
 
 /**
  * Driving adapter — the HTTP edge of the RSVP Bounded Context.
@@ -29,8 +103,8 @@ export async function submitRsvpAction(
   const payload = rsvpFormSchema.safeParse(values);
 
   if (!payload.success) {
-    // The shape is wrong, which in practice means the guest submitted without
-    // tapping "Vou" or "Não vou".
+    // A forma está errada, o que na prática significa que a pessoa enviou sem
+    // tocar em "Eu vou!" nem em "Não vou poder".
     return {
       status: 'invalid',
       field: 'decision',
@@ -39,19 +113,36 @@ export async function submitRsvpAction(
     };
   }
 
-  const result = await makeSubmitRsvp().execute(payload.data);
+  const respondent = await collectRespondentSignals(
+    String(formData.get(RSVP_FIELD_NAMES.deviceTraits) ?? ''),
+  );
+
+  const result = await makeSubmitRsvp().execute({ ...payload.data, respondent });
 
   if (!result.ok) {
-    if (result.error.kind === 'VALIDATION') {
-      return {
-        status: 'invalid',
-        field: result.error.field,
-        message: result.error.message,
-        values,
-      };
-    }
+    switch (result.error.kind) {
+      case 'VALIDATION':
+        return {
+          status: 'invalid',
+          field: result.error.field,
+          message: result.error.message,
+          values,
+        };
 
-    return { status: 'failed', message: result.error.message, values };
+      case 'DEVICE_LIMIT':
+        return {
+          status: 'locked',
+          reason: 'DEVICE',
+          message: result.error.message,
+          registeredGuestName: result.error.registeredGuestName,
+        };
+
+      case 'NAME_TAKEN':
+        return { status: 'locked', reason: 'NAME', message: result.error.message };
+
+      case 'UNAVAILABLE':
+        return { status: 'failed', message: result.error.message, values };
+    }
   }
 
   return {

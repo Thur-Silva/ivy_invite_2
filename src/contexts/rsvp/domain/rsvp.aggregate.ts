@@ -5,11 +5,13 @@ import { RsvpDecisionChanged } from './events/rsvp-decision-changed.event';
 import type { AttendanceDecision } from './value-objects/attendance-decision';
 import type { GuestKey } from './value-objects/guest-key';
 import type { GuestName } from './value-objects/guest-name';
+import type { RespondentIdentity } from './value-objects/respondent-identity';
 import type { RsvpId } from './value-objects/rsvp-id';
 
 interface RsvpState {
   guestName: GuestName;
   decision: AttendanceDecision;
+  identity: RespondentIdentity;
   respondedAt: Date;
   updatedAt: Date;
 }
@@ -17,10 +19,11 @@ interface RsvpState {
 /**
  * Aggregate Root — one guest's answer to Ivy's invitation.
  *
- * Consistency boundary: a guest (identified by `GuestKey`) has exactly one
- * answer at any time. Answering again is not a new `Rsvp`; it is a state
- * transition on the existing one, which is why the Use Case looks the aggregate
- * up by guest key before deciding to create or to change it.
+ * Consistency boundary: a guest has exactly one answer at any time, e cada
+ * resposta pertence a quem a criou. Answering again is not a new `Rsvp`; it is a
+ * state transition on the existing one — por isso o caso de uso procura o
+ * agregado por chave de convidado **e** por identidade antes de decidir entre
+ * criar, atualizar ou recusar.
  *
  * The aggregate never reads the clock or generates ids itself — both arrive as
  * arguments, so its behaviour is fully deterministic and unit-testable.
@@ -38,11 +41,13 @@ export class Rsvp extends AggregateRoot<RsvpId> {
     id: RsvpId;
     guestName: GuestName;
     decision: AttendanceDecision;
+    identity: RespondentIdentity;
     respondedAt: Date;
   }): Rsvp {
     const rsvp = new Rsvp(input.id, {
       guestName: input.guestName,
       decision: input.decision,
+      identity: input.identity,
       respondedAt: input.respondedAt,
       updatedAt: input.respondedAt,
     });
@@ -64,12 +69,14 @@ export class Rsvp extends AggregateRoot<RsvpId> {
     id: RsvpId;
     guestName: GuestName;
     decision: AttendanceDecision;
+    identity: RespondentIdentity;
     respondedAt: Date;
     updatedAt: Date;
   }): Rsvp {
     return new Rsvp(input.id, {
       guestName: input.guestName,
       decision: input.decision,
+      identity: input.identity,
       respondedAt: input.respondedAt,
       updatedAt: input.updatedAt,
     });
@@ -82,12 +89,22 @@ export class Rsvp extends AggregateRoot<RsvpId> {
    * The stored name is refreshed too ("maria clara" -> "Maria Clara"), because
    * the guest key is case- and accent-insensitive while the displayed name
    * should honour the latest spelling the guest chose.
+   *
+   * A identidade também é atualizada: a mesma pessoa volta com o cookie renovado
+   * ou de outra rede, e o registro precisa passar a refletir os sinais mais
+   * recentes — sem isso, o acesso seguinte deixaria de reconhecê-la.
    */
-  reconsider(input: { guestName: GuestName; decision: AttendanceDecision; changedAt: Date }): void {
+  reconsider(input: {
+    guestName: GuestName;
+    decision: AttendanceDecision;
+    identity: RespondentIdentity;
+    changedAt: Date;
+  }): void {
     const sameDecision = this.state.decision.equals(input.decision);
     const sameName = this.state.guestName.equals(input.guestName);
+    const sameIdentity = this.state.identity.equals(input.identity);
 
-    if (sameDecision && sameName) return;
+    if (sameDecision && sameName && sameIdentity) return;
 
     const previousDecision = this.state.decision;
 
@@ -95,6 +112,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
       ...this.state,
       guestName: input.guestName,
       decision: input.decision,
+      identity: input.identity,
       updatedAt: input.changedAt,
     };
 
@@ -121,6 +139,11 @@ export class Rsvp extends AggregateRoot<RsvpId> {
 
   get decision(): AttendanceDecision {
     return this.state.decision;
+  }
+
+  /** Sinais de quem criou — e mantém — esta resposta. */
+  get identity(): RespondentIdentity {
+    return this.state.identity;
   }
 
   get respondedAt(): Date {

@@ -1,4 +1,9 @@
 import type { Clock } from '@/shared/application/ports/clock';
+import type {
+  RespondentDigests,
+  RespondentIdentifier,
+  RespondentSignals,
+} from '@/shared/application/ports/respondent-identifier';
 import type { DomainEventPublisher } from '@/shared/application/ports/domain-event-publisher';
 import type { IdGenerator } from '@/shared/application/ports/id-generator';
 import type { DomainEvent } from '@/shared/kernel/domain-event';
@@ -26,6 +31,32 @@ export class SequentialIdGenerator implements IdGenerator {
     this.counter += 1;
     return `${this.prefix}-${this.counter}`;
   }
+}
+
+/**
+ * Identidade previsível: cada sinal vira hex legível repetido até 64 caracteres.
+ *
+ * Não usa crypto de propósito — os testes precisam que "o celular da Maria" e
+ * "o celular do João" sejam distinguíveis na saída de uma asserção que falhou.
+ * O contrato que importa é apenas "mesmo sinal, mesmo digest".
+ */
+export class StubRespondentIdentifier implements RespondentIdentifier {
+  identify(signals: RespondentSignals): RespondentDigests {
+    return {
+      token: toDigest(signals.sessionToken),
+      device: toDigest([signals.userAgent, signals.acceptLanguage, signals.clientTraits].join('~')),
+      network: toDigest(signals.networkAddress),
+    };
+  }
+}
+
+function toDigest(value: string): string {
+  let hex = '';
+  for (const char of value.trim().toLowerCase()) {
+    hex += char.charCodeAt(0).toString(16).padStart(2, '0');
+  }
+  if (hex.length === 0) hex = '00';
+  return hex.repeat(Math.ceil(64 / hex.length)).slice(0, 64);
 }
 
 /** Spy that keeps every published event so tests can assert on them. */

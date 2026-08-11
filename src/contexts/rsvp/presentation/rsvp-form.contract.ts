@@ -15,6 +15,12 @@ import type { SubmissionStatus, SubmitRsvpField } from '../application/dto/submi
 export const RSVP_FIELD_NAMES = {
   guestName: 'guestName',
   decision: 'decision',
+  /**
+   * Campo oculto com os traços do navegador (resolução, densidade, fuso,
+   * plataforma). Compõe a assinatura do aparelho junto com os cabeçalhos que o
+   * servidor lê sozinho. Vem vazio sem JavaScript, e o envio continua válido.
+   */
+  deviceTraits: 'deviceTraits',
 } as const;
 
 /**
@@ -59,6 +65,17 @@ export type RsvpFormState =
       readonly field: SubmitRsvpField;
       readonly message: string;
       readonly values: RsvpFormValues;
+    }
+  | {
+      /**
+       * A resposta foi recusada e não há o que corrigir no formulário:
+       * este aparelho já respondeu por alguém, ou este nome já respondeu de
+       * outro aparelho. O formulário sai de cena e dá lugar a uma explicação.
+       */
+      readonly status: 'locked';
+      readonly reason: 'DEVICE' | 'NAME';
+      readonly message: string;
+      readonly registeredGuestName?: string;
     }
   | {
       /** Nothing the guest did wrong — retry is the right advice. */

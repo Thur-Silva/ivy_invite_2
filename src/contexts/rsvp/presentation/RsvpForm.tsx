@@ -5,6 +5,8 @@ import { useActionState, useEffect, useId, useState } from 'react';
 import { cn } from '@/ui/cn';
 import { CrownGlyph, LilyGlyph } from '@/ui/ornaments/Glyphs';
 import { submitRsvpAction } from './actions/submit-rsvp.action';
+import { DeviceTraitsField } from './DeviceTraitsField';
+import { ResponseLockedNotice } from './ResponseLockedNotice';
 import { RoyalSeal } from './RoyalSeal';
 import {
   GUEST_NAME_MAX_LENGTH,
@@ -79,7 +81,9 @@ export function RsvpForm() {
     };
   }, [state]);
 
-  const showSeal = state.status === 'success' && dismissedState !== state;
+  const dismissed = dismissedState === state;
+  const showSeal = state.status === 'success' && !dismissed;
+  const showLocked = state.status === 'locked' && !dismissed;
   const errorMessage =
     state.status === 'invalid' || state.status === 'failed' ? state.message : null;
   const invalidField = state.status === 'invalid' ? state.field : null;
@@ -96,6 +100,14 @@ export function RsvpForm() {
           submission={state.submission}
           onEdit={() => setDismissedState(state)}
         />
+      ) : showLocked && state.status === 'locked' ? (
+        <ResponseLockedNotice
+          key="locked"
+          reason={state.reason}
+          message={state.message}
+          registeredGuestName={state.registeredGuestName}
+          onRetry={() => setDismissedState(state)}
+        />
       ) : (
         <motion.form
           key="form"
@@ -107,6 +119,8 @@ export function RsvpForm() {
           transition={{ duration: 0.35 }}
           className="surface-pad flex flex-col gap-6 rounded-3xl px-5 py-7 sm:px-7"
         >
+          <DeviceTraitsField />
+
           <div className="flex flex-col gap-2">
             <label
               htmlFor={nameFieldId}
@@ -185,7 +199,7 @@ export function RsvpForm() {
               <span className="text-blush-500">{errorMessage}</span>
             ) : (
               <span className="text-cream/45">
-                Pode responder por mais de uma pessoa enviando um nome por vez.
+                Uma resposta por convidado: cada pessoa confirma do próprio celular.
               </span>
             )}
           </p>

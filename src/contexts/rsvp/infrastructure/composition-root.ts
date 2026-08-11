@@ -2,6 +2,7 @@ import 'server-only';
 import { serverEnv } from '@/shared/config/server-env';
 import { ConsoleDomainEventPublisher } from '@/shared/infrastructure/console-domain-event-publisher';
 import { CryptoIdGenerator } from '@/shared/infrastructure/crypto-id-generator';
+import { HashedRespondentIdentifier } from '@/shared/infrastructure/hashed-respondent-identifier';
 import { SystemClock } from '@/shared/infrastructure/system-clock';
 import type { RsvpRepository } from '../domain/rsvp.repository';
 import { SubmitRsvp } from '../application/use-cases/submit-rsvp.use-case';
@@ -40,6 +41,14 @@ function resolveRepository(): RsvpRepository {
   return repository;
 }
 
+/**
+ * Salt padrão para o hash de aparelho.
+ *
+ * Existe para o projeto rodar sem configuração. Está no repositório, portanto
+ * **não é segredo** — defina `RSVP_DEVICE_SALT` na Vercel antes de publicar.
+ */
+const FALLBACK_DEVICE_SALT = 'ivy-2-anos-lago-encantado-salt-padrao';
+
 /** Builds the `SubmitRsvp` Use Case with production adapters. */
 export function makeSubmitRsvp(): SubmitRsvp {
   return new SubmitRsvp({
@@ -47,5 +56,11 @@ export function makeSubmitRsvp(): SubmitRsvp {
     clock: new SystemClock(),
     ids: new CryptoIdGenerator(),
     events: new ConsoleDomainEventPublisher(),
+    respondents: new HashedRespondentIdentifier(resolveDeviceSalt()),
   });
+}
+
+/** Segredo usado tanto para o digest quanto para assinar o cookie de sessão. */
+export function resolveDeviceSalt(): string {
+  return serverEnv.RSVP_DEVICE_SALT ?? FALLBACK_DEVICE_SALT;
 }
