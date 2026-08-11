@@ -1,26 +1,169 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * ---------------------------------------------------------------------------
+ *  Design tokens — "A Princesa e o Sapo"
+ * ---------------------------------------------------------------------------
+ *  Enchanted pond at dusk: deep emerald water, lily-pad greens, candle gold
+ *  and a princess blush. Tokens live here (Tailwind v4 is CSS-first) so the
+ *  Presentation layer never hard-codes a hex value.
+ */
+@theme {
+  /* Water — page background, from deepest to shallowest */
+  --color-pond-950: #04140f;
+  --color-pond-900: #072019;
+  --color-pond-800: #0b2e23;
+  --color-pond-700: #113d2e;
+  --color-pond-600: #17513c;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  /* Lily pads and stems */
+  --color-lily-500: #2e7d5b;
+  --color-lily-400: #3fa07a;
+  --color-lily-300: #6ec49b;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Candlelight / crown gold */
+  --color-gold-600: #c9a227;
+  --color-gold-500: #e9c46a;
+  --color-gold-400: #f3d68f;
+
+  /* Princess blush */
+  --color-blush-700: #b3486b;
+  --color-blush-500: #f4a6b8;
+  --color-blush-300: #ffd9e1;
+
+  /* Moonlight */
+  --color-cream: #fff6e8;
+
+  /* Typography — wired to next/font in layout.tsx */
+  --font-display: var(--font-cinzel), 'Georgia', serif;
+  --font-script: var(--font-vibes), 'Segoe Script', cursive;
+  --font-body: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
+
+  /* Motion */
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-sway: sway 9s ease-in-out infinite;
+  --animate-twinkle: twinkle 3.5s ease-in-out infinite;
+  --animate-shimmer: shimmer 6s linear infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes sway {
+    0%,
+    100% {
+      transform: rotate(-2.5deg);
+    }
+    50% {
+      transform: rotate(2.5deg);
+    }
+  }
+
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: scale(0.85);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes shimmer {
+    to {
+      background-position: 200% center;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * ---------------------------------------------------------------------------
+ *  Base layer
+ * ---------------------------------------------------------------------------
+ *  Mobile-first: the page is designed for a phone held in one hand, so the
+ *  root sets a comfortable reading size and disables horizontal overflow that
+ *  full-bleed decorations would otherwise create.
+ */
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-pond-950);
+    color: var(--color-cream);
+    font-family: var(--font-body);
+    overflow-x: clip;
+    /* Safe areas on notched phones. */
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Gold focus ring that survives on both dark water and cream cards. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold-500);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Never let a decorative image steal a tap. */
+  [aria-hidden='true'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+@layer utilities {
+  /* Gold foil text, used for the honoree's name. */
+  .text-foil {
+    background-image: linear-gradient(
+      100deg,
+      var(--color-gold-600) 0%,
+      var(--color-gold-400) 25%,
+      var(--color-cream) 45%,
+      var(--color-gold-400) 65%,
+      var(--color-gold-600) 100%
+    );
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Frosted lily-pad card. */
+  .surface-pad {
+    background-color: color-mix(in oklab, var(--color-pond-800) 82%, transparent);
+    border: 1px solid color-mix(in oklab, var(--color-gold-500) 28%, transparent);
+    backdrop-filter: blur(10px) saturate(120%);
+    box-shadow:
+      0 1px 0 0 color-mix(in oklab, var(--color-gold-400) 18%, transparent) inset,
+      0 18px 50px -24px rgb(0 0 0 / 0.8);
+  }
+}
+
+/*
+ * Accessibility: users who ask for less motion get a still, readable
+ * invitation. The WebGL pond is disabled at the component level too — this
+ * only covers CSS-driven motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
