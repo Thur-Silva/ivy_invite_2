@@ -37,12 +37,20 @@ describe('celebration configuration', () => {
       navigation: new GoogleMapsLinkProvider(),
     }).execute();
 
+    const pair = `${view.venue.latitude},${view.venue.longitude}`;
+
+    // A vírgula precisa chegar literal aos três links: percent-encoded, o
+    // Google trata o par como texto de busca e não oferece rota.
+    expect(view.navigation.embedUrl).toContain(`q=${pair}`);
     expect(view.navigation.embedUrl).toContain('output=embed');
     expect(view.navigation.directionsUrl).toContain('api=1');
-    expect(view.navigation.directionsUrl).toContain(
-      encodeURIComponent(`${view.venue.latitude},${view.venue.longitude}`),
-    );
+    expect(view.navigation.directionsUrl).toContain(`destination=${pair}`);
+    expect(view.navigation.wazeUrl).toContain(`ll=${pair}`);
     expect(view.navigation.wazeUrl).toContain('navigate=yes');
+
+    for (const url of Object.values(view.navigation)) {
+      expect(url).not.toContain('%2C');
+    }
     // The read model must be serializable across the RSC boundary.
     expect(() => JSON.stringify(view)).not.toThrow();
   });
