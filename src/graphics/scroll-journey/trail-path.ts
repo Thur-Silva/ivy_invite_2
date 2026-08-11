@@ -53,7 +53,7 @@ export function buildTrailPath(samples = 180): string {
  * valores fixos em vez de medidos: a página tem altura previsível, e medir
  * posições de seção exigiria observers para um ganho visual nulo.
  */
-export const TRAIL_STOPS = [0.26, 0.52, 0.78] as const;
+export const TRAIL_STOPS = [0.22, 0.42, 0.62, 0.8] as const;
 
 /** Onde a coroa de recompensa aparece, no fim da jornada. */
 export const TRAIL_FINALE = 0.97;

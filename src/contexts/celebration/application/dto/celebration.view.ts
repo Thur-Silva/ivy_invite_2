@@ -29,4 +29,9 @@ export interface CelebrationView {
     readonly directionsUrl: string;
     readonly wazeUrl: string;
   };
+  readonly dressCode: {
+    readonly headline: string;
+    readonly guidance: string;
+    readonly palette: readonly { readonly name: string; readonly hex: string }[];
+  };
 }

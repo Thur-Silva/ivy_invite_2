@@ -2,6 +2,7 @@ import { makeGetCelebrationDetails } from '@/contexts/celebration/infrastructure
 import { DriftingPetals } from '@/graphics/scroll-journey/DriftingPetals';
 import { ScrollJourney } from '@/graphics/scroll-journey/ScrollJourney';
 import { ClosingSection } from './_sections/ClosingSection';
+import { DressCodeSection } from './_sections/DressCodeSection';
 import { HeroSection } from './_sections/HeroSection';
 import { RsvpSection } from './_sections/RsvpSection';
 import { StorySection } from './_sections/StorySection';
@@ -35,6 +36,7 @@ export default async function InvitationPage() {
       <HeroSection celebration={celebration} />
       <StorySection celebration={celebration} />
       <RsvpSection />
+      <DressCodeSection celebration={celebration} />
       <VenueSection celebration={celebration} />
       <ClosingSection />
     </main>

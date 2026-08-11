@@ -1,6 +1,7 @@
 import { Celebration, CelebrationId } from '../domain/celebration.aggregate';
 import type { CelebrationRepository } from '../domain/celebration.repository';
 import { CelebrationSchedule } from '../domain/value-objects/celebration-schedule';
+import { DressCode } from '../domain/value-objects/dress-code';
 import { GeoCoordinates } from '../domain/value-objects/geo-coordinates';
 import { Honoree } from '../domain/value-objects/honoree';
 import { Venue } from '../domain/value-objects/venue';
@@ -18,10 +19,15 @@ export class StaticCelebrationRepository implements CelebrationRepository {
   constructor(private readonly config: CelebrationConfig = celebrationConfig) {}
 
   async current(): Promise<Celebration> {
-    const { honoree, schedule, venue } = this.config;
+    const { honoree, schedule, venue, dressCode } = this.config;
 
     return Celebration.create(CelebrationId.fromString('ivy-2-anos'), {
       honoree: Honoree.create(honoree.name, honoree.turningAge),
+      dressCode: DressCode.create({
+        headline: dressCode.headline,
+        guidance: dressCode.guidance,
+        palette: dressCode.palette.map((color) => ({ name: color.name, hex: color.hex })),
+      }),
       schedule: CelebrationSchedule.create({
         startsAt: new Date(schedule.startsAt),
         endsAt: new Date(schedule.endsAt),

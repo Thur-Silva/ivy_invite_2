@@ -19,7 +19,7 @@ export class GetCelebrationDetails {
 
   async execute(): Promise<CelebrationView> {
     const celebration = await this.deps.celebrations.current();
-    const { honoree, schedule, venue } = celebration;
+    const { honoree, schedule, venue, dressCode } = celebration;
 
     return {
       honoree: {
@@ -43,6 +43,11 @@ export class GetCelebrationDetails {
         embedUrl: this.deps.navigation.embedUrl(venue),
         directionsUrl: this.deps.navigation.directionsUrl(venue),
         wazeUrl: this.deps.navigation.wazeUrl(venue),
+      },
+      dressCode: {
+        headline: dressCode.headline,
+        guidance: dressCode.guidance,
+        palette: dressCode.palette.map((color) => ({ name: color.name, hex: color.hex })),
       },
     };
   }

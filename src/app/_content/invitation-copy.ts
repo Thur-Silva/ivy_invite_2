@@ -23,7 +23,14 @@ export const invitationCopy = {
 
   rsvp: {
     title: 'Confirme sua presença',
-    subtitle: 'Precisamos saber quantas coroas separar. Responda até uma semana antes da festa.',
+    subtitle:
+      'Precisamos saber quantas coroas separar. Cada convidado responde por si, ' +
+      'do próprio celular — não dá para confirmar por outra pessoa.',
+  },
+
+  dressCode: {
+    title: 'O que vestir',
+    subtitle: 'Para a foto da família sair combinando com o reino.',
   },
 
   venue: {

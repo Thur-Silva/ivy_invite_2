@@ -1,6 +1,7 @@
 import { AggregateRoot } from '@/shared/kernel/aggregate-root';
 import { Identifier } from '@/shared/kernel/identifier';
 import type { CelebrationSchedule } from './value-objects/celebration-schedule';
+import type { DressCode } from './value-objects/dress-code';
 import type { Honoree } from './value-objects/honoree';
 import type { Venue } from './value-objects/venue';
 
@@ -18,6 +19,7 @@ interface CelebrationProps {
   honoree: Honoree;
   schedule: CelebrationSchedule;
   venue: Venue;
+  dressCode: DressCode;
 }
 
 /**
@@ -53,5 +55,9 @@ export class Celebration extends AggregateRoot<CelebrationId> {
 
   get venue(): Venue {
     return this.props.venue;
+  }
+
+  get dressCode(): DressCode {
+    return this.props.dressCode;
   }
 }
