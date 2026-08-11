@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useActionState, useEffect, useId, useState } from 'react';
 import { cn } from '@/ui/cn';
+import { CrownGlyph, LilyGlyph } from '@/ui/ornaments/Glyphs';
 import { submitRsvpAction } from './actions/submit-rsvp.action';
 import { RoyalSeal } from './RoyalSeal';
 import {
@@ -17,15 +18,17 @@ const CHOICES = [
     value: 'ATTENDING',
     label: 'Eu vou!',
     hint: 'Conta comigo na festa',
-    emoji: '👑',
+    Glyph: CrownGlyph,
     accent: 'peer-checked:border-gold-500 peer-checked:bg-gold-500/15 peer-checked:text-gold-400',
+    glow: 'peer-checked:shadow-[0_0_28px_-6px_rgba(233,196,106,0.55)]',
   },
   {
     value: 'NOT_ATTENDING',
     label: 'Não vou poder',
     hint: 'Mas mando meu carinho',
-    emoji: '💚',
+    Glyph: LilyGlyph,
     accent: 'peer-checked:border-lily-400 peer-checked:bg-lily-400/15 peer-checked:text-lily-300',
+    glow: 'peer-checked:shadow-[0_0_28px_-6px_rgba(63,160,122,0.55)]',
   },
 ] as const;
 
@@ -151,20 +154,26 @@ export function RsvpForm() {
                   />
                   <span
                     className={cn(
-                      'flex min-h-[68px] flex-col items-start justify-center gap-0.5 rounded-2xl border',
+                      'flex min-h-[68px] items-center gap-3 rounded-2xl border',
                       'border-gold-500/20 bg-pond-950/50 text-cream/80 px-4 py-3 transition',
                       'peer-focus-visible:outline peer-focus-visible:outline-2 active:scale-[0.98]',
                       'peer-focus-visible:outline-gold-500 peer-focus-visible:outline-offset-2',
                       choice.accent,
+                      choice.glow,
+                      // O glifo cresce e se inclina quando a opção é marcada:
+                      // confirmação visual sem depender do radio nativo, que
+                      // cada sistema desenha de um jeito. Precisa ser alcançado
+                      // por seletor de filho porque o `peer` é irmão deste span,
+                      // não do SVG lá dentro.
+                      'peer-checked:[&>svg]:scale-110 peer-checked:[&>svg]:-rotate-6',
+                      'peer-checked:[&>svg]:opacity-100',
                     )}
                   >
-                    <span className="text-base font-semibold">
-                      <span aria-hidden="true" className="mr-1.5">
-                        {choice.emoji}
-                      </span>
-                      {choice.label}
+                    <choice.Glyph className="h-7 w-7 shrink-0 opacity-45 transition-all duration-300" />
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-base font-semibold">{choice.label}</span>
+                      <span className="text-cream/55 text-xs">{choice.hint}</span>
                     </span>
-                    <span className="text-cream/55 text-xs">{choice.hint}</span>
                   </span>
                 </label>
               ))}

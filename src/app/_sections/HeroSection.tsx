@@ -1,23 +1,27 @@
 import type { CelebrationView } from '@/contexts/celebration/application/dto/celebration.view';
+import { HeroTitle } from '@/ui/HeroTitle';
 import { Reveal } from '@/ui/Reveal';
 import { CrownIcon } from '@/ui/ornaments/CrownIcon';
+import { RippleRings } from '@/ui/ornaments/RippleRings';
 import { invitationCopy } from '../_content/invitation-copy';
 
 /**
- * Above the fold: who, what and the promise of a fairy tale.
+ * Primeira dobra: quem, o quê e a promessa de um conto de fadas.
  *
- * `100svh` (small viewport height) instead of `100vh` so the hero is never cut
- * off by mobile Safari's collapsing toolbar. The honoree's name is a real `h1`
- * for screen readers, with the decorative split into two lines marked
- * `aria-hidden` so it is announced once, cleanly.
+ * `100svh` (small viewport height) em vez de `100vh` para o herói nunca ser
+ * cortado pela barra retrátil do Safari mobile.
+ *
+ * A composição tem três planos: os anéis de água se abrindo ao fundo, a coroa
+ * flutuando com o reflexo atravessando o ouro, e o nome entrando letra por letra.
  */
 export function HeroSection({ celebration }: { celebration: CelebrationView }) {
   const { honoree } = celebration;
 
   return (
     <section className="relative flex min-h-[100svh] flex-col items-center justify-center px-6 py-20 text-center">
-      <Reveal className="mb-6 w-24 sm:w-28">
-        <div className="animate-float">
+      <Reveal className="relative mb-6 w-24 sm:w-28">
+        <RippleRings />
+        <div className="animate-float relative">
           <CrownIcon />
         </div>
       </Reveal>
@@ -28,25 +32,7 @@ export function HeroSection({ celebration }: { celebration: CelebrationView }) {
         </p>
       </Reveal>
 
-      <Reveal delay={0.2}>
-        <h1 className="mt-2">
-          <span className="sr-only">
-            {honoree.name} faz {honoree.turningAge} anos
-          </span>
-          <span
-            aria-hidden="true"
-            className="text-foil font-display block text-[clamp(4rem,26vw,7rem)] leading-[0.95] font-bold"
-          >
-            {honoree.name}
-          </span>
-          <span
-            aria-hidden="true"
-            className="font-display text-cream/80 mt-1 block text-lg tracking-[0.3em] uppercase sm:text-xl"
-          >
-            faz {honoree.turningAge} anos
-          </span>
-        </h1>
-      </Reveal>
+      <HeroTitle name={honoree.name} turningAge={honoree.turningAge} />
 
       <Reveal delay={0.35}>
         <p className="border-gold-500/30 bg-pond-900/50 text-gold-400 mt-7 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs tracking-[0.18em] uppercase backdrop-blur-sm">

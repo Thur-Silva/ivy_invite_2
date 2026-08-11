@@ -1,3 +1,4 @@
+import { MapPinGlyph, NavigationGlyph } from '@/ui/ornaments/Glyphs';
 import type { CelebrationView } from '../application/dto/celebration.view';
 
 /**
@@ -35,18 +36,18 @@ export function VenueMap({ celebration }: { celebration: CelebrationView }) {
           href={navigation.directionsUrl}
           target="_blank"
           rel="noreferrer"
-          className="border-gold-500/45 bg-gold-500/10 text-gold-400 flex min-h-[52px] items-center justify-center gap-2 rounded-full border px-5 py-3.5 text-sm font-semibold transition active:scale-[0.98]"
+          className="border-gold-500/45 bg-gold-500/10 text-gold-400 group flex min-h-[52px] items-center justify-center gap-2 rounded-full border px-5 py-3.5 text-sm font-semibold transition active:scale-[0.98]"
         >
-          <span aria-hidden="true">🗺️</span>
+          <MapPinGlyph className="h-5 w-5 transition-transform duration-300 group-hover:-translate-y-0.5 group-active:-translate-y-1" />
           Abrir no Google Maps
         </a>
         <a
           href={navigation.wazeUrl}
           target="_blank"
           rel="noreferrer"
-          className="border-lily-400/40 bg-lily-400/10 text-lily-300 flex min-h-[52px] items-center justify-center gap-2 rounded-full border px-5 py-3.5 text-sm font-semibold transition active:scale-[0.98]"
+          className="border-lily-400/40 bg-lily-400/10 text-lily-300 group flex min-h-[52px] items-center justify-center gap-2 rounded-full border px-5 py-3.5 text-sm font-semibold transition active:scale-[0.98]"
         >
-          <span aria-hidden="true">🚗</span>
+          <NavigationGlyph className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5 group-active:translate-x-1" />
           Abrir no Waze
         </a>
       </div>

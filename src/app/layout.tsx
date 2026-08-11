@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     'Convite para o aniversário de 2 anos da Ivy. Confirme sua presença e veja como chegar à festa.',
   applicationName: 'Convite da Ivy',
   openGraph: {
-    title: 'Ivy faz 2 anos 👑🐸',
+    title: 'Ivy faz 2 anos — A Princesa e o Sapo',
     description: 'Um convite do reino encantado. Confirme sua presença!',
     locale: 'pt_BR',
     type: 'website',

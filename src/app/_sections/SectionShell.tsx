@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Reveal } from '@/ui/Reveal';
-import { Flourish } from '@/ui/ornaments/Flourish';
+import { AnimatedFlourish } from '@/ui/ornaments/AnimatedFlourish';
 
 /**
  * Shared frame for every act of the invitation.
@@ -26,7 +26,7 @@ export function SectionShell({
       className="relative mx-auto w-full max-w-md scroll-mt-8 px-5 py-14 sm:py-20"
     >
       <Reveal className="mb-8 flex flex-col items-center gap-3 text-center">
-        <Flourish />
+        <AnimatedFlourish />
         <h2 id={`${id}-title`} className="font-display text-gold-400 text-2xl tracking-wide">
           {title}
         </h2>
