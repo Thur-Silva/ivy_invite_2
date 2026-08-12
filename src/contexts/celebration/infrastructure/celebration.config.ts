@@ -29,7 +29,7 @@ export const celebrationConfig = {
     /** [PLACEHOLDER] Rua, número e complemento. */
     streetAddress: 'Estrada dos Pardais, S/N',
     /** [PLACEHOLDER] Bairro, cidade e estado. */
-    locality: 'Furnas, Extrama, Minas Gerais',
+    locality: 'Furnas, Extrema, Minas Gerais',
     /**
      * [PLACEHOLDER] Coordenadas exatas da entrada.
      * Como obter: abra o Google Maps, clique com o botão direito no ponto
