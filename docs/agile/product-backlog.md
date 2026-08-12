@@ -240,16 +240,41 @@ Cenário: sem o token
 
 ---
 
-### 📋 PBI-06. Notificar os anfitriões a cada resposta
+### ✅ PBI-06. Notificar os anfitriões a cada resposta
 
 > **Como** Marina, **quero** receber um aviso quando alguém responder, **para**
 > acompanhar sem ficar abrindo o painel.
 
 `SHOULD` · **5 pts**
 
-**Notas técnicas:** o seam já existe. Implementar `DomainEventPublisher`
-assinando `RsvpConfirmed` / `RsvpDeclined` / `RsvpDecisionChanged`. Nenhuma
-mudança em domínio ou caso de uso.
+```gherkin
+Cenário: alguém confirma presença
+  Dado que RSVP_NOTIFY_EMAILS tem os e-mails dos anfitriões
+  Quando um convidado confirma presença
+  Então cada anfitrião recebe um aviso com o nome e a conta verificada
+  E responder esse aviso escreve direto para o convidado
+  E o convidado recebe um recibo da própria resposta
+
+Cenário: o convidado não espera pelo e-mail
+  Quando a resposta é gravada
+  Então a tela confirma na hora
+  E o envio acontece depois, sem entrar no tempo de resposta
+
+Cenário: o mesmo fato não gera dois e-mails
+  Dado que o envio sofreu timeout e foi retentado
+  Então a chave de idempotência é a mesma em toda tentativa
+  E o serviço responde replayed sem mandar e-mail novo
+
+Cenário: serviço de e-mail fora do ar
+  Quando o envio falha em todas as tentativas
+  Então a confirmação continua gravada
+  E o requestId vai para o log para investigação
+```
+
+**Entregue** no Sprint 2, junto de um recibo para o próprio convidado. Assinou o
+`DomainEventPublisher` que já existia desde o Sprint 1: nenhuma mudança em
+domínio ou caso de uso. Ver
+[ADR-0013](../architecture/adr/0013-notificacao-por-email-via-ivy-messager.md).
 
 ---
 

@@ -58,8 +58,8 @@ export class Rsvp extends AggregateRoot<RsvpId> {
 
     rsvp.record(
       input.decision.isAttending()
-        ? new RsvpConfirmed(input.id, input.guestName, input.respondedAt)
-        : new RsvpDeclined(input.id, input.guestName, input.respondedAt),
+        ? new RsvpConfirmed(input.id, input.guestName, input.account, input.respondedAt)
+        : new RsvpDeclined(input.id, input.guestName, input.account, input.respondedAt),
     );
 
     return rsvp;
@@ -129,6 +129,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
         new RsvpDecisionChanged(
           this.id,
           input.guestName,
+          input.account,
           previousDecision,
           input.decision,
           input.changedAt,

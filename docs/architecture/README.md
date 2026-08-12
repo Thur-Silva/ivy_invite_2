@@ -215,6 +215,7 @@ Dois pontos que definem o desenho:
 | 10  | Ubiquitous Language em inglês no código              | [0010](./adr/0010-ubiquitous-language-em-ingles.md)             |
 | 11  | Camada de cena que acompanha o scroll                | [0011](./adr/0011-cena-que-acompanha-o-scroll.md)               |
 | 12  | Nenhum emoji de teclado na interface                 | [0012](./adr/0012-sem-emoji-de-teclado-na-interface.md)         |
+| 13  | Notificação por e-mail via Ivy Messager              | [0013](./adr/0013-notificacao-por-email-via-ivy-messager.md)    |
 
 ## 6. Estratégia de testes
 

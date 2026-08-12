@@ -99,7 +99,7 @@ a ter dois é acrescentar um provider e um valor no enum do domínio.
 | `npm run verify`      | **typecheck + lint + testes**. Rode antes de todo commit                |
 | `npm run typecheck`   | `tsc --noEmit`                                                          |
 | `npm run lint`        | ESLint, incluindo a Regra da Dependência entre camadas                  |
-| `npm run test`        | Vitest (65 testes, ~2s, sem banco)                                      |
+| `npm run test`        | Vitest (95 testes, ~3s, sem banco)                                      |
 | `npm run test:watch`  | Vitest em watch                                                         |
 | `npm run format`      | Prettier                                                                |
 | `npm run db:generate` | gera migração a partir do schema Drizzle                                |
@@ -151,7 +151,7 @@ Leitura recomendada, nesta ordem:
 | [Arquitetura](./docs/architecture/README.md)                      | contextos, camadas, fluxo de uma confirmação, estratégia de testes |
 | [Ubiquitous Language](./docs/architecture/ubiquitous-language.md) | glossário PT-BR ↔ código                                           |
 | [Agregados e invariantes](./docs/architecture/aggregates.md)      | Event Storming e as 12 invariantes                                 |
-| [ADRs](./docs/architecture/adr)                                   | as 12 decisões que sustentam o resto                               |
+| [ADRs](./docs/architecture/adr)                                   | as 13 decisões que sustentam o resto                               |
 | [Processo Agile](./docs/agile/README.md)                          | visão, personas, backlog, DoR, DoD, Sprint 1                       |
 
 ### Em uma frase, por camada

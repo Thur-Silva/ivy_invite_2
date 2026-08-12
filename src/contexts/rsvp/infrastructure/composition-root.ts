@@ -1,11 +1,16 @@
 import 'server-only';
+import type { DomainEventPublisher } from '@/shared/application/ports/domain-event-publisher';
 import { serverEnv } from '@/shared/config/server-env';
+import { CompositeDomainEventPublisher } from '@/shared/infrastructure/composite-domain-event-publisher';
 import { ConsoleDomainEventPublisher } from '@/shared/infrastructure/console-domain-event-publisher';
 import { CryptoIdGenerator } from '@/shared/infrastructure/crypto-id-generator';
+import { DeferredDomainEventPublisher } from '@/shared/infrastructure/deferred-domain-event-publisher';
 import { HashedRespondentIdentifier } from '@/shared/infrastructure/hashed-respondent-identifier';
+import { IvyMessagerEmailSender } from '@/shared/infrastructure/messager/ivy-messager-email-sender';
 import { SystemClock } from '@/shared/infrastructure/system-clock';
 import type { RsvpRepository } from '../domain/rsvp.repository';
 import { SubmitRsvp } from '../application/use-cases/submit-rsvp.use-case';
+import { EmailNotifyingEventPublisher } from './notifications/email-notifying-event-publisher';
 import { InMemoryRsvpRepository } from './persistence/in-memory-rsvp.repository';
 import { NeonRsvpRepository } from './persistence/neon-rsvp.repository';
 
@@ -49,13 +54,70 @@ function resolveRepository(): RsvpRepository {
  */
 const FALLBACK_DEVICE_SALT = 'ivy-2-anos-lago-encantado-salt-padrao';
 
+/**
+ * URL pública do convite, para o botão dos e-mails.
+ *
+ * A Vercel expõe o domínio de produção numa variável própria, então em deploy
+ * normal não há nada a configurar. `INVITATION_URL` existe para domínio próprio
+ * ou outra hospedagem, e o localhost fecha a lista para o envio funcionar em
+ * desenvolvimento.
+ */
+function resolveInvitationUrl(): string {
+  if (serverEnv.INVITATION_URL !== undefined) return serverEnv.INVITATION_URL;
+  if (serverEnv.VERCEL_PROJECT_PRODUCTION_URL !== undefined) {
+    return `https://${serverEnv.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  return 'http://localhost:3000';
+}
+
+function resolveHostRecipients(): readonly string[] {
+  return (serverEnv.RSVP_NOTIFY_EMAILS ?? '')
+    .split(',')
+    .map((address) => address.trim())
+    .filter((address) => address.length > 0);
+}
+
+/**
+ * Monta os assinantes de evento de domínio.
+ *
+ * Sempre inclui o log de auditoria. O assinante de e-mail entra só quando há
+ * token: sem ele, notificação é desligada e o convite continua aceitando
+ * confirmações normalmente, porque avisar é melhoria, não requisito.
+ *
+ * O conjunto todo é embrulhado em `DeferredDomainEventPublisher`, então nada
+ * disso acontece antes de o convidado receber a resposta.
+ */
+function resolveEventPublisher(): DomainEventPublisher {
+  const subscribers: DomainEventPublisher[] = [new ConsoleDomainEventPublisher()];
+
+  if (serverEnv.IVY_MESSAGER_TOKEN !== undefined) {
+    subscribers.push(
+      new EmailNotifyingEventPublisher({
+        emails: new IvyMessagerEmailSender({
+          baseUrl: serverEnv.IVY_MESSAGER_BASE_URL,
+          token: serverEnv.IVY_MESSAGER_TOKEN,
+        }),
+        invitationUrl: resolveInvitationUrl(),
+        hostRecipients: resolveHostRecipients(),
+      }),
+    );
+  } else if (serverEnv.NODE_ENV === 'production') {
+    console.warn(
+      '[rsvp] IVY_MESSAGER_TOKEN ausente: nenhum e-mail será enviado. ' +
+        'Confirmações continuam sendo gravadas.',
+    );
+  }
+
+  return new DeferredDomainEventPublisher(new CompositeDomainEventPublisher(subscribers));
+}
+
 /** Builds the `SubmitRsvp` Use Case with production adapters. */
 export function makeSubmitRsvp(): SubmitRsvp {
   return new SubmitRsvp({
     rsvps: resolveRepository(),
     clock: new SystemClock(),
     ids: new CryptoIdGenerator(),
-    events: new ConsoleDomainEventPublisher(),
+    events: resolveEventPublisher(),
     respondents: new HashedRespondentIdentifier(resolveDeviceSalt()),
   });
 }
