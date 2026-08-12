@@ -90,6 +90,40 @@ traria quase nenhum convidado a mais num público que já usa Android e Gmail. A
 estrutura continua plural (`SupportedProvider`, `ACCOUNT_PROVIDERS`), então voltar
 a ter dois é acrescentar um provider e um valor no enum do domínio.
 
+## E-mail de confirmação
+
+Quando alguém responde, saem dois e-mails pelo serviço de mensageria: um recibo
+para o convidado e um aviso para os anfitriões. Responder o aviso escreve direto
+para quem confirmou, porque o `replyTo` aponta para a conta que respondeu.
+
+O corpo **não repete data, endereço nem traje**, de propósito. E-mail é retrato:
+se o local mudar, a caixa de entrada guarda a versão velha para sempre e o
+convidado confia nela. O e-mail confirma o fato e aponta para o convite, que é a
+fonte da verdade.
+
+Nada disso bloqueia a resposta. O envio acontece depois que a tela já confirmou,
+via `after()` do Next. Sem `IVY_MESSAGER_TOKEN` o convite segue aceitando
+confirmações e nenhum e-mail sai, porque notificar é melhoria, não requisito.
+
+### Testar com envio real
+
+```bash
+npm run email:smoke
+```
+
+Exercita o código de produção contra o serviço: o mesmo adapter, o mesmo
+publisher, os mesmos templates e os mesmos eventos de domínio que a Server Action
+usa. Um `curl` provaria que o serviço funciona; isto prova que a **integração**
+funciona, que é a pergunta útil.
+
+Valida comprovante de envio, idempotência (dois envios, um e-mail), credencial
+errada classificada como permanente sem retentativa, e os dois fluxos completos
+de confirmação e de mudança de ideia.
+
+> **Manda seis e-mails de verdade** para o endereço de `RSVP_NOTIFY_EMAILS`.
+> Fica fora de `npm run verify` por construção: a suíte normal inclui só
+> `*.spec.ts` e esta inclui só `*.live.ts`, então nenhum arquivo casa nos dois.
+
 ## Scripts
 
 | Comando               | O que faz                                                               |
@@ -105,6 +139,7 @@ a ter dois é acrescentar um provider e um valor no enum do domínio.
 | `npm run db:generate` | gera migração a partir do schema Drizzle                                |
 | `npm run db:migrate`  | aplica migrações no Neon                                                |
 | `npm run db:studio`   | abre o Drizzle Studio. **é aqui que se lê a lista de confirmados hoje** |
+| `npm run email:smoke` | **envia e-mail de verdade** e valida a integração de ponta a ponta      |
 | `npm run db:inspect`  | imprime colunas, índices e contagens do banco, sem dado de convidado    |
 
 ---
@@ -114,7 +149,8 @@ a ter dois é acrescentar um provider e um valor no enum do domínio.
 1. Importe o repositório na Vercel (o preset Next.js é detectado automaticamente).
 2. Em _Settings → Environment Variables_, adicione nos três ambientes:
    **`DATABASE_URL`** (Neon), **`AUTH_SECRET`**, **`RSVP_DEVICE_SALT`** e as
-   credenciais `AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET`.
+   credenciais `AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET`. Para os e-mails,
+   `IVY_MESSAGER_TOKEN` e `RSVP_NOTIFY_EMAILS`.
 3. Volte ao console do Google e acrescente o domínio da Vercel aos URIs de
    redirecionamento. Sem isso o login falha só em produção.
 4. Deploy.
