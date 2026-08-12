@@ -8,6 +8,7 @@ import { Rsvp } from '../../domain/rsvp.aggregate';
 import type { RsvpRepository } from '../../domain/rsvp.repository';
 import { RsvpEligibilityPolicy } from '../../domain/services/rsvp-eligibility.policy';
 import { AttendanceDecision } from '../../domain/value-objects/attendance-decision';
+import { GuestAccount } from '../../domain/value-objects/guest-account';
 import { GuestName } from '../../domain/value-objects/guest-name';
 import { RespondentIdentity } from '../../domain/value-objects/respondent-identity';
 import { RsvpId } from '../../domain/value-objects/rsvp-id';
@@ -30,14 +31,14 @@ export interface SubmitRsvpDependencies {
 type SubmitRsvpResult = Result<SubmitRsvpOutcome, SubmitRsvpFailure>;
 
 /**
- * Use Case. "a guest answers Ivy's invitation".
+ * Use Case. "um convidado autenticado responde ao convite da Ivy".
  *
  * Orquestração apenas; toda regra vive no agregado, nos Value Objects e no
  * `RsvpEligibilityPolicy`. Na ordem:
  *
- *  1. traduz primitivos em Value Objects (invariantes acontecem aqui);
- *  2. transforma o endereço de rede numa impressão digital opaca;
- *  3. lê as duas identidades da resposta. Por nome e por aparelho;
+ *  1. traduz primitivos em Value Objects, incluindo a conta verificada;
+ *  2. transforma os sinais de rede e navegador em digests opacos;
+ *  3. lê as duas identidades que importam: a conta e o nome;
  *  4. pergunta à política de domínio o que fazer;
  *  5. cria, atualiza ou recusa;
  *  6. persiste e só então publica os eventos;
@@ -54,11 +55,15 @@ export class SubmitRsvp {
       const decision = this.parse(() => AttendanceDecision.fromValue(command.decision), 'decision');
       if (!decision.ok) return decision;
 
+      // A conta vem da sessão, não do formulário. Um erro aqui é defeito, não
+      // entrada inválida, então sobe para o catch e vira falha técnica.
+      const account = GuestAccount.create(command.account);
+
       const identity = RespondentIdentity.fromDigests(
         this.deps.respondents.identify(command.respondent),
       );
 
-      return await this.record(guestName.value, decision.value, identity);
+      return await this.record(guestName.value, decision.value, account, identity);
     } catch (error) {
       // Anything reaching here is a defect or an infrastructure outage. Never
       // a business outcome. The guest gets one honest, retryable message.
@@ -74,37 +79,28 @@ export class SubmitRsvp {
   private async record(
     guestName: GuestName,
     decision: AttendanceDecision,
+    account: GuestAccount,
     identity: RespondentIdentity,
   ): Promise<SubmitRsvpResult> {
     const now = this.deps.clock.now();
 
     // Duas leituras independentes, em paralelo: o driver HTTP do Neon faz uma
     // requisição por statement, então serializá-las dobraria a latência à toa.
-    const [fromRespondent, underName] = await Promise.all([
-      this.deps.rsvps.findByRespondent(identity),
+    const [fromAccount, underName] = await Promise.all([
+      this.deps.rsvps.findByAccount(account),
       this.deps.rsvps.findByGuestKey(guestName.key()),
     ]);
 
-    const eligibility = RsvpEligibilityPolicy.decide({ guestName, fromRespondent, underName });
-
-    if (eligibility.kind === 'DEVICE_ALREADY_ANSWERED') {
-      return fail({
-        kind: 'DEVICE_LIMIT',
-        code: 'DEVICE_ALREADY_RESPONDED',
-        registeredGuestName: eligibility.registeredGuestName.value,
-        message:
-          `Este aparelho já confirmou presença como ${eligibility.registeredGuestName.value}. ` +
-          'Cada convidado responde por si. Peça para a outra pessoa responder pelo celular dela.',
-      });
-    }
+    const eligibility = RsvpEligibilityPolicy.decide({ fromAccount, underName });
 
     if (eligibility.kind === 'NAME_ANSWERED_ELSEWHERE') {
       return fail({
         kind: 'NAME_TAKEN',
         code: 'GUEST_ALREADY_RESPONDED',
         message:
-          `Já existe uma resposta em nome de ${guestName.value}, enviada de outro aparelho. ` +
-          'Para alterá-la, use o mesmo celular de antes ou fale com os anfitriões.',
+          `Já existe uma confirmação em nome de ${eligibility.registeredGuestName.value}, ` +
+          'enviada por outra conta. Se forem duas pessoas com o mesmo nome, ' +
+          'acrescente o sobrenome para diferenciar.',
       });
     }
 
@@ -114,11 +110,12 @@ export class SubmitRsvp {
     if (eligibility.kind === 'OWN_RESPONSE') {
       rsvp = eligibility.rsvp;
       status = rsvp.decision.equals(decision) ? 'UNCHANGED' : 'UPDATED';
-      rsvp.reconsider({ guestName, decision, identity, changedAt: now });
+      rsvp.reconsider({ guestName, account, decision, identity, changedAt: now });
     } else {
       rsvp = Rsvp.submit({
         id: RsvpId.fromString(this.deps.ids.generate()),
         guestName,
+        account,
         decision,
         identity,
         respondedAt: now,

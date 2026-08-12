@@ -3,58 +3,70 @@ import type { GuestName } from '../value-objects/guest-name';
 
 /** O que pode acontecer com uma tentativa de resposta. */
 export type RsvpEligibility =
-  /** Ninguém respondeu ainda por este nome nem deste aparelho. */
+  /** Ninguém respondeu ainda por esta conta nem por este nome. */
   | { readonly kind: 'FIRST_RESPONSE' }
-  /** Este respondente já respondeu, e é a mesma pessoa voltando. */
+  /** Esta conta já respondeu, e é a mesma pessoa voltando. */
   | { readonly kind: 'OWN_RESPONSE'; readonly rsvp: Rsvp }
-  /** Este respondente já respondeu, mas por outra pessoa. */
-  | { readonly kind: 'DEVICE_ALREADY_ANSWERED'; readonly registeredGuestName: GuestName }
-  /** Este nome já tem resposta, enviada por outro respondente. */
-  | { readonly kind: 'NAME_ANSWERED_ELSEWHERE' };
+  /** Este nome já tem resposta, enviada por outra conta. */
+  | { readonly kind: 'NAME_ANSWERED_ELSEWHERE'; readonly registeredGuestName: GuestName };
 
 /**
  * Domain Service. Decide se uma resposta pode ser registrada.
  *
  * Existe como serviço de domínio porque a regra **atravessa agregados**: ela
- * compara a tentativa atual com outras `Rsvp` que já existem. Colocá-la dentro
- * de `Rsvp` obrigaria um agregado a conhecer os outros; deixá-la solta no caso de
- * uso a esconderia num `if` no meio da orquestração, onde regra de negócio não
- * pertence e ninguém a encontra depois.
+ * compara a tentativa atual com outras `Rsvp` que já existem. Dentro de `Rsvp`,
+ * um agregado precisaria conhecer os outros; solta no caso de uso, viraria um
+ * `if` escondido no meio da orquestração.
  *
- * Aqui ela é pura: recebe o que já foi lido do repositório, não faz I/O, e é
- * testável sem nada em volta.
+ * ## A conta é a identidade
  *
- * As duas regras que ela codifica:
+ * Desde que responder exige login, a regra "uma resposta por convidado" se apoia
+ * na conta verificada, não mais no aparelho. É mais forte e mais justa:
  *
- *  1. **Um aparelho responde por uma pessoa só.** Quem já confirmou não pode
- *     confirmar por mais ninguém. Nem por acompanhante, nem por parente.
- *  2. **Uma resposta pertence a quem a criou.** Digitar o nome de alguém em
- *     outro celular não sobrescreve a resposta dessa pessoa.
+ *  - **mais forte**, porque burlar exige criar contas de verdade no Google ou no
+ *    Facebook, não apagar um cookie;
+ *  - **mais justa**, porque o bloqueio por aparelho reprovava gente honesta. Mãe
+ *    e pai que dividem o mesmo celular são duas pessoas e devem poder responder
+ *    as duas. Com contas distintas, agora podem.
  *
- * A regra 2 é o que fecha o buraco da regra 1: sem ela, bastaria trocar de
- * aparelho. Ou o mesmo aparelho assumir a resposta de outro. Para o limite
- * deixar de valer.
+ * Os sinais de aparelho continuam sendo gravados na resposta como registro de
+ * auditoria, mas já não recusam ninguém.
+ *
+ * ## A regra do nome continua
+ *
+ * Se um nome já foi usado por outra conta, a segunda tentativa é recusada em vez
+ * de sobrescrever. Sem isso, digitar o nome de outra pessoa apagaria a resposta
+ * dela. Homônimos de verdade resolvem acrescentando um sobrenome ou um apelido.
  */
 export const RsvpEligibilityPolicy = {
   decide(input: {
-    guestName: GuestName;
-    /** Resposta já enviada por este respondente, se houver. */
-    fromRespondent: Rsvp | null;
-    /** Resposta já feita com este nome, por qualquer respondente. */
+    /** Resposta já enviada por esta conta, se houver. */
+    fromAccount: Rsvp | null;
+    /** Resposta já feita com o nome pedido agora, por qualquer conta. */
     underName: Rsvp | null;
   }): RsvpEligibility {
-    const { guestName, fromRespondent, underName } = input;
+    const { fromAccount, underName } = input;
 
-    if (fromRespondent !== null) {
-      // Mesma chave natural = mesma pessoa corrigindo a grafia ou mudando de
-      // ideia. Chave diferente = tentativa de responder por outra pessoa.
-      return fromRespondent.guestKey.equals(guestName.key())
-        ? { kind: 'OWN_RESPONSE', rsvp: fromRespondent }
-        : { kind: 'DEVICE_ALREADY_ANSWERED', registeredGuestName: fromRespondent.guestName };
+    if (fromAccount !== null) {
+      /*
+       * A pessoa pode estar trocando o próprio nome, e o nome novo pode já
+       * pertencer a outra conta. Sem esta comparação, a troca passaria pela
+       * política e só explodiria no `UNIQUE(guest_key)` do banco, virando um
+       * erro técnico incompreensível em vez de uma recusa explicada.
+       *
+       * Comparação por id de agregado, não por nome: `underName` ser a própria
+       * resposta é o caso normal de quem reenvia sem mudar nada.
+       */
+      if (underName !== null && !underName.id.equals(fromAccount.id)) {
+        return { kind: 'NAME_ANSWERED_ELSEWHERE', registeredGuestName: underName.guestName };
+      }
+      return { kind: 'OWN_RESPONSE', rsvp: fromAccount };
     }
 
+    // Nome tomado por outra conta. `fromAccount` é nulo aqui, então `underName`
+    // pertence necessariamente a outra pessoa.
     if (underName !== null) {
-      return { kind: 'NAME_ANSWERED_ELSEWHERE' };
+      return { kind: 'NAME_ANSWERED_ELSEWHERE', registeredGuestName: underName.guestName };
     }
 
     return { kind: 'FIRST_RESPONSE' };

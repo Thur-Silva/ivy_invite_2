@@ -2,6 +2,7 @@
 
 import { cookies, headers } from 'next/headers';
 import type { RespondentSignals } from '@/shared/application/ports/respondent-identifier';
+import { auth } from '@/shared/auth/auth';
 import {
   RSVP_SESSION_COOKIE,
   SignedSessionToken,
@@ -113,11 +114,43 @@ export async function submitRsvpAction(
     };
   }
 
+  /*
+   * A conta vem da SESSÃO, nunca do formulário.
+   *
+   * É o ponto mais sensível desta feature. Se o provedor, o e-mail ou o id
+   * viessem em campos do `<form>`, bastaria abrir o DevTools e trocá-los para
+   * responder no lugar de outra pessoa, e o login não valeria absolutamente
+   * nada. Aqui só o cookie assinado do Auth.js pode dizer quem é quem.
+   */
+  const session = await auth();
+  if (
+    session === null ||
+    session.provider === undefined ||
+    session.providerSubject === undefined ||
+    session.user?.email === undefined ||
+    session.user.email === null
+  ) {
+    return {
+      status: 'locked',
+      reason: 'UNAUTHENTICATED',
+      message: 'Sua sessão expirou. Entre de novo com Google ou Facebook para confirmar.',
+    };
+  }
+
   const respondent = await collectRespondentSignals(
     String(formData.get(RSVP_FIELD_NAMES.deviceTraits) ?? ''),
   );
 
-  const result = await makeSubmitRsvp().execute({ ...payload.data, respondent });
+  const result = await makeSubmitRsvp().execute({
+    ...payload.data,
+    account: {
+      provider: session.provider,
+      subject: session.providerSubject,
+      email: session.user.email,
+      displayName: session.user.name ?? '',
+    },
+    respondent,
+  });
 
   if (!result.ok) {
     switch (result.error.kind) {
@@ -127,14 +160,6 @@ export async function submitRsvpAction(
           field: result.error.field,
           message: result.error.message,
           values,
-        };
-
-      case 'DEVICE_LIMIT':
-        return {
-          status: 'locked',
-          reason: 'DEVICE',
-          message: result.error.message,
-          registeredGuestName: result.error.registeredGuestName,
         };
 
       case 'NAME_TAKEN':

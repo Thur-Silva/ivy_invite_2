@@ -6,8 +6,23 @@ import {
   SequentialIdGenerator,
   StubRespondentIdentifier,
 } from '@/shared/testing/test-doubles';
+import type { AuthenticatedAccount } from '../dto/submit-rsvp.dto';
 import { InMemoryRsvpRepository } from '../../infrastructure/persistence/in-memory-rsvp.repository';
 import { SubmitRsvp } from './submit-rsvp.use-case';
+
+const MARIA: AuthenticatedAccount = {
+  provider: 'google',
+  subject: 'google-oauth|1001',
+  email: 'maria.clara@gmail.com',
+  displayName: 'Maria Clara Souza',
+};
+
+const JOAO: AuthenticatedAccount = {
+  provider: 'facebook',
+  subject: 'facebook|2002',
+  email: 'joao.pedro@outlook.com',
+  displayName: 'João Pedro',
+};
 
 /** Celular da Maria, no Wi-Fi de casa. */
 const MARIA_PHONE: RespondentSignals = {
@@ -18,18 +33,9 @@ const MARIA_PHONE: RespondentSignals = {
   networkAddress: '189.10.10.1',
 };
 
-/** Celular do João. Aparelho diferente, **mesma rede** que o da Maria. */
-const JOAO_PHONE: RespondentSignals = {
-  sessionToken: 'token-joao',
-  userAgent: 'Mozilla/5.0 (Linux; Android 14; Moto G84)',
-  acceptLanguage: 'pt-BR',
-  clientTraits: '412x915|24|275|America/Sao_Paulo',
-  networkAddress: '189.10.10.1',
-};
-
 /**
- * Critérios de aceite do PBI-02 (confirmar presença) e do PBI-19 (uma resposta
- * por convidado), executáveis. Roda contra o repositório em memória. Sem banco.
+ * Critérios de aceite do PBI-02 (confirmar presença) e do PBI-20 (login),
+ * executáveis. Roda contra o repositório em memória, sem banco.
  */
 describe('SubmitRsvp', () => {
   let rsvps: InMemoryRsvpRepository;
@@ -50,12 +56,21 @@ describe('SubmitRsvp', () => {
     });
   });
 
-  it('records a first "vou" and publishes RsvpConfirmed', async () => {
-    const result = await useCase.execute({
-      guestName: 'Maria Clara',
-      decision: 'ATTENDING',
-      respondent: MARIA_PHONE,
+  const submit = (overrides: {
+    guestName: string;
+    decision: string;
+    account?: AuthenticatedAccount;
+    respondent?: RespondentSignals;
+  }) =>
+    useCase.execute({
+      guestName: overrides.guestName,
+      decision: overrides.decision,
+      account: overrides.account ?? MARIA,
+      respondent: overrides.respondent ?? MARIA_PHONE,
     });
+
+  it('records a first "vou" and publishes RsvpConfirmed', async () => {
+    const result = await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
 
     expect(result).toEqual({
       ok: true,
@@ -71,22 +86,23 @@ describe('SubmitRsvp', () => {
   });
 
   it('records a first "não vou" and publishes RsvpDeclined', async () => {
-    const result = await useCase.execute({
-      guestName: 'João',
-      decision: 'NOT_ATTENDING',
-      respondent: MARIA_PHONE,
-    });
+    const result = await submit({ guestName: 'João', decision: 'NOT_ATTENDING', account: JOAO });
 
     expect(result.ok).toBe(true);
     expect(events.names()).toEqual(['RsvpDeclined']);
   });
 
+  it('guarda a conta verificada junto da resposta', async () => {
+    await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
+
+    const account = rsvps.snapshot()[0]?.account;
+    expect(account?.provider).toBe('GOOGLE');
+    expect(account?.subject).toBe('google-oauth|1001');
+    expect(account?.email).toBe('maria.clara@gmail.com');
+  });
+
   it('stores opaque digests, never the raw signals', async () => {
-    await useCase.execute({
-      guestName: 'Maria Clara',
-      decision: 'ATTENDING',
-      respondent: MARIA_PHONE,
-    });
+    await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
 
     const identity = rsvps.snapshot()[0]?.identity;
     expect(identity?.token).toHaveLength(64);
@@ -98,21 +114,13 @@ describe('SubmitRsvp', () => {
     expect(serialized).not.toContain('iPhone');
   });
 
-  describe('mesmo convidado voltando', () => {
+  describe('mesma conta voltando', () => {
     it('updates instead of duplicating when the guest changes their mind', async () => {
-      await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
       events.published.length = 0;
       clock.advanceMinutes(90);
 
-      const result = await useCase.execute({
-        guestName: 'MARIA CLARA',
-        decision: 'NOT_ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+      const result = await submit({ guestName: 'MARIA CLARA', decision: 'NOT_ATTENDING' });
 
       expect(result.ok && result.value.status).toBe('UPDATED');
       expect(result.ok && result.value.rsvpId).toBe('rsvp-1');
@@ -121,141 +129,101 @@ describe('SubmitRsvp', () => {
     });
 
     it('is idempotent when the same answer is sent twice', async () => {
-      await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
       events.published.length = 0;
 
-      const result = await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+      const result = await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
 
       expect(result.ok && result.value.status).toBe('UNCHANGED');
       expect(events.published).toHaveLength(0);
       expect(rsvps.snapshot()).toHaveLength(1);
     });
 
-    it('recognises the guest by cookie even after the network changes', async () => {
-      await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+    it('reconhece a conta mesmo trocando de aparelho e de rede', async () => {
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
 
-      // Saiu do Wi-Fi e foi para o 4G: IP e traços de rede mudam, o token não.
-      const result = await useCase.execute({
+      // Respondeu do celular, agora está no notebook, em outra rede.
+      const result = await submit({
         guestName: 'Maria Clara',
         decision: 'NOT_ATTENDING',
-        respondent: { ...MARIA_PHONE, networkAddress: '177.55.99.4' },
+        respondent: {
+          sessionToken: 'outro-token',
+          userAgent: 'Mozilla/5.0 (Macintosh)',
+          acceptLanguage: 'pt-BR',
+          clientTraits: '1440x900|24|200|America/Sao_Paulo',
+          networkAddress: '177.55.99.4',
+        },
       });
 
       expect(result.ok && result.value.status).toBe('UPDATED');
       expect(rsvps.snapshot()).toHaveLength(1);
     });
 
-    it('recognises the guest by device + network even after cookies are cleared', async () => {
-      await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+    it('deixa a pessoa corrigir o nome que veio preenchido', async () => {
+      await submit({ guestName: 'Maria', decision: 'ATTENDING' });
 
-      // Limpou os cookies: token novo, mas mesmo aparelho e mesma rede.
-      const result = await useCase.execute({
-        guestName: 'Outra Pessoa',
-        decision: 'ATTENDING',
-        respondent: { ...MARIA_PHONE, sessionToken: 'token-novo-em-folha' },
-      });
+      // O palpite do e-mail era "Maria"; ela prefere o apelido.
+      const result = await submit({ guestName: 'Mariazinha', decision: 'ATTENDING' });
 
-      expect(result).toMatchObject({
-        ok: false,
-        error: { kind: 'DEVICE_LIMIT', registeredGuestName: 'Maria Clara' },
-      });
+      expect(result.ok).toBe(true);
+      expect(rsvps.snapshot()).toHaveLength(1);
+      expect(rsvps.snapshot()[0]?.guestName.value).toBe('Mariazinha');
     });
   });
 
   describe('uma resposta por convidado', () => {
-    it('refuses a second person from the same device and says who is registered', async () => {
-      await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
-      events.published.length = 0;
-
-      const result = await useCase.execute({
+    /**
+     * O caso que motivou trocar o bloqueio por aparelho pelo bloqueio por conta.
+     * Mãe e pai que dividem o mesmo celular são duas pessoas, e cada uma tem
+     * direito à sua resposta. A regra antiga reprovava a segunda.
+     */
+    it('deixa duas contas responderem do MESMO aparelho', async () => {
+      const primeira = await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
+      const segunda = await submit({
         guestName: 'João Pedro',
         decision: 'ATTENDING',
+        account: JOAO,
         respondent: MARIA_PHONE,
       });
 
-      expect(result).toMatchObject({
-        ok: false,
-        error: {
-          kind: 'DEVICE_LIMIT',
-          code: 'DEVICE_ALREADY_RESPONDED',
-          registeredGuestName: 'Maria Clara',
-        },
-      });
-      expect(rsvps.snapshot()).toHaveLength(1);
-      expect(events.published).toHaveLength(0);
+      expect(primeira.ok && primeira.value.status).toBe('RECORDED');
+      expect(segunda.ok && segunda.value.status).toBe('RECORDED');
+      expect(rsvps.snapshot()).toHaveLength(2);
     });
 
-    it('refuses a name that already answered from another device', async () => {
-      await useCase.execute({
-        guestName: 'Maria Clara',
-        decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
+    it('recusa um nome que outra conta já usou, sem sobrescrever', async () => {
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
 
-      const result = await useCase.execute({
+      const result = await submit({
         guestName: 'maria clara',
         decision: 'NOT_ATTENDING',
-        respondent: JOAO_PHONE,
+        account: JOAO,
       });
 
       expect(result).toMatchObject({
         ok: false,
         error: { kind: 'NAME_TAKEN', code: 'GUEST_ALREADY_RESPONDED' },
       });
-      // A resposta original permanece intacta. Ninguém sobrescreve ninguém.
       expect(rsvps.snapshot()).toHaveLength(1);
       expect(rsvps.snapshot()[0]?.isAttending()).toBe(true);
     });
 
-    /**
-     * O caso que justifica combinar os sinais em vez de bloquear por IP: no
-     * CGNAT das operadoras e no Wi-Fi de casa, convidados diferentes dividem o
-     * mesmo endereço. Bloquear por rede sozinha deixaria a família toda de fora.
-     */
-    it('lets two different phones on the SAME network both answer', async () => {
-      const maria = await useCase.execute({
-        guestName: 'Maria Clara',
+    it('trata o mesmo subject em provedores diferentes como pessoas diferentes', async () => {
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
+
+      const result = await submit({
+        guestName: 'Outra Pessoa',
         decision: 'ATTENDING',
-        respondent: MARIA_PHONE,
-      });
-      const joao = await useCase.execute({
-        guestName: 'João Pedro',
-        decision: 'ATTENDING',
-        respondent: JOAO_PHONE,
+        account: { ...MARIA, provider: 'facebook', email: 'outra@facebook.com' },
       });
 
-      expect(maria.ok && maria.value.status).toBe('RECORDED');
-      expect(joao.ok && joao.value.status).toBe('RECORDED');
+      expect(result.ok && result.value.status).toBe('RECORDED');
       expect(rsvps.snapshot()).toHaveLength(2);
     });
   });
 
   it('returns a fixable failure for an invalid name, without storing anything', async () => {
-    const result = await useCase.execute({
-      guestName: 'A',
-      decision: 'ATTENDING',
-      respondent: MARIA_PHONE,
-    });
+    const result = await submit({ guestName: 'A', decision: 'ATTENDING' });
 
     expect(result).toMatchObject({
       ok: false,
@@ -266,11 +234,7 @@ describe('SubmitRsvp', () => {
   });
 
   it('returns a fixable failure for an unknown decision', async () => {
-    const result = await useCase.execute({
-      guestName: 'Maria Clara',
-      decision: 'MAYBE',
-      respondent: MARIA_PHONE,
-    });
+    const result = await submit({ guestName: 'Maria Clara', decision: 'MAYBE' });
 
     expect(result).toMatchObject({
       ok: false,
@@ -279,12 +243,27 @@ describe('SubmitRsvp', () => {
     expect(rsvps.snapshot()).toHaveLength(0);
   });
 
+  it('trata conta malformada como falha técnica, não como erro de formulário', async () => {
+    const result = await submit({
+      guestName: 'Maria Clara',
+      decision: 'ATTENDING',
+      account: { ...MARIA, subject: '' },
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { kind: 'UNAVAILABLE', code: 'RSVP_STORAGE_UNAVAILABLE' },
+    });
+    expect(rsvps.snapshot()).toHaveLength(0);
+  });
+
   it('never throws when the repository is down. It reports UNAVAILABLE', async () => {
     const brokenUseCase = new SubmitRsvp({
       rsvps: {
-        findByGuestKey: async () => {
+        findByAccount: async () => {
           throw new Error('connection reset');
         },
+        findByGuestKey: async () => null,
         findByRespondent: async () => null,
         save: async () => undefined,
       },
@@ -297,6 +276,7 @@ describe('SubmitRsvp', () => {
     const result = await brokenUseCase.execute({
       guestName: 'Maria Clara',
       decision: 'ATTENDING',
+      account: MARIA,
       respondent: MARIA_PHONE,
     });
 

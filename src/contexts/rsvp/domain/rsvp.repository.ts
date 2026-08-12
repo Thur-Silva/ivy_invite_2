@@ -1,27 +1,31 @@
 import type { Rsvp } from './rsvp.aggregate';
+import type { GuestAccount } from './value-objects/guest-account';
 import type { GuestKey } from './value-objects/guest-key';
 import type { RespondentIdentity } from './value-objects/respondent-identity';
 
 /**
- * Port (driven side of the hexagon). The collection of `Rsvp` aggregates as
- * the domain wishes it existed.
+ * Port (driven side of the hexagon). A coleção de `Rsvp` como o domínio gostaria
+ * que ela existisse.
  *
- * As duas buscas existem porque uma resposta tem **duas identidades**: o nome do
- * convidado e quem a enviou. `RsvpEligibilityPolicy` precisa das duas para
- * decidir se a tentativa é uma pessoa voltando, uma pessoa nova, ou alguém
- * tentando responder por outro.
+ * São três buscas porque uma resposta tem três identidades, em ordem de força:
  *
- * Métodos de consulta para o painel do anfitrião chegam com o PBI-05.
+ *  1. **a conta verificada** (`findByAccount`), provada por Google ou Facebook.
+ *     É a que carrega a regra "uma resposta por convidado";
+ *  2. **o nome** (`findByGuestKey`), que impede duas pessoas de reivindicarem o
+ *     mesmo convidado;
+ *  3. **o aparelho** (`findByRespondent`), sinal residual, mantido como registro
+ *     de auditoria depois que o login virou a identidade principal.
  */
 export interface RsvpRepository {
+  findByAccount(account: GuestAccount): Promise<Rsvp | null>;
+
   findByGuestKey(guestKey: GuestKey): Promise<Rsvp | null>;
 
   /**
    * Resposta já enviada por este respondente, se houver.
    *
-   * "Este respondente" segue a regra de `RespondentIdentity.isSameRespondentAs`:
-   * mesmo token **ou** (mesmo aparelho **e** mesma rede). Toda implementação
-   * precisa honrar exatamente essa regra.
+   * "Este respondente" segue `RespondentIdentity.isSameRespondentAs`: mesmo
+   * token **ou** (mesmo aparelho **e** mesma rede).
    */
   findByRespondent(identity: RespondentIdentity): Promise<Rsvp | null>;
 

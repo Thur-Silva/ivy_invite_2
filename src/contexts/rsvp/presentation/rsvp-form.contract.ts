@@ -73,7 +73,7 @@ export type RsvpFormState =
        * outro aparelho. O formulário sai de cena e dá lugar a uma explicação.
        */
       readonly status: 'locked';
-      readonly reason: 'DEVICE' | 'NAME';
+      readonly reason: 'NAME' | 'UNAUTHENTICATED';
       readonly message: string;
       readonly registeredGuestName?: string;
     }

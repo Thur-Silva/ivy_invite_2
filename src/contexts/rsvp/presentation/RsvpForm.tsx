@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useActionState, useEffect, useId, useState } from 'react';
 import { cn } from '@/ui/cn';
 import { CrownGlyph, LilyGlyph } from '@/ui/ornaments/Glyphs';
+import { signOutGuest } from './actions/auth.actions';
 import { submitRsvpAction } from './actions/submit-rsvp.action';
 import { DeviceTraitsField } from './DeviceTraitsField';
 import { ResponseLockedNotice } from './ResponseLockedNotice';
@@ -42,7 +43,19 @@ const CHOICES = [
  * disabled the guest still gets a full page response and their RSVP is stored;
  * with JavaScript the same submission animates in place.
  */
-export function RsvpForm() {
+export function RsvpForm({
+  suggestedName,
+  accountEmail,
+}: {
+  /**
+   * Primeiro nome deduzido do e-mail da conta. É palpite, não imposição: entra
+   * como `defaultValue` de um input não controlado, então a pessoa apaga e
+   * digita o que quiser sem que o React devolva o valor antigo.
+   */
+  suggestedName: string;
+  /** Mostrado no rodapé do cartão para a pessoa saber com qual conta está. */
+  accountEmail: string;
+}) {
   const [state, formAction, isPending] = useActionState(submitRsvpAction, INITIAL_RSVP_FORM_STATE);
 
   /**
@@ -105,7 +118,6 @@ export function RsvpForm() {
           key="locked"
           reason={state.reason}
           message={state.message}
-          registeredGuestName={state.registeredGuestName}
           onRetry={() => setDismissedState(state)}
         />
       ) : (
@@ -126,15 +138,18 @@ export function RsvpForm() {
               htmlFor={nameFieldId}
               className="font-display text-gold-400 text-sm tracking-wide"
             >
-              Como podemos te chamar?
+              Confira seu nome
             </label>
+            <p className="text-cream/45 -mt-1 text-xs">
+              Preenchemos com o que achamos no seu e-mail. Corrija se não for assim que te chamam.
+            </p>
             <input
               id={nameFieldId}
               name={RSVP_FIELD_NAMES.guestName}
               type="text"
               required
               maxLength={GUEST_NAME_MAX_LENGTH}
-              defaultValue={previousValues?.guestName ?? ''}
+              defaultValue={previousValues?.guestName ?? suggestedName}
               placeholder="Seu nome"
               autoComplete="name"
               autoCapitalize="words"
@@ -217,6 +232,17 @@ export function RsvpForm() {
           >
             {isPending ? 'Enviando…' : 'Enviar minha resposta'}
           </button>
+
+          <p className="text-cream/35 flex flex-wrap items-center justify-center gap-x-2 text-[0.7rem]">
+            <span>Conectado como {accountEmail}</span>
+            <button
+              type="button"
+              onClick={() => void signOutGuest()}
+              className="decoration-cream/30 hover:text-cream/70 underline decoration-dotted underline-offset-4 transition"
+            >
+              trocar de conta
+            </button>
+          </p>
         </motion.form>
       )}
     </AnimatePresence>

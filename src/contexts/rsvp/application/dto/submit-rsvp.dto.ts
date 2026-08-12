@@ -2,18 +2,32 @@ import type { RespondentSignals } from '@/shared/application/ports/respondent-id
 import type { AttendanceDecisionValue } from '../../domain/value-objects/attendance-decision';
 
 /**
+ * Conta autenticada, como o adapter de entrada a leu **da sessão do servidor**.
+ *
+ * Nunca vem do formulário. Se viesse, bastaria forjar um campo escondido para
+ * responder no lugar de outra pessoa, e o login não valeria nada.
+ */
+export interface AuthenticatedAccount {
+  readonly provider: string;
+  readonly subject: string;
+  readonly email: string;
+  readonly displayName?: string;
+}
+
+/**
  * Command crossing into the Application layer.
  *
  * Primitives only: the Presentation layer must not need to know how to build a
- * `GuestName` or an `AttendanceDecision`. Translating primitives into Value
- * Objects (and rejecting what cannot be translated) is the Use Case's job.
+ * `GuestName` or an `AttendanceDecision`. Traduzir primitivo em Value Object, e
+ * recusar o que não traduz, é trabalho do Use Case.
  */
 export interface SubmitRsvpCommand {
   readonly guestName: string;
   readonly decision: string;
+  readonly account: AuthenticatedAccount;
   /**
-   * Sinais crus de quem está respondendo. IP, user agent, idioma, traços do
-   * navegador e token de sessão. Como o adapter de entrada os viu.
+   * Sinais crus de quem está respondendo: IP, user agent, idioma, traços do
+   * navegador e token de sessão, como o adapter de entrada os viu.
    *
    * Viram `RespondentIdentity` dentro do caso de uso e **nunca** são persistidos
    * crus: o que chega ao banco são três digests irreversíveis.
@@ -49,15 +63,7 @@ export type SubmitRsvpFailure =
       readonly field: SubmitRsvpField;
     }
   | {
-      /** Este aparelho já respondeu por outra pessoa. Não há o que corrigir. */
-      readonly kind: 'DEVICE_LIMIT';
-      readonly code: 'DEVICE_ALREADY_RESPONDED';
-      readonly message: string;
-      /** Nome já registrado por este aparelho, para a mensagem ser útil. */
-      readonly registeredGuestName: string;
-    }
-  | {
-      /** Este nome já respondeu, de outro aparelho. */
+      /** Este nome já respondeu, por outra conta. */
       readonly kind: 'NAME_TAKEN';
       readonly code: 'GUEST_ALREADY_RESPONDED';
       readonly message: string;

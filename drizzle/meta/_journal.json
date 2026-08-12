@@ -15,6 +15,13 @@
       "when": 1786476519208,
       "tag": "0001_add_respondent_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786535501348,
+      "tag": "0002_add_guest_account",
+      "breakpoints": true
     }
   ]
 }

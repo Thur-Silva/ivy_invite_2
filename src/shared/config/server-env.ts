@@ -21,12 +21,34 @@ const serverEnvSchema = z.object({
    * e o espaço de IPv4 é pequeno o bastante para força bruta.
    */
   RSVP_DEVICE_SALT: z.string().min(16).optional(),
+
+  /**
+   * Segredo que assina o cookie de sessão do Auth.js. Obrigatório em produção.
+   * Gere com: `npx auth secret`
+   */
+  AUTH_SECRET: z.string().min(16).optional(),
+
+  /*
+   * Credenciais de OAuth. Cada provedor é opcional: sem as duas variáveis, o
+   * botão correspondente simplesmente não aparece. Isso mantém o projeto
+   * rodando em clone limpo e permite publicar só com o Google, se preferirem.
+   */
+  AUTH_GOOGLE_ID: z.string().min(1).optional(),
+  AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
+  AUTH_FACEBOOK_ID: z.string().min(1).optional(),
+  AUTH_FACEBOOK_SECRET: z.string().min(1).optional(),
+
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
 
 const parsed = serverEnvSchema.safeParse({
   DATABASE_URL: process.env.DATABASE_URL,
   RSVP_DEVICE_SALT: process.env.RSVP_DEVICE_SALT,
+  AUTH_SECRET: process.env.AUTH_SECRET,
+  AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+  AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
+  AUTH_FACEBOOK_ID: process.env.AUTH_FACEBOOK_ID,
+  AUTH_FACEBOOK_SECRET: process.env.AUTH_FACEBOOK_SECRET,
   NODE_ENV: process.env.NODE_ENV,
 });
 

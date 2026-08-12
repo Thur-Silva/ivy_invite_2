@@ -3,31 +3,42 @@
 import { motion } from 'motion/react';
 import { LilyGlyph } from '@/ui/ornaments/Glyphs';
 
+const COPY = {
+  NAME: {
+    title: 'Este nome já respondeu',
+    hint: 'Se forem duas pessoas com o mesmo nome, acrescente o sobrenome para diferenciar.',
+  },
+  UNAUTHENTICATED: {
+    title: 'Sua sessão expirou',
+    hint: 'Recarregue a página e entre de novo. Nada do que você respondeu antes se perdeu.',
+  },
+} as const;
+
 /**
- * Explica por que a resposta foi recusada, quando não há nada a corrigir.
+ * Explica por que a resposta foi recusada, quando não há nada a corrigir no
+ * formulário em si.
  *
- * Duas situações distintas, duas saídas distintas:
+ * Duas situações, duas saídas:
  *
- *  - **DEVICE**. Este aparelho já confirmou por alguém. O caminho é a outra
- *    pessoa responder do celular dela. Se quiserem alterar a resposta que já
- *    existe, basta digitar aquele mesmo nome, então o botão volta ao formulário.
- *  - **NAME**. O nome já respondeu de outro aparelho. Aqui não há saída pelo
- *    site: ou usam o celular original, ou falam com os anfitriões.
+ *  - **NAME**. O nome já foi usado por outra conta. A saída é diferenciar com o
+ *    sobrenome, ou falar com os anfitriões se for engano.
+ *  - **UNAUTHENTICATED**. O cookie de sessão venceu entre carregar a página e
+ *    enviar. Recarregar e entrar de novo resolve.
  *
  * O tom importa. É um convite de festa infantil, e a pessoa acabou de levar um
- * "não". O texto explica o motivo sem soar como catraca de estádio.
+ * "não". O texto explica o motivo e aponta a saída, sem soar como catraca.
  */
 export function ResponseLockedNotice({
   reason,
   message,
-  registeredGuestName,
   onRetry,
 }: {
-  reason: 'DEVICE' | 'NAME';
+  reason: 'NAME' | 'UNAUTHENTICATED';
   message: string;
-  registeredGuestName?: string;
   onRetry: () => void;
 }) {
+  const copy = COPY[reason];
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.94 }}
@@ -40,19 +51,11 @@ export function ResponseLockedNotice({
         <LilyGlyph className="h-12 w-12" />
       </span>
 
-      <h3 className="font-display text-gold-400 text-xl">
-        {reason === 'DEVICE' ? 'Uma resposta por convidado' : 'Este nome já respondeu'}
-      </h3>
+      <h3 className="font-display text-gold-400 text-xl">{copy.title}</h3>
 
       <p className="text-cream/85 max-w-[36ch] text-sm leading-relaxed text-balance">{message}</p>
 
-      {reason === 'DEVICE' && registeredGuestName !== undefined ? (
-        <p className="text-cream/55 max-w-[36ch] text-xs leading-relaxed">
-          Precisa corrigir a resposta de{' '}
-          <strong className="text-lily-300">{registeredGuestName}</strong>? Volte ao formulário e
-          envie com esse mesmo nome.
-        </p>
-      ) : null}
+      <p className="text-cream/55 max-w-[36ch] text-xs leading-relaxed">{copy.hint}</p>
 
       <button
         type="button"

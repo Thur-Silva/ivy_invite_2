@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Rsvp } from './rsvp.aggregate';
 import { AttendanceDecision } from './value-objects/attendance-decision';
+import { GuestAccount } from './value-objects/guest-account';
 import { RespondentIdentity } from './value-objects/respondent-identity';
 import { GuestName } from './value-objects/guest-name';
 import { RsvpId } from './value-objects/rsvp-id';
@@ -8,6 +9,13 @@ import { RsvpId } from './value-objects/rsvp-id';
 const ID = RsvpId.fromString('rsvp-1');
 const RESPONDED_AT = new Date('2026-08-11T14:00:00Z');
 const LATER = new Date('2026-08-12T09:30:00Z');
+
+const ACCOUNT = GuestAccount.create({
+  provider: 'google',
+  subject: 'google|1001',
+  email: 'maria.clara@gmail.com',
+  displayName: 'Maria Clara',
+});
 
 const IDENTITY = RespondentIdentity.fromDigests({
   token: 'a'.repeat(64),
@@ -20,6 +28,7 @@ function submit(decision: AttendanceDecision, name = 'Maria Clara'): Rsvp {
     id: ID,
     guestName: GuestName.create(name),
     decision,
+    account: ACCOUNT,
     identity: IDENTITY,
     respondedAt: RESPONDED_AT,
   });
@@ -63,6 +72,7 @@ describe('Rsvp', () => {
       rsvp.reconsider({
         guestName: GuestName.create('Maria Clara'),
         decision: AttendanceDecision.NOT_ATTENDING,
+        account: ACCOUNT,
         identity: IDENTITY,
         changedAt: LATER,
       });
@@ -85,6 +95,7 @@ describe('Rsvp', () => {
       rsvp.reconsider({
         guestName: GuestName.create('Maria Clara'),
         decision: AttendanceDecision.ATTENDING,
+        account: ACCOUNT,
         identity: IDENTITY,
         changedAt: LATER,
       });
@@ -100,6 +111,7 @@ describe('Rsvp', () => {
       rsvp.reconsider({
         guestName: GuestName.create('Maria Clara'),
         decision: AttendanceDecision.ATTENDING,
+        account: ACCOUNT,
         identity: IDENTITY,
         changedAt: LATER,
       });
@@ -116,6 +128,7 @@ describe('Rsvp', () => {
       id: ID,
       guestName: GuestName.create('Maria Clara'),
       decision: AttendanceDecision.ATTENDING,
+      account: ACCOUNT,
       identity: IDENTITY,
       respondedAt: RESPONDED_AT,
       updatedAt: LATER,
@@ -131,6 +144,7 @@ describe('Rsvp', () => {
     rsvp.reconsider({
       guestName: GuestName.create('Maria Clara'),
       decision: AttendanceDecision.NOT_ATTENDING,
+      account: ACCOUNT,
       identity: IDENTITY,
       changedAt: LATER,
     });

@@ -4,6 +4,7 @@ import { and, eq, or } from 'drizzle-orm';
 import { drizzle, type NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import type { Rsvp } from '../../domain/rsvp.aggregate';
 import type { RsvpRepository } from '../../domain/rsvp.repository';
+import type { GuestAccount } from '../../domain/value-objects/guest-account';
 import type { GuestKey } from '../../domain/value-objects/guest-key';
 import type { RespondentIdentity } from '../../domain/value-objects/respondent-identity';
 import { rsvpsTable } from './drizzle/rsvp.schema';
@@ -21,6 +22,23 @@ export class NeonRsvpRepository implements RsvpRepository {
 
   constructor(connectionString: string) {
     this.db = drizzle(neon(connectionString));
+  }
+
+  /** Identidade forte: o par provedor + subject é único no banco. */
+  async findByAccount(account: GuestAccount): Promise<Rsvp | null> {
+    const rows = await this.db
+      .select()
+      .from(rsvpsTable)
+      .where(
+        and(
+          eq(rsvpsTable.accountProvider, account.provider),
+          eq(rsvpsTable.accountSubject, account.subject),
+        ),
+      )
+      .limit(1);
+
+    const row = rows.at(0);
+    return row === undefined ? null : RsvpMapper.toDomain(row);
   }
 
   async findByGuestKey(guestKey: GuestKey): Promise<Rsvp | null> {
@@ -63,11 +81,18 @@ export class NeonRsvpRepository implements RsvpRepository {
   }
 
   /**
-   * Single atomic upsert keyed by `guest_key`.
+   * Upsert atômico com a **conta** como alvo do conflito.
    *
-   * `id` and `responded_at` are intentionally left out of the `set` clause: the
-   * aggregate's identity and the moment the guest first answered never change,
-   * even when they change their mind.
+   * Já foi `guest_key`, e estava errado: quando a pessoa corrigia o nome que
+   * veio preenchido, a chave mudava, o `ON CONFLICT` não casava com nada e o
+   * `INSERT` criava uma segunda linha para a mesma conta. A conta é a única
+   * identidade que não muda entre duas respostas da mesma pessoa, então é ela
+   * que tem de ser o alvo. `guest_key` entra no `SET`, porque é justamente o
+   * campo que pode mudar.
+   *
+   * `id` e `responded_at` ficam fora do `SET` de propósito: a identidade do
+   * agregado e o momento da primeira resposta não mudam quando alguém muda de
+   * ideia.
    */
   async save(rsvp: Rsvp): Promise<void> {
     const row = RsvpMapper.toRow(rsvp);
@@ -76,13 +101,17 @@ export class NeonRsvpRepository implements RsvpRepository {
       .insert(rsvpsTable)
       .values(row)
       .onConflictDoUpdate({
-        target: rsvpsTable.guestKey,
+        target: [rsvpsTable.accountProvider, rsvpsTable.accountSubject],
         set: {
+          guestKey: row.guestKey,
           guestName: row.guestName,
           decision: row.decision,
-          // A identidade é atualizada junto: a mesma pessoa pode voltar com
-          // cookie renovado ou de outra rede, e o registro precisa refletir os
-          // sinais atuais para reconhecê-la no acesso seguinte.
+          // O provedor pode ter atualizado nome ou e-mail desde a última vez.
+          accountEmail: row.accountEmail,
+          accountName: row.accountName,
+          // A identidade de aparelho é atualizada junto: a mesma pessoa pode
+          // voltar com cookie renovado ou de outra rede, e o registro deve
+          // refletir os sinais atuais.
           respondentToken: row.respondentToken,
           respondentDevice: row.respondentDevice,
           respondentNetwork: row.respondentNetwork,

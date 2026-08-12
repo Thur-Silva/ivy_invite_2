@@ -1,0 +1,180 @@
+{
+  "id": "78458413-59d7-43fe-86d6-df9042c9c5e2",
+  "prevId": "45bc8a11-abce-4e19-84c0-9592d99e50c3",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.rsvps": {
+      "name": "rsvps",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "guest_key": {
+          "name": "guest_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "guest_name": {
+          "name": "guest_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "decision": {
+          "name": "decision",
+          "type": "attendance_decision",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_provider": {
+          "name": "account_provider",
+          "type": "account_provider",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_subject": {
+          "name": "account_subject",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_email": {
+          "name": "account_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_name": {
+          "name": "account_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "respondent_token": {
+          "name": "respondent_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "respondent_device": {
+          "name": "respondent_device",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "respondent_network": {
+          "name": "respondent_network",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "responded_at": {
+          "name": "responded_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "rsvps_account_idx": {
+          "name": "rsvps_account_idx",
+          "columns": [
+            {
+              "expression": "account_provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "account_subject",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rsvps_respondent_device_network_idx": {
+          "name": "rsvps_respondent_device_network_idx",
+          "columns": [
+            {
+              "expression": "respondent_device",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "respondent_network",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "rsvps_guest_key_unique": {
+          "name": "rsvps_guest_key_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "guest_key"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.account_provider": {
+      "name": "account_provider",
+      "schema": "public",
+      "values": [
+        "GOOGLE",
+        "FACEBOOK"
+      ]
+    },
+    "public.attendance_decision": {
+      "name": "attendance_decision",
+      "schema": "public",
+      "values": [
+        "ATTENDING",
+        "NOT_ATTENDING"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

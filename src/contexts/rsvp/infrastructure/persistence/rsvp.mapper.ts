@@ -1,5 +1,6 @@
 import { Rsvp } from '../../domain/rsvp.aggregate';
 import { AttendanceDecision } from '../../domain/value-objects/attendance-decision';
+import { GuestAccount } from '../../domain/value-objects/guest-account';
 import { RespondentIdentity } from '../../domain/value-objects/respondent-identity';
 import { GuestName } from '../../domain/value-objects/guest-name';
 import { RsvpId } from '../../domain/value-objects/rsvp-id';
@@ -18,6 +19,12 @@ export const RsvpMapper = {
       id: RsvpId.fromString(row.id),
       guestName: GuestName.create(row.guestName),
       decision: AttendanceDecision.fromValue(row.decision),
+      account: GuestAccount.create({
+        provider: row.accountProvider,
+        subject: row.accountSubject,
+        email: row.accountEmail,
+        displayName: row.accountName,
+      }),
       identity: RespondentIdentity.fromDigests({
         token: row.respondentToken,
         device: row.respondentDevice,
@@ -34,6 +41,10 @@ export const RsvpMapper = {
       guestKey: rsvp.guestKey.value,
       guestName: rsvp.guestName.value,
       decision: rsvp.decision.value,
+      accountProvider: rsvp.account.provider,
+      accountSubject: rsvp.account.subject,
+      accountEmail: rsvp.account.email,
+      accountName: rsvp.account.displayName,
       respondentToken: rsvp.identity.token,
       respondentDevice: rsvp.identity.device,
       respondentNetwork: rsvp.identity.network,

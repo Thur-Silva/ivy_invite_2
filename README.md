@@ -64,6 +64,25 @@ invertida, o endereço vazio ou a coordenada fora do Brasil.
 
 ---
 
+## Login do convidado
+
+Confirmar presença exige entrar com Google ou Facebook. É o que sustenta a regra
+"uma resposta por convidado": burlar passa a exigir criar contas de verdade, não
+apagar um cookie. Do login tiramos o primeiro nome do e-mail e já preenchemos o
+campo, que continua editável.
+
+Sem credenciais configuradas o projeto **sobe normalmente**: o cartão de login
+avisa que nenhum provedor está disponível, e o resto do convite funciona. Para
+liberar, preencha as variáveis `AUTH_*` do `.env.example`, que trazem o passo a
+passo de cada provedor.
+
+Dois detalhes que costumam morder:
+
+- **o Facebook não aceita `localhost`** nos URIs de redirecionamento. Em
+  desenvolvimento, use só o Google, ou levante um túnel HTTPS;
+- **o app do Facebook precisa estar publicado**, senão apenas contas listadas
+  como testadoras conseguem entrar.
+
 ## Scripts
 
 | Comando               | O que faz                                                               |
@@ -85,9 +104,12 @@ invertida, o endereço vazio ou a coordenada fora do Brasil.
 ## Deploy na Vercel
 
 1. Importe o repositório na Vercel (o preset Next.js é detectado automaticamente).
-2. Em _Settings → Environment Variables_, adicione **`DATABASE_URL`** com a
-   string do Neon, nos três ambientes.
-3. Deploy.
+2. Em _Settings → Environment Variables_, adicione nos três ambientes:
+   **`DATABASE_URL`** (Neon), **`AUTH_SECRET`**, **`RSVP_DEVICE_SALT`** e as
+   credenciais `AUTH_GOOGLE_*` / `AUTH_FACEBOOK_*`.
+3. Volte ao console do Google e do Facebook e acrescente o domínio da Vercel aos
+   URIs de redirecionamento. Sem isso o login falha só em produção.
+4. Deploy.
 
 Sem `DATABASE_URL`, a aplicação **falha ao subir em produção** de propósito.
 melhor um erro de deploy que um convite que aceita respostas e joga fora.

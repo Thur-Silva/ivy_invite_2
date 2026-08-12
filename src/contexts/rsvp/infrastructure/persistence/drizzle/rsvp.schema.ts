@@ -1,38 +1,44 @@
-import { pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import type { AttendanceDecisionValue } from '../../../domain/value-objects/attendance-decision';
+import type { AccountProviderValue } from '../../../domain/value-objects/guest-account';
 
 /**
  * Postgres enum mirroring the `AttendanceDecision` Value Object.
  * The database refuses any third value, so a bug in the app cannot corrupt the
- * guest list. The invariant is enforced twice, on purpose.
+ * guest list. A invariante é garantida duas vezes, de propósito.
  */
 export const attendanceDecisionEnum = pgEnum('attendance_decision', ['ATTENDING', 'NOT_ATTENDING']);
 
+/** Espelha `AccountProvider`. Mesma ideia: o banco recusa um terceiro valor. */
+export const accountProviderEnum = pgEnum('account_provider', ['GOOGLE', 'FACEBOOK']);
+
 /**
- * Compile-time guard: adding a case to the domain Value Object without adding
- * it here (and generating a migration) breaks `npm run typecheck`.
+ * Compile-time guards: adicionar um caso no Value Object sem adicionar aqui
+ * (e gerar migração) quebra `npm run typecheck`.
  */
 export type AttendanceDecisionEnumInSync =
   AttendanceDecisionValue extends (typeof attendanceDecisionEnum.enumValues)[number] ? true : never;
 
+export type AccountProviderEnumInSync =
+  AccountProviderValue extends (typeof accountProviderEnum.enumValues)[number] ? true : never;
+
 /**
  * Persistence shape of the `Rsvp` aggregate.
  *
- * `guest_key` is UNIQUE: it is the natural key that makes "answering again" an
- * update instead of a duplicate, and it lets `save()` be a single atomic
- * `INSERT .. ON CONFLICT`. Which matters because the Neon HTTP driver has no
- * multi-statement transactions.
- */
-/**
- * Persistence shape of the `Rsvp` aggregate.
+ * ## Uma restrição de unicidade, não três
  *
- * Os três digests de identidade têm restrição no banco, e não só na política de
- * domínio: duas submissões simultâneas do mesmo aparelho passariam pelas duas
- * leituras antes de qualquer escrita, e quem arbitra a corrida é o Postgres.
+ * Desde que responder exige login, quem carrega a regra "uma resposta por
+ * convidado" é `UNIQUE(account_provider, account_subject)`. Só isso.
  *
- * As restrições espelham `RespondentIdentity.isSameRespondentAs`:
- *  - `UNIQUE(respondent_token)` cobre a primeira arma da regra;
- *  - `UNIQUE(respondent_device, respondent_network)` cobre a segunda.
+ * As restrições únicas de aparelho e de token foram **removidas de propósito**,
+ * não esquecidas. Elas eram a defesa possível enquanto a identidade era um nome
+ * digitado; com login, passaram a reprovar gente honesta: mãe e pai que dividem
+ * o mesmo celular compartilham token, aparelho e rede, e são duas pessoas com
+ * direito a duas respostas. Os digests continuam gravados como registro de
+ * auditoria, e o índice não único acelera consultas futuras.
+ *
+ * `guest_key` segue único: impede que uma conta sobrescreva a resposta de outra
+ * digitando o mesmo nome.
  */
 export const rsvpsTable = pgTable(
   'rsvps',
@@ -41,17 +47,30 @@ export const rsvpsTable = pgTable(
     guestKey: text('guest_key').notNull().unique(),
     guestName: text('guest_name').notNull(),
     decision: attendanceDecisionEnum('decision').notNull(),
-    /** Digest do token do cookie assinado. */
-    respondentToken: text('respondent_token').notNull().unique(),
-    /** Digest de navegador + SO + idioma + resolução + fuso. */
+
+    /*
+     * Conta verificada por Google ou Facebook.
+     *
+     * Guardamos o `subject` e não só o e-mail porque e-mail muda: a pessoa troca
+     * de provedor, corrige um alias, migra a conta. O `subject` é o id interno
+     * do provedor e não muda nunca.
+     */
+    accountProvider: accountProviderEnum('account_provider').notNull(),
+    accountSubject: text('account_subject').notNull(),
+    accountEmail: text('account_email').notNull(),
+    accountName: text('account_name').notNull(),
+
+    /* Sinais de aparelho: auditoria, já não recusam ninguém. */
+    respondentToken: text('respondent_token').notNull(),
     respondentDevice: text('respondent_device').notNull(),
-    /** Digest do endereço de rede. Nunca o IP cru. */
     respondentNetwork: text('respondent_network').notNull(),
+
     respondedAt: timestamp('responded_at', { withTimezone: true }).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
   },
   (table) => [
-    uniqueIndex('rsvps_respondent_device_network_idx').on(
+    uniqueIndex('rsvps_account_idx').on(table.accountProvider, table.accountSubject),
+    index('rsvps_respondent_device_network_idx').on(
       table.respondentDevice,
       table.respondentNetwork,
     ),

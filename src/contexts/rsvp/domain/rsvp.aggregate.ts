@@ -4,12 +4,14 @@ import { RsvpDeclined } from './events/rsvp-declined.event';
 import { RsvpDecisionChanged } from './events/rsvp-decision-changed.event';
 import type { AttendanceDecision } from './value-objects/attendance-decision';
 import type { GuestKey } from './value-objects/guest-key';
+import type { GuestAccount } from './value-objects/guest-account';
 import type { GuestName } from './value-objects/guest-name';
 import type { RespondentIdentity } from './value-objects/respondent-identity';
 import type { RsvpId } from './value-objects/rsvp-id';
 
 interface RsvpState {
   guestName: GuestName;
+  account: GuestAccount;
   decision: AttendanceDecision;
   identity: RespondentIdentity;
   respondedAt: Date;
@@ -40,12 +42,14 @@ export class Rsvp extends AggregateRoot<RsvpId> {
   static submit(input: {
     id: RsvpId;
     guestName: GuestName;
+    account: GuestAccount;
     decision: AttendanceDecision;
     identity: RespondentIdentity;
     respondedAt: Date;
   }): Rsvp {
     const rsvp = new Rsvp(input.id, {
       guestName: input.guestName,
+      account: input.account,
       decision: input.decision,
       identity: input.identity,
       respondedAt: input.respondedAt,
@@ -68,6 +72,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
   static rehydrate(input: {
     id: RsvpId;
     guestName: GuestName;
+    account: GuestAccount;
     decision: AttendanceDecision;
     identity: RespondentIdentity;
     respondedAt: Date;
@@ -75,6 +80,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
   }): Rsvp {
     return new Rsvp(input.id, {
       guestName: input.guestName,
+      account: input.account,
       decision: input.decision,
       identity: input.identity,
       respondedAt: input.respondedAt,
@@ -96,6 +102,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
    */
   reconsider(input: {
     guestName: GuestName;
+    account: GuestAccount;
     decision: AttendanceDecision;
     identity: RespondentIdentity;
     changedAt: Date;
@@ -111,6 +118,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
     this.state = {
       ...this.state,
       guestName: input.guestName,
+      account: input.account,
       decision: input.decision,
       identity: input.identity,
       updatedAt: input.changedAt,
@@ -127,6 +135,11 @@ export class Rsvp extends AggregateRoot<RsvpId> {
         ),
       );
     }
+  }
+
+  /** Conta verificada que criou esta resposta. Nunca muda de dono. */
+  get account(): GuestAccount {
+    return this.state.account;
   }
 
   get guestName(): GuestName {
