@@ -262,6 +262,11 @@ Cenário: o recibo do convidado não carrega regra de negócio
   Então ele vê a própria resposta e o caminho para o convite
   E não vê contagem, lista de outros convidados nem instrução de uso
 
+Cenário: quem responde é o próprio admin
+  Dado que o e-mail de quem responde está em RSVP_ADMIN_EMAILS
+  Quando ele confirma presença
+  Então chega só o relatório, e não o relatório mais o recibo
+
 Cenário: a lista não pôde ser lida
   Dado que a consulta da lista falhou
   Quando o relatório é montado

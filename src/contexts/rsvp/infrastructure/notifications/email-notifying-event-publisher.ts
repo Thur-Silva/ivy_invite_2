@@ -45,6 +45,10 @@ interface RsvpFact {
  * lista completa. É quem fecha número com buffet, e abrir o `db:studio` a cada
  * resposta não é uma opção realista.
  *
+ * Quando os dois são a mesma caixa de entrada (o admin respondendo o próprio
+ * convite), **só o relatório sai**. Dois e-mails sobre o mesmo fato para o mesmo
+ * endereço é spam, e o relatório já contém tudo que o recibo diria.
+ *
  * ## A lista é lida na hora de escrever
  *
  * O relatório precisa do estado atual, que o evento não carrega, e nem deveria:
@@ -141,19 +145,23 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
   }
 
   private messagesFor(fact: RsvpFact, roster: GuestRoster | null): EmailMessage[] {
-    const receipt = guestReceiptEmail({
-      firstName: fact.guestFirstName,
-      attending: fact.attending,
-      invitationUrl: this.deps.invitationUrl,
-    });
+    const messages: EmailMessage[] = [];
 
-    const messages: EmailMessage[] = [
-      this.compose({
-        to: [fact.guestEmail],
-        rendered: receipt,
-        idempotencyKey: `rsvp-${fact.rsvpId}-${fact.slug}-convidado`,
-      }),
-    ];
+    // O recibo é cortesia para quem não recebe o relatório. Quem recebe os dois
+    // ganharia duas notificações do mesmo fato, e a segunda só irrita.
+    if (!this.isAdmin(fact.guestEmail)) {
+      messages.push(
+        this.compose({
+          to: [fact.guestEmail],
+          rendered: guestReceiptEmail({
+            firstName: fact.guestFirstName,
+            attending: fact.attending,
+            invitationUrl: this.deps.invitationUrl,
+          }),
+          idempotencyKey: `rsvp-${fact.rsvpId}-${fact.slug}-convidado`,
+        }),
+      );
+    }
 
     if (this.deps.adminRecipients.length > 0) {
       const report = adminReportEmail({
@@ -178,6 +186,14 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
     }
 
     return messages;
+  }
+
+  /** Compara sem diferenciar maiúscula nem espaço em volta, como servidor faz. */
+  private isAdmin(email: string): boolean {
+    const normalized = email.trim().toLowerCase();
+    return this.deps.adminRecipients.some(
+      (recipient) => recipient.trim().toLowerCase() === normalized,
+    );
   }
 
   private compose(input: {

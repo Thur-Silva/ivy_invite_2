@@ -341,6 +341,46 @@ describe('EmailNotifyingEventPublisher', () => {
     });
   });
 
+  /**
+   * O caso que motivou a regra: o admin testando o próprio convite recebia dois
+   * e-mails sobre o mesmo fato, e o segundo não acrescentava nada.
+   */
+  describe('quando quem responde é o próprio admin', () => {
+    const ADMIN_ACCOUNT = GuestAccount.create({
+      provider: 'google',
+      subject: 'google|9001',
+      email: 'mae@ivy.test',
+      displayName: 'Marina',
+    });
+
+    it('manda só o relatório, não os dois', async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ADMIN_ACCOUNT, AT)]);
+
+      expect(emails.sent).toHaveLength(1);
+      expect(emails.sent[0]?.to).toEqual(['mae@ivy.test', 'pai@ivy.test']);
+      expect(emails.sent[0]?.idempotencyKey).toBe('rsvp-rsvp-1-confirmado-admin');
+    });
+
+    it('ignora maiúscula e espaço ao comparar o endereço', async () => {
+      const conta = GuestAccount.create({
+        provider: 'google',
+        subject: 'google|9002',
+        email: 'MAE@Ivy.test',
+        displayName: 'Marina',
+      });
+
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, conta, AT)]);
+
+      expect(emails.sent).toHaveLength(1);
+    });
+
+    it('continua mandando o recibo para quem não é admin', async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      expect(emails.sent).toHaveLength(2);
+    });
+  });
+
   describe('sem admin configurado', () => {
     it('escreve só para o convidado', async () => {
       await build({ adminRecipients: [] }).publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);

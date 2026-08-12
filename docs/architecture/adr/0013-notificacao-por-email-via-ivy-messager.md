@@ -67,6 +67,10 @@ deveria: evento é fato pontual, não fotografia do banco. Por isso o publisher
 consulta `GetGuestRoster`, um caso de uso de leitura, uma vez por lote. É a única
 consulta de estado neste caminho, e ela vive do lado de fora do domínio.
 
+Quando os dois papéis caem na mesma caixa de entrada, o recibo é suprimido e sai
+só o relatório. Uma resposta, um e-mail por endereço: o relatório é superconjunto
+do recibo, então a segunda mensagem só teria valor de incômodo.
+
 ## Consequências
 
 **Boas:** o caso de uso não mudou uma linha; trocar de provedor de e-mail é

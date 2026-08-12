@@ -10,6 +10,7 @@ import { GuestAccount } from '../../domain/value-objects/guest-account';
 import { GuestName } from '../../domain/value-objects/guest-name';
 import { RsvpId } from '../../domain/value-objects/rsvp-id';
 import { NeonRsvpRepository } from '../persistence/neon-rsvp.repository';
+import type { EmailSender } from '@/shared/application/ports/email-sender';
 import { IvyMessagerEmailSender } from '@/shared/infrastructure/messager/ivy-messager-email-sender';
 
 /**
@@ -23,6 +24,17 @@ import { IvyMessagerEmailSender } from '@/shared/infrastructure/messager/ivy-mes
  * que a Server Action usa. Um curl provaria que o serviço funciona; isto prova
  * que a nossa integração com ele funciona, que é a pergunta útil.
  *
+ * ## Um e-mail, não uma rajada
+ *
+ * A versão anterior mandava cinco fluxos, cada um com recibo **e** relatório para
+ * o mesmo endereço: oito e-mails por execução. Verificar integração não justifica
+ * entupir caixa de entrada de ninguém.
+ *
+ * Agora o padrão manda **um**: o relatório com o gráfico cheio, que é a única
+ * peça que precisa de olho humano. Health e credencial errada não enviam nada.
+ * A bateria completa (cinco e-mails) existe atrás de `RSVP_SMOKE_FULL=1`, para
+ * quando alguém estiver mexendo nos templates de propósito.
+ *
  * Sem `IVY_MESSAGER_TOKEN` os casos são pulados em vez de falharem: um smoke test
  * que quebra por falta de credencial vira ruído.
  */
@@ -31,6 +43,9 @@ const TOKEN = process.env.IVY_MESSAGER_TOKEN;
 const GUEST = process.env.RSVP_SMOKE_RECIPIENT ?? 'arthurcaue100@gmail.com';
 const BASE = process.env.IVY_MESSAGER_BASE_URL ?? 'https://messager-lyart-nu.vercel.app';
 const INVITATION = 'https://ivy-invite-2.vercel.app';
+
+/** Bateria completa. Fora dela, a execução manda um único e-mail. */
+const FULL = process.env.RSVP_SMOKE_FULL === '1';
 
 /** Uma corrida por execução: chaves estáveis dentro do teste, novas a cada run. */
 const RUN = new Date()
@@ -89,7 +104,7 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
     console.info(`[smoke] health ok, remetente=${body.sender ?? 'n/d'}`);
   });
 
-  it('envia pelo adapter e devolve comprovante', async () => {
+  it.runIf(FULL)('envia pelo adapter e devolve comprovante', async () => {
     const result = await sender.send({
       to: [GUEST],
       subject: `[smoke ${RUN}] integração do convite da Ivy`,
@@ -113,7 +128,7 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
     expect(result.ok && result.value.rejected).toHaveLength(0);
   });
 
-  it('a mesma Idempotency-Key não manda e-mail novo', async () => {
+  it.runIf(FULL)('a mesma Idempotency-Key não manda e-mail novo', async () => {
     // Chave nova, para o primeiro envio ser real e o segundo ser replay.
     const key = `smoke-${RUN}-idempotencia`;
     const message = {
@@ -157,7 +172,7 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
     console.info('[smoke] 401 classificado como permanente, sem retentativa');
   });
 
-  it('o fluxo completo: confirmação gera recibo e relatório', async () => {
+  it.runIf(FULL)('o fluxo completo: confirmação gera recibo e relatório', async () => {
     const publisher = new EmailNotifyingEventPublisher({
       emails: sender,
       invitationUrl: INVITATION,
@@ -180,13 +195,26 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
   });
 
   /**
-   * Garante que a caixa de entrada recebe pelo menos um relatório com o gráfico
-   * cheio e a lista longa, mesmo que o banco esteja vazio. É a peça que o olho
-   * humano precisa conferir, e conferir barra de 0% não prova nada.
+   * O único envio da execução padrão.
+   *
+   * Escolhido por ser a peça que o olho humano precisa conferir: gráfico cheio e
+   * lista longa. Usa a lista de demonstração mesmo havendo banco, porque conferir
+   * uma barra de 0% não prova nada sobre o desenho.
+   *
+   * Como o endereço do convidado é o mesmo do admin, o publisher suprime o
+   * recibo: chega **um** e-mail, e isso é parte do que este caso verifica.
    */
   it('o relatório com gráfico e lista completa chega montado', async () => {
+    const enviados: string[] = [];
+    const contando: EmailSender = {
+      async send(message) {
+        enviados.push(message.subject);
+        return sender.send(message);
+      },
+    };
+
     const publisher = new EmailNotifyingEventPublisher({
-      emails: sender,
+      emails: contando,
       invitationUrl: INVITATION,
       adminRecipients: [GUEST],
       roster: { execute: async () => DEMO_ROSTER },
@@ -202,13 +230,17 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
       ),
     ]);
 
+    // A garantia que motivou esta mudança: uma resposta, um e-mail na caixa.
+    expect(enviados).toHaveLength(1);
+    expect(enviados[0]).toContain('confirmou presença');
+
     console.info(
-      `[smoke] relatório de demonstração publicado: ${DEMO_ROSTER.attendingCount} vão, ` +
+      `[smoke] um e-mail enviado: "${enviados[0]}" com ${DEMO_ROSTER.attendingCount} vão, ` +
         `${DEMO_ROSTER.notAttendingCount} não vão, ${DEMO_ROSTER.total} responderam`,
     );
   });
 
-  it('o fluxo de mudança de ideia usa o tom de recusa', async () => {
+  it.runIf(FULL)('o fluxo de mudança de ideia usa o tom de recusa', async () => {
     const publisher = new EmailNotifyingEventPublisher({
       emails: sender,
       invitationUrl: INVITATION,
