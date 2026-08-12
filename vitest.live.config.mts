@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -9,9 +10,22 @@ import { defineConfig } from 'vitest/config';
  *
  * Sem timeout curto: um envio real leva ~1,2s por mensagem, e o teste de
  * idempotência faz dois seguidos.
+ *
+ * O `alias` de `server-only` existe porque o repositório Neon começa com
+ * `import 'server-only'`, que é um marcador resolvido pelo bundler do Next e não
+ * existe fora dele. Aqui ele vira um módulo vazio. Trocar por um stub é seguro:
+ * o pacote não tem comportamento, só quebra o build quando alguém o importa do
+ * navegador, e este teste roda em Node.
  */
 export default defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    alias: {
+      'server-only': fileURLToPath(
+        new URL('./src/shared/testing/server-only.stub.ts', import.meta.url),
+      ),
+    },
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.live.ts'],

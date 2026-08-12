@@ -240,20 +240,33 @@ Cenário: sem o token
 
 ---
 
-### ✅ PBI-06. Notificar os anfitriões a cada resposta
+### ✅ PBI-06. Relatório para o admin a cada resposta
 
-> **Como** Marina, **quero** receber um aviso quando alguém responder, **para**
-> acompanhar sem ficar abrindo o painel.
+> **Como** Marina, **quero** receber um relatório quando alguém responder,
+> **para** acompanhar a lista sem ficar abrindo o painel.
 
 `SHOULD` · **5 pts**
 
 ```gherkin
 Cenário: alguém confirma presença
-  Dado que RSVP_NOTIFY_EMAILS tem os e-mails dos anfitriões
+  Dado que RSVP_ADMIN_EMAILS tem os e-mails de quem administra o convite
   Quando um convidado confirma presença
-  Então cada anfitrião recebe um aviso com o nome e a conta verificada
-  E responder esse aviso escreve direto para o convidado
+  Então cada admin recebe um relatório com o nome de quem acabou de responder
+  E com um gráfico de quantos vão e quantos não vão
+  E com a lista completa de nomes marcados vai/não vai
+  E responder esse relatório escreve direto para o convidado
   E o convidado recebe um recibo da própria resposta
+
+Cenário: o recibo do convidado não carrega regra de negócio
+  Quando o convidado recebe o recibo
+  Então ele vê a própria resposta e o caminho para o convite
+  E não vê contagem, lista de outros convidados nem instrução de uso
+
+Cenário: a lista não pôde ser lida
+  Dado que a consulta da lista falhou
+  Quando o relatório é montado
+  Então ele sai mesmo assim, com o nome de quem respondeu
+  E sem o gráfico e sem a lista
 
 Cenário: o convidado não espera pelo e-mail
   Quando a resposta é gravada

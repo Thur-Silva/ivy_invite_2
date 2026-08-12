@@ -1,61 +1,91 @@
-import type { EmailMessage, EmailSender } from '@/shared/application/ports/email-sender';
 import type { DomainEventPublisher } from '@/shared/application/ports/domain-event-publisher';
+import type { EmailMessage, EmailSender } from '@/shared/application/ports/email-sender';
 import type { DomainEvent } from '@/shared/kernel/domain-event';
+import type {
+  GetGuestRoster,
+  GuestRoster,
+} from '../../application/use-cases/get-guest-roster.use-case';
 import { RsvpConfirmed } from '../../domain/events/rsvp-confirmed.event';
 import { RsvpDeclined } from '../../domain/events/rsvp-declined.event';
 import { RsvpDecisionChanged } from '../../domain/events/rsvp-decision-changed.event';
-import {
-  guestConfirmedEmail,
-  guestDeclinedEmail,
-  hostNotificationEmail,
-} from './rsvp-email-templates';
+import { adminReportEmail, guestReceiptEmail } from './rsvp-email-templates';
+
+/**
+ * Só o método que o relatório usa.
+ *
+ * Depender do formato, e não da classe, deixa o dublê de teste ser um objeto
+ * literal em vez de exigir um repositório inteiro montado só para ler a lista.
+ */
+type RosterQuery = Pick<GetGuestRoster, 'execute'>;
+
+/** O que cada evento significa para quem escreve os e-mails. */
+interface RsvpFact {
+  readonly rsvpId: string;
+  /** Entra na chave de idempotência. Precisa ser estável e distinto por fato. */
+  readonly slug: string;
+  readonly guestEmail: string;
+  readonly guestFirstName: string;
+  readonly guestFullName: string;
+  readonly attending: boolean;
+  readonly changed: boolean;
+}
 
 /**
  * Adapter. Transforma evento de domínio em e-mail.
  *
  * Encaixa no `DomainEventPublisher`, que existia desde o Sprint 1 exatamente para
- * isto. O comentário original da porta dizia que um assinante de notificação
- * entraria "sem tocar no caso de uso", e é o que acontece: `SubmitRsvp` não sabe
- * que e-mail existe.
+ * isto. `SubmitRsvp` não sabe que e-mail existe.
  *
- * ## Por que é infraestrutura e não aplicação
+ * ## Dois destinatários, dois propósitos opostos
  *
- * Ele monta HTML e conhece endereços de anfitrião. Corpo de mensagem e destino
- * são detalhe de entrega, não regra. A regra ("quem confirma recebe recibo") está
- * na escolha do evento que dispara cada e-mail, e essa escolha é declarativa
- * aqui, sem `if` de negócio escondido.
+ * **Convidado** recebe um recibo e nada mais: nenhuma regra, nenhum número,
+ * nenhuma instrução. Ele já viu a confirmação na tela; o e-mail é cortesia.
+ *
+ * **Admin** recebe relatório: quem acabou de responder, os totais, o gráfico e a
+ * lista completa. É quem fecha número com buffet, e abrir o `db:studio` a cada
+ * resposta não é uma opção realista.
+ *
+ * ## A lista é lida na hora de escrever
+ *
+ * O relatório precisa do estado atual, que o evento não carrega, e nem deveria:
+ * evento é fato pontual. Por isso o publisher consulta `GetGuestRoster`, um caso
+ * de uso de leitura. Se a consulta falhar, o relatório sai **sem** o gráfico em
+ * vez de não sair: saber que alguém respondeu vale mais que o gráfico.
  *
  * ## Idempotência derivada do fato, nunca da tentativa
  *
- * `rsvp-<id>-<fato>-<destino>`. Se a Server Action for reexecutada, ou se o mesmo
- * evento chegar duas vezes, o serviço reconhece a chave e responde
- * `replayed: true` sem mandar nada. É a diferença entre um retry seguro e um
- * convidado recebendo o mesmo e-mail três vezes.
+ * `rsvp-<id>-<fato>-<destino>`. Reexecutar a Server Action, ou o mesmo evento
+ * chegar duas vezes, faz o serviço responder `replayed: true` sem mandar nada.
  *
- * Uma consequência aceita: se alguém confirma, muda para "não vou" e volta para
- * "vou", o segundo `RsvpDecisionChanged` reusa a chave do primeiro se acontecer
- * dentro dos 15 minutos da janela de idempotência, e o e-mail não sai de novo. O
- * estado final na tela e no banco está certo; o convidado só não recebe o
- * terceiro aviso. Preferimos isso a arriscar duplicata.
+ * Consequência aceita: confirmar, recusar e confirmar de novo dentro dos 15
+ * minutos da janela reusa a chave e o segundo aviso não sai. O estado final está
+ * certo na tela e no banco; preferimos isso a arriscar duplicata.
  */
 export class EmailNotifyingEventPublisher implements DomainEventPublisher {
   constructor(
     private readonly deps: {
       readonly emails: EmailSender;
       readonly invitationUrl: string;
-      /** Vazio = ninguém é avisado, e o envio ao convidado segue normal. */
-      readonly hostRecipients: readonly string[];
-      /** Para o serviço de e-mail amarrar o log dele ao nosso rastro. */
+      /** Vazio = ninguém recebe relatório, e o recibo do convidado segue saindo. */
+      readonly adminRecipients: readonly string[];
+      /** Ausente = relatório sai sem gráfico nem lista. */
+      readonly roster?: RosterQuery;
       readonly correlationId?: string;
     },
   ) {}
 
   async publish(events: readonly DomainEvent[]): Promise<void> {
-    const messages = events.flatMap((event) => this.messagesFor(event));
+    const facts = events.map((event) => toFact(event)).filter((fact) => fact !== null);
+    if (facts.length === 0) return;
 
-    // `allSettled`, não `all`: um e-mail que falha não pode impedir o outro de
-    // sair. O convidado receber o recibo importa mesmo que o aviso ao anfitrião
-    // tenha falhado, e vice-versa.
+    // Uma leitura para o lote inteiro. Publicar dois eventos do mesmo envio é
+    // raro, mas consultar a lista duas vezes seria desperdício garantido.
+    const roster = this.deps.adminRecipients.length > 0 ? await this.loadRoster() : null;
+
+    const messages = facts.flatMap((fact) => this.messagesFor(fact, roster));
+
+    // `allSettled`, não `all`: um e-mail que falha não pode impedir o outro. O
+    // recibo do convidado importa mesmo que o relatório tenha falhado.
     const results = await Promise.allSettled(messages.map((message) => this.dispatch(message)));
 
     const crashed = results.filter((result) => result.status === 'rejected');
@@ -64,13 +94,25 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
     }
   }
 
+  /** Nunca propaga: sem lista, o relatório degrada em vez de não sair. */
+  private async loadRoster(): Promise<GuestRoster | null> {
+    if (this.deps.roster === undefined) return null;
+
+    try {
+      return await this.deps.roster.execute();
+    } catch (error) {
+      console.error('[email] não foi possível ler a lista para o relatório', error);
+      return null;
+    }
+  }
+
   /**
    * Envia e registra o desfecho.
    *
-   * Nunca relança. `publish` é chamado depois da resposta ao convidado, então
-   * ninguém está esperando: a única coisa útil a fazer com uma falha aqui é
-   * deixar rastro suficiente para investigar. `requestId` é a chave de busca no
-   * log de quem opera o serviço, e por isso vai no log **e** no alerta.
+   * Nunca relança. `publish` roda depois da resposta ao convidado, então ninguém
+   * está esperando: a única coisa útil a fazer com uma falha é deixar rastro
+   * suficiente para investigar. `requestId` é a chave de busca no log de quem
+   * opera o serviço.
    */
   private async dispatch(message: EmailMessage): Promise<void> {
     const result = await this.deps.emails.send(message);
@@ -89,8 +131,8 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
       return;
     }
 
-    // Falha permanente merece barulho: não vai melhorar sozinha e quase sempre é
-    // dado ruim ou credencial errada. Transiente já esgotou as retentativas.
+    // Falha permanente merece barulho: não melhora sozinha e quase sempre é dado
+    // ruim ou credencial errada. Transiente já esgotou as retentativas.
     const level = result.error.kind === 'PERMANENT' ? console.error : console.warn;
     level(
       `[email] FALHOU (${result.error.kind}) key=${message.idempotencyKey} ` +
@@ -98,112 +140,112 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
     );
   }
 
-  private messagesFor(event: DomainEvent): EmailMessage[] {
-    if (event instanceof RsvpConfirmed) {
-      return this.fanOut({
-        rsvpId: event.aggregateId,
-        fact: 'confirmado',
-        guestEmail: event.guestEmail,
-        guest: guestConfirmedEmail({
-          firstName: event.guestFirstName,
-          invitationUrl: this.deps.invitationUrl,
-        }),
-        host: hostNotificationEmail({
-          guestFullName: event.guestFullName,
-          guestEmail: event.guestEmail,
-          isAttending: true,
-          changed: false,
-          invitationUrl: this.deps.invitationUrl,
-        }),
-      });
-    }
+  private messagesFor(fact: RsvpFact, roster: GuestRoster | null): EmailMessage[] {
+    const receipt = guestReceiptEmail({
+      firstName: fact.guestFirstName,
+      attending: fact.attending,
+      invitationUrl: this.deps.invitationUrl,
+    });
 
-    if (event instanceof RsvpDeclined) {
-      return this.fanOut({
-        rsvpId: event.aggregateId,
-        fact: 'recusado',
-        guestEmail: event.guestEmail,
-        guest: guestDeclinedEmail({
-          firstName: event.guestFirstName,
-          invitationUrl: this.deps.invitationUrl,
-        }),
-        host: hostNotificationEmail({
-          guestFullName: event.guestFullName,
-          guestEmail: event.guestEmail,
-          isAttending: false,
-          changed: false,
-          invitationUrl: this.deps.invitationUrl,
-        }),
-      });
-    }
-
-    if (event instanceof RsvpDecisionChanged) {
-      const guest = event.isNowAttending
-        ? guestConfirmedEmail({
-            firstName: event.guestFirstName,
-            invitationUrl: this.deps.invitationUrl,
-          })
-        : guestDeclinedEmail({
-            firstName: event.guestFirstName,
-            invitationUrl: this.deps.invitationUrl,
-          });
-
-      return this.fanOut({
-        rsvpId: event.aggregateId,
-        fact: 'alterado',
-        guestEmail: event.guestEmail,
-        guest,
-        host: hostNotificationEmail({
-          guestFullName: event.guestFullName,
-          guestEmail: event.guestEmail,
-          isAttending: event.isNowAttending,
-          changed: true,
-          invitationUrl: this.deps.invitationUrl,
-        }),
-      });
-    }
-
-    // Evento que este assinante não trata. Ignorar em silêncio é correto: o
-    // publisher de log já registrou o fato.
-    return [];
-  }
-
-  private fanOut(input: {
-    rsvpId: string;
-    fact: string;
-    guestEmail: string;
-    guest: { subject: string; html: string; text: string };
-    host: { subject: string; html: string; text: string };
-  }): EmailMessage[] {
     const messages: EmailMessage[] = [
-      {
-        to: [input.guestEmail],
-        subject: input.guest.subject,
-        html: input.guest.html,
-        text: input.guest.text,
-        idempotencyKey: `rsvp-${input.rsvpId}-${input.fact}-convidado`,
-        ...(this.deps.correlationId === undefined
-          ? {}
-          : { correlationId: this.deps.correlationId }),
-      },
+      this.compose({
+        to: [fact.guestEmail],
+        rendered: receipt,
+        idempotencyKey: `rsvp-${fact.rsvpId}-${fact.slug}-convidado`,
+      }),
     ];
 
-    if (this.deps.hostRecipients.length > 0) {
-      messages.push({
-        to: this.deps.hostRecipients,
-        subject: input.host.subject,
-        html: input.host.html,
-        text: input.host.text,
-        // `replyTo` no e-mail do convidado: o anfitrião responde o aviso e a
-        // mensagem vai direto para quem confirmou, não para a caixa do serviço.
-        replyTo: input.guestEmail,
-        idempotencyKey: `rsvp-${input.rsvpId}-${input.fact}-anfitriao`,
-        ...(this.deps.correlationId === undefined
-          ? {}
-          : { correlationId: this.deps.correlationId }),
+    if (this.deps.adminRecipients.length > 0) {
+      const report = adminReportEmail({
+        guestName: fact.guestFullName,
+        guestEmail: fact.guestEmail,
+        attending: fact.attending,
+        changed: fact.changed,
+        roster,
+        invitationUrl: this.deps.invitationUrl,
       });
+
+      messages.push(
+        this.compose({
+          to: this.deps.adminRecipients,
+          rendered: report,
+          idempotencyKey: `rsvp-${fact.rsvpId}-${fact.slug}-admin`,
+          // Responder o relatório escreve direto para quem respondeu, não para a
+          // caixa do serviço de mensageria.
+          replyTo: fact.guestEmail,
+        }),
+      );
     }
 
     return messages;
   }
+
+  private compose(input: {
+    to: readonly string[];
+    rendered: { subject: string; html: string; text: string };
+    idempotencyKey: string;
+    replyTo?: string;
+  }): EmailMessage {
+    return {
+      to: input.to,
+      subject: input.rendered.subject,
+      html: input.rendered.html,
+      text: input.rendered.text,
+      idempotencyKey: input.idempotencyKey,
+      ...(input.replyTo === undefined ? {} : { replyTo: input.replyTo }),
+      ...(this.deps.correlationId === undefined
+        ? {}
+        : { correlationId: this.deps.correlationId }),
+    };
+  }
+}
+
+/**
+ * Normaliza os três eventos numa forma só.
+ *
+ * Antes cada um tinha seu próprio bloco quase idêntico. Reduzir a um `RsvpFact`
+ * deixa uma única descrição de "quem recebe o quê", em vez de três que precisam
+ * ser mantidas em sincronia.
+ *
+ * Evento que este assinante não trata devolve `null` e é ignorado em silêncio: o
+ * publisher de log já registrou o fato.
+ */
+function toFact(event: DomainEvent): RsvpFact | null {
+  if (event instanceof RsvpConfirmed) {
+    return {
+      rsvpId: event.aggregateId,
+      slug: 'confirmado',
+      guestEmail: event.guestEmail,
+      guestFirstName: event.guestFirstName,
+      guestFullName: event.guestFullName,
+      attending: true,
+      changed: false,
+    };
+  }
+
+  if (event instanceof RsvpDeclined) {
+    return {
+      rsvpId: event.aggregateId,
+      slug: 'recusado',
+      guestEmail: event.guestEmail,
+      guestFirstName: event.guestFirstName,
+      guestFullName: event.guestFullName,
+      attending: false,
+      changed: false,
+    };
+  }
+
+  if (event instanceof RsvpDecisionChanged) {
+    return {
+      rsvpId: event.aggregateId,
+      slug: 'alterado',
+      guestEmail: event.guestEmail,
+      guestFirstName: event.guestFirstName,
+      guestFullName: event.guestFullName,
+      attending: event.isNowAttending,
+      changed: true,
+    };
+  }
+
+  return null;
 }

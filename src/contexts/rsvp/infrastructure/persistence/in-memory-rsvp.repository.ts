@@ -50,6 +50,19 @@ export class InMemoryRsvpRepository implements RsvpRepository {
     return null;
   }
 
+  /**
+   * Mesma ordem que o Neon devolve: mais recente primeiro.
+   *
+   * Repetir a ordenação aqui não é redundância, é o que impede o dublê de
+   * mentir. Um teste que passa com ordem arbitrária e quebra em produção é pior
+   * que não ter teste.
+   */
+  async listAll(): Promise<readonly Rsvp[]> {
+    return [...this.byId.values()].sort(
+      (left, right) => right.updatedAt.getTime() - left.updatedAt.getTime(),
+    );
+  }
+
   async save(rsvp: Rsvp): Promise<void> {
     this.byId.set(rsvp.id.value, rsvp);
   }

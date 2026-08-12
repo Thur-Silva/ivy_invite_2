@@ -29,7 +29,7 @@ que e-mail existe.
 | `CompositeDomainEventPublisher` | infrastructure      | Log de auditoria **e** e-mail assinam juntos           |
 | `DeferredDomainEventPublisher`  | infrastructure      | `after()` do Next: envia depois da resposta            |
 
-Cinco escolhas que sustentam o resto:
+Seis escolhas que sustentam o resto:
 
 **1. O e-mail não repete data, endereço nem traje.** Instinto óbvio, e armadilha.
 E-mail é retrato: se o local mudar, a caixa de entrada guarda a versão velha para
@@ -56,6 +56,17 @@ carrega `kind: 'PERMANENT' | 'TRANSIENT'` em vez de só um código.
 requisito para alguém confirmar presença. Faltando `IVY_MESSAGER_TOKEN`, o
 assinante de e-mail simplesmente não entra na composição.
 
+**6. Dois destinatários, dois conteúdos opostos.** O convidado recebe um recibo
+**sem uma linha de regra**: nem contagem, nem lista, nem instrução de uso. Ele já
+viu a confirmação na tela, e mostrar a lista dos outros seria vazar dado de
+terceiro para quem não pediu. O admin recebe o contrário: nome de quem respondeu,
+totais, gráfico e lista completa, porque é quem fecha número com fornecedor.
+
+Esse relatório precisa do **estado atual**, que o evento não carrega, e nem
+deveria: evento é fato pontual, não fotografia do banco. Por isso o publisher
+consulta `GetGuestRoster`, um caso de uso de leitura, uma vez por lote. É a única
+consulta de estado neste caminho, e ela vive do lado de fora do domínio.
+
 ## Consequências
 
 **Boas:** o caso de uso não mudou uma linha; trocar de provedor de e-mail é
@@ -80,6 +91,18 @@ tocar a rede; o log de auditoria continuou existindo em paralelo.
   quem escrever, e voltar ao repositório transformaria "reagir a um fato" em
   "consultar estado". Como o payload virou dado pessoal,
   `ConsoleDomainEventPublisher` mascara (`ma***@gmail.com`) antes de logar.
+- **O relatório é uma leitura a mais por resposta.** Uma consulta por lote de
+  eventos, fora do caminho crítico (roda no `after()`). Se ela falhar, o
+  relatório sai sem o gráfico e sem a lista, em vez de não sair: saber que alguém
+  respondeu vale mais que o gráfico.
+- **A lista completa vai para a caixa de entrada do admin.** É dado pessoal de
+  todos os convidados replicado a cada resposta. Aceito porque o admin já tem
+  acesso a essa lista por direito, e porque `RSVP_ADMIN_EMAILS` é a única coisa
+  que define quem recebe. Configurar essa variável errado vaza a lista.
+- **Nada de imagem no gráfico.** Barra empilhada é `<td>` com largura
+  percentual. O custo é não ter gráfico de verdade (linha, pizza, eixo); o
+  ganho é renderizar igual em Gmail, Apple Mail e Outlook, sem serviço externo
+  gerando PNG e sem bloqueio de imagem remota.
 - **Teto do Gmail: ~500 destinatários/dia.** Irrelevante para esta festa, fatal
   para um disparo em massa. Registrado porque a doc do serviço pede que se fale
   com quem o opera **antes** de o volume chegar.
@@ -93,3 +116,6 @@ tocar a rede; o log de auditoria continuou existindo em paralelo.
 | Enviar dentro do `SubmitRsvp`           | Regra de negócio passaria a conhecer HTML e SMTP, e a latência do e-mail entraria no tempo de resposta do formulário. |
 | Fila (QStash, SQS) entre RSVP e envio   | Entrega garantida de verdade, ao custo de mais um serviço e mais um segredo, para um volume de dezenas de mensagens.  |
 | Repetir data e local no corpo do e-mail | Cria uma segunda fonte de verdade que envelhece na caixa de entrada de cada convidado.                                |
+| Gráfico como imagem (PNG de um serviço) | Depende de terceiro no ar, e cliente de e-mail bloqueia imagem remota por padrão: o gráfico chegaria como retângulo vazio. |
+| Mandar o mesmo e-mail para os dois      | Ou o convidado recebe a lista dos outros, ou o admin não recebe número nenhum. Os dois públicos querem coisas opostas. |
+| Um resumo diário em vez de a cada resposta | Menos e-mail, mas o admin passa a saber com atraso justo quando responder rápido importa. Cabe se o volume crescer. |

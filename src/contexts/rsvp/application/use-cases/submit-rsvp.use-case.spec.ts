@@ -268,6 +268,7 @@ describe('SubmitRsvp', () => {
         },
         findByGuestKey: async () => null,
         findByRespondent: async () => null,
+        listAll: async () => [],
         save: async () => undefined,
       },
       clock,

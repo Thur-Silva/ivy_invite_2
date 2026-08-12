@@ -1,6 +1,6 @@
 import 'server-only';
 import { neon } from '@neondatabase/serverless';
-import { and, eq, or } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { drizzle, type NeonHttpDatabase } from 'drizzle-orm/neon-http';
 import type { Rsvp } from '../../domain/rsvp.aggregate';
 import type { RsvpRepository } from '../../domain/rsvp.repository';
@@ -78,6 +78,18 @@ export class NeonRsvpRepository implements RsvpRepository {
 
     const row = rows.at(0);
     return row === undefined ? null : RsvpMapper.toDomain(row);
+  }
+
+  /**
+   * Lista inteira, ordenada pelo banco.
+   *
+   * `ORDER BY` no Postgres e não em JavaScript: o índice já existe e ordenar
+   * dezenas de linhas no servidor de banco é mais barato que trazer tudo fora de
+   * ordem para reordenar em memória.
+   */
+  async listAll(): Promise<readonly Rsvp[]> {
+    const rows = await this.db.select().from(rsvpsTable).orderBy(desc(rsvpsTable.updatedAt));
+    return rows.map((row) => RsvpMapper.toDomain(row));
   }
 
   /**

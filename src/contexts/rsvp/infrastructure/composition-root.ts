@@ -9,6 +9,7 @@ import { HashedRespondentIdentifier } from '@/shared/infrastructure/hashed-respo
 import { IvyMessagerEmailSender } from '@/shared/infrastructure/messager/ivy-messager-email-sender';
 import { SystemClock } from '@/shared/infrastructure/system-clock';
 import type { RsvpRepository } from '../domain/rsvp.repository';
+import { GetGuestRoster } from '../application/use-cases/get-guest-roster.use-case';
 import { SubmitRsvp } from '../application/use-cases/submit-rsvp.use-case';
 import { EmailNotifyingEventPublisher } from './notifications/email-notifying-event-publisher';
 import { InMemoryRsvpRepository } from './persistence/in-memory-rsvp.repository';
@@ -70,8 +71,15 @@ function resolveInvitationUrl(): string {
   return 'http://localhost:3000';
 }
 
-function resolveHostRecipients(): readonly string[] {
-  return (serverEnv.RSVP_NOTIFY_EMAILS ?? '')
+/**
+ * Quem recebe o relatorio a cada resposta.
+ *
+ * `RSVP_ADMIN_EMAILS` e o nome atual. `RSVP_NOTIFY_EMAILS` continua aceito para
+ * nao quebrar um ambiente ja cadastrado: renomear variavel de ambiente e o tipo
+ * de mudanca que derruba producao em silencio.
+ */
+function resolveAdminRecipients(): readonly string[] {
+  return (serverEnv.RSVP_ADMIN_EMAILS ?? serverEnv.RSVP_NOTIFY_EMAILS ?? '')
     .split(',')
     .map((address) => address.trim())
     .filter((address) => address.length > 0);
@@ -98,7 +106,9 @@ function resolveEventPublisher(): DomainEventPublisher {
           token: serverEnv.IVY_MESSAGER_TOKEN,
         }),
         invitationUrl: resolveInvitationUrl(),
-        hostRecipients: resolveHostRecipients(),
+        adminRecipients: resolveAdminRecipients(),
+        // O relatorio precisa do estado atual da lista, que o evento nao carrega.
+        roster: new GetGuestRoster({ rsvps: resolveRepository() }),
       }),
     );
   } else if (serverEnv.NODE_ENV === 'production') {

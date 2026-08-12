@@ -29,6 +29,15 @@ export interface RsvpRepository {
    */
   findByRespondent(identity: RespondentIdentity): Promise<Rsvp | null>;
 
+  /**
+   * Todas as respostas, da mais recente para a mais antiga.
+   *
+   * Sem paginação de propósito: o convite é de uma festa infantil com dezenas de
+   * convidados, e a lista inteira cabe numa consulta. Se um dia não couber, o
+   * lugar de resolver é aqui, não em quem chama.
+   */
+  listAll(): Promise<readonly Rsvp[]>;
+
   /** Creates or updates the aggregate as a whole. Must be atomic per guest. */
   save(rsvp: Rsvp): Promise<void>;
 }

@@ -92,14 +92,36 @@ a ter dois é acrescentar um provider e um valor no enum do domínio.
 
 ## E-mail de confirmação
 
-Quando alguém responde, saem dois e-mails pelo serviço de mensageria: um recibo
-para o convidado e um aviso para os anfitriões. Responder o aviso escreve direto
-para quem confirmou, porque o `replyTo` aponta para a conta que respondeu.
+Quando alguém responde, saem dois e-mails pelo serviço de mensageria, com
+propósitos opostos.
+
+**O recibo do convidado** não tem uma linha de regra: nem "uma resposta por
+pessoa", nem contagem, nem lista, nem instrução de uso. Ele já viu a confirmação
+na tela, então o e-mail é cortesia. Sobram o nome dele, um selo, vaga-lumes
+piscando e o botão do convite.
+
+**O relatório do admin** é o oposto, e é para isso que existe: o nome de quem
+acabou de responder, os totais, um gráfico de barra empilhada e a lista completa
+com vai/não vai, com um selo "AGORA" em quem respondeu por último. Quem recebe é
+quem fecha número com buffet, e abrir o `db:studio` a cada resposta não é uma
+opção realista. Responder o relatório escreve direto para quem confirmou, porque
+o `replyTo` aponta para a conta que respondeu.
+
+A lista vem de `GetGuestRoster`, um caso de uso de leitura consultado na hora de
+escrever: o evento é um fato pontual e não carrega o estado atual. Se a consulta
+falhar, o relatório sai **sem** o gráfico em vez de não sair, porque saber que
+alguém respondeu vale mais que o gráfico.
 
 O corpo **não repete data, endereço nem traje**, de propósito. E-mail é retrato:
 se o local mudar, a caixa de entrada guarda a versão velha para sempre e o
 convidado confia nela. O e-mail confirma o fato e aponta para o convite, que é a
 fonte da verdade.
+
+Sobre o desenho: o Gmail apaga o `<style>` inteiro e remove SVG, e o Outlook usa
+o motor do Word. Então todo enfeite é HTML puro (círculo é `border-radius`,
+gráfico é `<td>` com largura em porcentagem), todo gradiente vem com `bgcolor` de
+reserva, e as animações do `<style>` são bônus para Apple Mail: o desenho fica
+completo sem elas.
 
 Nada disso bloqueia a resposta. O envio acontece depois que a tela já confirmou,
 via `after()` do Next. Sem `IVY_MESSAGER_TOKEN` o convite segue aceitando
@@ -117,10 +139,12 @@ usa. Um `curl` provaria que o serviço funciona; isto prova que a **integração
 funciona, que é a pergunta útil.
 
 Valida comprovante de envio, idempotência (dois envios, um e-mail), credencial
-errada classificada como permanente sem retentativa, e os dois fluxos completos
-de confirmação e de mudança de ideia.
+errada classificada como permanente sem retentativa, os fluxos completos de
+confirmação e de mudança de ideia, e um relatório com gráfico cheio e lista longa
+para conferir o desenho a olho. Havendo `DATABASE_URL`, os fluxos usam a lista
+real do banco; sem banco, uma lista de demonstração.
 
-> **Manda seis e-mails de verdade** para o endereço de `RSVP_NOTIFY_EMAILS`.
+> **Manda oito e-mails de verdade** para o endereço de `RSVP_ADMIN_EMAILS`.
 > Fica fora de `npm run verify` por construção: a suíte normal inclui só
 > `*.spec.ts` e esta inclui só `*.live.ts`, então nenhum arquivo casa nos dois.
 
@@ -150,7 +174,7 @@ de confirmação e de mudança de ideia.
 2. Em _Settings → Environment Variables_, adicione nos três ambientes:
    **`DATABASE_URL`** (Neon), **`AUTH_SECRET`**, **`RSVP_DEVICE_SALT`** e as
    credenciais `AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET`. Para os e-mails,
-   `IVY_MESSAGER_TOKEN` e `RSVP_NOTIFY_EMAILS`.
+   `IVY_MESSAGER_TOKEN` e `RSVP_ADMIN_EMAILS`.
 3. Volte ao console do Google e acrescente o domínio da Vercel aos URIs de
    redirecionamento. Sem isso o login falha só em produção.
 4. Deploy.

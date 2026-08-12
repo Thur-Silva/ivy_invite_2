@@ -6,6 +6,7 @@ import type {
   EmailSender,
 } from '@/shared/application/ports/email-sender';
 import { fail, ok, type Result } from '@/shared/kernel/result';
+import type { GuestRoster } from '../../application/use-cases/get-guest-roster.use-case';
 import { RsvpConfirmed } from '../../domain/events/rsvp-confirmed.event';
 import { RsvpDeclined } from '../../domain/events/rsvp-declined.event';
 import { RsvpDecisionChanged } from '../../domain/events/rsvp-decision-changed.event';
@@ -24,6 +25,19 @@ const ACCOUNT = GuestAccount.create({
   displayName: 'Maria Clara Souza',
 });
 const AT = new Date('2026-08-12T14:00:00Z');
+
+/** Lista já pronta: o publisher só precisa saber ler, não montar. */
+const ROSTER: GuestRoster = {
+  entries: [
+    { name: 'Maria Clara Souza', attending: true, respondedAtIso: AT.toISOString() },
+    { name: 'João Pedro', attending: false, respondedAtIso: AT.toISOString() },
+    { name: 'Ana Beatriz', attending: true, respondedAtIso: AT.toISOString() },
+  ],
+  attendingCount: 2,
+  notAttendingCount: 1,
+  total: 3,
+  attendingPercent: 67,
+};
 
 /** Registra tudo que passou pela porta, sem tocar a rede. */
 class RecordingEmailSender implements EmailSender {
@@ -56,32 +70,42 @@ class ExplodingEmailSender implements EmailSender {
 describe('EmailNotifyingEventPublisher', () => {
   let emails: RecordingEmailSender;
 
-  const build = (hostRecipients: readonly string[] = ['mae@ivy.test', 'pai@ivy.test']) =>
+  const build = (
+    options: {
+      adminRecipients?: readonly string[];
+      roster?: { execute(): Promise<GuestRoster> };
+    } = {},
+  ) =>
     new EmailNotifyingEventPublisher({
       emails,
       invitationUrl: 'https://ivy-invite-2.vercel.app',
-      hostRecipients,
+      adminRecipients: options.adminRecipients ?? ['mae@ivy.test', 'pai@ivy.test'],
+      ...(options.roster === undefined ? {} : { roster: options.roster }),
     });
+
+  /** Publisher com a lista carregada, que é a montagem de produção. */
+  const buildWithRoster = (roster: GuestRoster = ROSTER) =>
+    build({ roster: { execute: async () => roster } });
 
   beforeEach(() => {
     emails = new RecordingEmailSender();
   });
 
   describe('RsvpConfirmed', () => {
-    it('escreve para o convidado e para os anfitriões', async () => {
+    it('escreve para o convidado e para o admin', async () => {
       await build().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
 
       expect(emails.sent).toHaveLength(2);
 
-      const [convidado, anfitriao] = emails.sent;
+      const [convidado, admin] = emails.sent;
       expect(convidado?.to).toEqual(['maria.clara@gmail.com']);
       expect(convidado?.subject).toContain('confirmada');
       expect(convidado?.html).toContain('Maria');
 
-      expect(anfitriao?.to).toEqual(['mae@ivy.test', 'pai@ivy.test']);
-      expect(anfitriao?.subject).toContain('Maria Clara Souza');
-      // Responder o aviso fala com quem confirmou, não com a caixa do serviço.
-      expect(anfitriao?.replyTo).toBe('maria.clara@gmail.com');
+      expect(admin?.to).toEqual(['mae@ivy.test', 'pai@ivy.test']);
+      expect(admin?.subject).toContain('Maria Clara Souza');
+      // Responder o relatório fala com quem confirmou, não com a caixa do serviço.
+      expect(admin?.replyTo).toBe('maria.clara@gmail.com');
     });
 
     it('deriva a chave de idempotência do fato, não da tentativa', async () => {
@@ -89,7 +113,7 @@ describe('EmailNotifyingEventPublisher', () => {
 
       expect(emails.sent.map((message) => message.idempotencyKey)).toEqual([
         'rsvp-rsvp-1-confirmado-convidado',
-        'rsvp-rsvp-1-confirmado-anfitriao',
+        'rsvp-rsvp-1-confirmado-admin',
       ]);
     });
 
@@ -107,7 +131,7 @@ describe('EmailNotifyingEventPublisher', () => {
     });
 
     it('sempre inclui parte texto puro, além do HTML', async () => {
-      await build().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
 
       for (const message of emails.sent) {
         expect(message.text).toBeTruthy();
@@ -115,31 +139,169 @@ describe('EmailNotifyingEventPublisher', () => {
         // texto puro, não `&#39;` no meio da frase.
         expect(message.text).not.toContain('<');
         expect(message.text).not.toContain('&#');
-        expect(message.text).toContain('Ver o convite: https://ivy-invite-2.vercel.app');
+        expect(message.text).toContain('https://ivy-invite-2.vercel.app');
       }
+    });
+  });
+
+  /**
+   * O recibo do convidado perdeu de propósito tudo que é regra ou número. Ele já
+   * viu a confirmação na tela; o e-mail é cortesia, e cortesia não vem com
+   * relatório nem com manual de uso.
+   */
+  describe('recibo do convidado', () => {
+    beforeEach(async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+    });
+
+    it('não carrega nenhuma regra de negócio', async () => {
+      const convidado = emails.sent[0];
+
+      expect(convidado?.html).not.toMatch(/uma resposta por|mudou de ideia|não pode confirmar/i);
+      expect(convidado?.text).not.toMatch(/uma resposta por|mudou de ideia/i);
+    });
+
+    it('não mostra número nem lista de ninguém', async () => {
+      const convidado = emails.sent[0];
+
+      expect(convidado?.html).not.toMatch(/confirmados|responderam|João Pedro|Ana Beatriz/i);
+      // Privacidade antes de tudo: o convidado não recebe a lista dos outros.
+      expect(convidado?.text).not.toContain('Ana Beatriz');
     });
 
     it('não repete data nem endereço, só aponta para o convite', async () => {
-      await build().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
-
       const convidado = emails.sent[0];
+
       expect(convidado?.html).toContain('https://ivy-invite-2.vercel.app');
       // Detalhe da festa envelhece na caixa de entrada. O convite é a fonte.
       expect(convidado?.html).not.toMatch(/setembro|Estrada|Extrema/i);
     });
   });
 
+  describe('relatório do admin', () => {
+    it('nomeia quem acabou de responder e traz os totais', async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      const admin = emails.sent[1];
+      expect(admin?.subject).toBe('Maria Clara Souza confirmou presença (2 confirmados)');
+      expect(admin?.html).toContain('Maria Clara Souza');
+      expect(admin?.text).toContain('2 vão, 1 não vão, 3 responderam');
+    });
+
+    it('desenha o gráfico com largura proporcional, sem imagem externa', async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      const html = emails.sent[1]?.html ?? '';
+      // Barra empilhada em tabela: as duas fatias somam a largura toda.
+      expect(html).toContain('width="67%"');
+      expect(html).toContain('width="33%"');
+      // Nenhum PNG gerado por serviço de terceiro, que é como gráfico de e-mail
+      // costuma ser feito e como ele costuma quebrar.
+      expect(html).not.toContain('<img');
+      expect(html).not.toContain('chart');
+    });
+
+    it('lista todos os nomes com vai/não vai', async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      const admin = emails.sent[1];
+      for (const entry of ROSTER.entries) {
+        expect(admin?.html).toContain(entry.name);
+        expect(admin?.text).toContain(entry.name);
+      }
+      expect(admin?.text).toContain('[VAI]');
+      expect(admin?.text).toContain('[NAO VAI]');
+    });
+
+    it('destaca quem respondeu agora dentro da lista', async () => {
+      await buildWithRoster().publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      expect(emails.sent[1]?.html).toContain('AGORA');
+    });
+
+    it('sai sem gráfico, e não deixa de sair, quando a lista falha', async () => {
+      const publisher = build({
+        roster: {
+          execute: async () => {
+            throw new Error('banco indisponível');
+          },
+        },
+      });
+
+      await publisher.publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      // Saber que alguém respondeu vale mais que o gráfico.
+      expect(emails.sent).toHaveLength(2);
+      const admin = emails.sent[1];
+      expect(admin?.subject).toBe('Maria Clara Souza confirmou presença');
+      expect(admin?.html).toContain('Não foi possível ler a lista');
+      expect(admin?.text).toContain('lista indisponível');
+    });
+
+    it('não consulta a lista quando ninguém recebe relatório', async () => {
+      let leituras = 0;
+      const publisher = build({
+        adminRecipients: [],
+        roster: {
+          execute: async () => {
+            leituras += 1;
+            return ROSTER;
+          },
+        },
+      });
+
+      await publisher.publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      expect(leituras).toBe(0);
+      expect(emails.sent).toHaveLength(1);
+    });
+
+    it('lê a lista uma vez só, mesmo com vários eventos no lote', async () => {
+      let leituras = 0;
+      const publisher = build({
+        roster: {
+          execute: async () => {
+            leituras += 1;
+            return ROSTER;
+          },
+        },
+      });
+
+      await publisher.publish([
+        new RsvpConfirmed(ID, NAME, ACCOUNT, AT),
+        new RsvpDeclined(RsvpId.fromString('rsvp-2'), NAME, ACCOUNT, AT),
+      ]);
+
+      expect(leituras).toBe(1);
+      expect(emails.sent).toHaveLength(4);
+    });
+
+    it('aguenta lista vazia sem inventar gráfico', async () => {
+      await buildWithRoster({
+        entries: [],
+        attendingCount: 0,
+        notAttendingCount: 0,
+        total: 0,
+        attendingPercent: 0,
+      }).publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      const html = emails.sent[1]?.html ?? '';
+      expect(html).toContain('Nenhuma resposta ainda');
+      expect(html).not.toContain('width="0%"');
+    });
+  });
+
   describe('RsvpDeclined', () => {
-    it('usa tom de recusa e avisa os anfitriões', async () => {
+    it('usa tom de recusa e avisa o admin', async () => {
       await build().publish([new RsvpDeclined(ID, NAME, ACCOUNT, AT)]);
 
-      const [convidado, anfitriao] = emails.sent;
+      const [convidado, admin] = emails.sent;
       expect(convidado?.subject).toContain('registrada');
-      expect(convidado?.html).toContain('sentir sua falta');
-      expect(anfitriao?.subject).toContain('não vai poder ir');
+      expect(convidado?.html).toContain('Obrigada por avisar');
+      expect(admin?.subject).toContain('não vai poder ir');
       expect(emails.sent.map((message) => message.idempotencyKey)).toEqual([
         'rsvp-rsvp-1-recusado-convidado',
-        'rsvp-rsvp-1-recusado-anfitriao',
+        'rsvp-rsvp-1-recusado-admin',
       ]);
     });
   });
@@ -158,10 +320,10 @@ describe('EmailNotifyingEventPublisher', () => {
       ]);
 
       expect(emails.sent[0]?.subject).toContain('confirmada');
-      expect(emails.sent[1]?.subject).toContain('vai à festa');
+      expect(emails.sent[1]?.subject).toContain('confirmou presença');
     });
 
-    it('avisa o anfitrião que houve mudança de ideia', async () => {
+    it('avisa o admin que houve mudança de ideia', async () => {
       await build().publish([
         new RsvpDecisionChanged(
           ID,
@@ -174,12 +336,14 @@ describe('EmailNotifyingEventPublisher', () => {
       ]);
 
       expect(emails.sent[1]?.html).toContain('mudou de ideia');
+      // O convidado não precisa saber que o sistema achou isso interessante.
+      expect(emails.sent[0]?.html).not.toContain('mudou de ideia');
     });
   });
 
-  describe('sem anfitriões configurados', () => {
+  describe('sem admin configurado', () => {
     it('escreve só para o convidado', async () => {
-      await build([]).publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+      await build({ adminRecipients: [] }).publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
 
       expect(emails.sent).toHaveLength(1);
       expect(emails.sent[0]?.to).toEqual(['maria.clara@gmail.com']);
@@ -204,7 +368,7 @@ describe('EmailNotifyingEventPublisher', () => {
       const publisher = new EmailNotifyingEventPublisher({
         emails: new ExplodingEmailSender(),
         invitationUrl: 'https://exemplo.test',
-        hostRecipients: ['mae@ivy.test'],
+        adminRecipients: ['mae@ivy.test'],
       });
 
       // A resposta ao convidado já foi enviada quando isto roda. Relançar aqui
@@ -246,6 +410,20 @@ describe('EmailNotifyingEventPublisher', () => {
 
       expect(emails.sent[1]?.html).toContain('&#39;');
       expect(emails.sent[1]?.html).not.toContain("D'Ávila Souza");
+    });
+
+    it('escapa o nome também dentro da lista', async () => {
+      await buildWithRoster({
+        entries: [{ name: `Ana "Aninha" <b>`, attending: true, respondedAtIso: AT.toISOString() }],
+        attendingCount: 1,
+        notAttendingCount: 0,
+        total: 1,
+        attendingPercent: 100,
+      }).publish([new RsvpConfirmed(ID, NAME, ACCOUNT, AT)]);
+
+      const html = emails.sent[1]?.html ?? '';
+      expect(html).toContain('&lt;b&gt;');
+      expect(html).not.toContain('<b>');
     });
   });
 });

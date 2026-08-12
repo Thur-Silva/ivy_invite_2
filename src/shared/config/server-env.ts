@@ -53,6 +53,8 @@ const serverEnvSchema = z.object({
    * fora do config evita que o contexto RSVP precise importar o Celebration,
    * quebrando a fronteira que a arquitetura promete.
    */
+  RSVP_ADMIN_EMAILS: z.string().optional(),
+  /** Nome antigo de `RSVP_ADMIN_EMAILS`. Aceito para nao quebrar ambiente. */
   RSVP_NOTIFY_EMAILS: z.string().optional(),
 
   /**
@@ -90,6 +92,7 @@ const parsed = serverEnvSchema.safeParse({
   AUTH_GOOGLE_SECRET: absentWhenBlank(process.env.AUTH_GOOGLE_SECRET),
   IVY_MESSAGER_BASE_URL: absentWhenBlank(process.env.IVY_MESSAGER_BASE_URL),
   IVY_MESSAGER_TOKEN: absentWhenBlank(process.env.IVY_MESSAGER_TOKEN),
+  RSVP_ADMIN_EMAILS: absentWhenBlank(process.env.RSVP_ADMIN_EMAILS),
   RSVP_NOTIFY_EMAILS: absentWhenBlank(process.env.RSVP_NOTIFY_EMAILS),
   INVITATION_URL: absentWhenBlank(process.env.INVITATION_URL),
   VERCEL_PROJECT_PRODUCTION_URL: absentWhenBlank(process.env.VERCEL_PROJECT_PRODUCTION_URL),

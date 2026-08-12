@@ -1,12 +1,15 @@
 import 'dotenv/config';
 import { describe, expect, it } from 'vitest';
 import { EmailNotifyingEventPublisher } from './email-notifying-event-publisher';
+import type { GuestRoster } from '../../application/use-cases/get-guest-roster.use-case';
+import { GetGuestRoster } from '../../application/use-cases/get-guest-roster.use-case';
 import { RsvpConfirmed } from '../../domain/events/rsvp-confirmed.event';
 import { RsvpDecisionChanged } from '../../domain/events/rsvp-decision-changed.event';
 import { AttendanceDecision } from '../../domain/value-objects/attendance-decision';
 import { GuestAccount } from '../../domain/value-objects/guest-account';
 import { GuestName } from '../../domain/value-objects/guest-name';
 import { RsvpId } from '../../domain/value-objects/rsvp-id';
+import { NeonRsvpRepository } from '../persistence/neon-rsvp.repository';
 import { IvyMessagerEmailSender } from '@/shared/infrastructure/messager/ivy-messager-email-sender';
 
 /**
@@ -43,6 +46,38 @@ const ACCOUNT = GuestAccount.create({
   email: GUEST,
   displayName: 'Arthur Caue',
 });
+
+/**
+ * A lista que alimenta o gráfico do relatório.
+ *
+ * Com `DATABASE_URL`, lê o banco de verdade, e o e-mail que chega mostra o estado
+ * real do convite. Sem banco, cai numa lista de demonstração: um smoke test que
+ * exige Neon para provar que o **e-mail** está certo obriga a configurar demais
+ * para verificar de menos.
+ */
+const DEMO_ROSTER: GuestRoster = {
+  entries: [
+    { name: 'Arthur Caue', attending: true, respondedAtIso: new Date().toISOString() },
+    { name: 'Maria Clara Souza', attending: true, respondedAtIso: new Date().toISOString() },
+    { name: 'João Pedro Lima', attending: false, respondedAtIso: new Date().toISOString() },
+    { name: 'Ana Beatriz', attending: true, respondedAtIso: new Date().toISOString() },
+    { name: 'Tia Lúcia', attending: true, respondedAtIso: new Date().toISOString() },
+    { name: 'Vovô Antônio', attending: false, respondedAtIso: new Date().toISOString() },
+  ],
+  attendingCount: 4,
+  notAttendingCount: 2,
+  total: 6,
+  attendingPercent: 67,
+};
+
+const DATABASE_URL = process.env.DATABASE_URL;
+
+function resolveRoster(): { execute(): Promise<GuestRoster> } {
+  if (DATABASE_URL === undefined || DATABASE_URL.trim() === '') {
+    return { execute: async () => DEMO_ROSTER };
+  }
+  return new GetGuestRoster({ rsvps: new NeonRsvpRepository(DATABASE_URL) });
+}
 
 describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
   it('a instância está de pé e configurada', async () => {
@@ -122,11 +157,12 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
     console.info('[smoke] 401 classificado como permanente, sem retentativa');
   });
 
-  it('o fluxo completo: confirmação gera recibo e aviso', async () => {
+  it('o fluxo completo: confirmação gera recibo e relatório', async () => {
     const publisher = new EmailNotifyingEventPublisher({
       emails: sender,
       invitationUrl: INVITATION,
-      hostRecipients: [GUEST],
+      adminRecipients: [GUEST],
+      roster: resolveRoster(),
       correlationId: `smoke-${RUN}-fluxo`,
     });
 
@@ -140,14 +176,44 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
       ),
     ]);
 
-    console.info('[smoke] fluxo de confirmação publicado: recibo + aviso ao anfitrião');
+    console.info('[smoke] fluxo de confirmação publicado: recibo + relatório do admin');
+  });
+
+  /**
+   * Garante que a caixa de entrada recebe pelo menos um relatório com o gráfico
+   * cheio e a lista longa, mesmo que o banco esteja vazio. É a peça que o olho
+   * humano precisa conferir, e conferir barra de 0% não prova nada.
+   */
+  it('o relatório com gráfico e lista completa chega montado', async () => {
+    const publisher = new EmailNotifyingEventPublisher({
+      emails: sender,
+      invitationUrl: INVITATION,
+      adminRecipients: [GUEST],
+      roster: { execute: async () => DEMO_ROSTER },
+      correlationId: `smoke-${RUN}-relatorio`,
+    });
+
+    await publisher.publish([
+      new RsvpConfirmed(
+        RsvpId.fromString(`smoke-${RUN}-relatorio`),
+        GuestName.create('Arthur Caue'),
+        ACCOUNT,
+        new Date(),
+      ),
+    ]);
+
+    console.info(
+      `[smoke] relatório de demonstração publicado: ${DEMO_ROSTER.attendingCount} vão, ` +
+        `${DEMO_ROSTER.notAttendingCount} não vão, ${DEMO_ROSTER.total} responderam`,
+    );
   });
 
   it('o fluxo de mudança de ideia usa o tom de recusa', async () => {
     const publisher = new EmailNotifyingEventPublisher({
       emails: sender,
       invitationUrl: INVITATION,
-      hostRecipients: [GUEST],
+      adminRecipients: [GUEST],
+      roster: resolveRoster(),
       correlationId: `smoke-${RUN}-mudanca`,
     });
 
@@ -162,6 +228,6 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
       ),
     ]);
 
-    console.info('[smoke] fluxo de mudança publicado: recibo de recusa + aviso');
+    console.info('[smoke] fluxo de mudança publicado: recibo de recusa + relatório');
   });
 });

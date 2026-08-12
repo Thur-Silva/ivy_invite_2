@@ -20,7 +20,7 @@ RELEASE 2 │              │                   │ PBI-07           │       
  no       │              │                   │ acompanhantes    │                │ calendário   │
  controle"│              │                   │                  │                │              │
 ⏳Sprint 2 │              │                   │ PBI-05 painel do anfitrião (lista + contagem)   │
-          │              │                   │ PBI-06 notificar anfitriões a cada resposta      │
+          │              │                   │ PBI-06 relatório do admin a cada resposta        │
           ├──────────────┼───────────────────┼──────────────────┼────────────────┼──────────────┤
 RELEASE 3 │              │ PBI-12            │ PBI-08           │ PBI-13         │              │
 "encanto  │, │ trilha sonora     │ recadinho para   │ instruções de  │, │
