@@ -45,9 +45,8 @@ interface RsvpFact {
  * lista completa. É quem fecha número com buffet, e abrir o `db:studio` a cada
  * resposta não é uma opção realista.
  *
- * Quando os dois são a mesma caixa de entrada (o admin respondendo o próprio
- * convite), **só o relatório sai**. Dois e-mails sobre o mesmo fato para o mesmo
- * endereço é spam, e o relatório já contém tudo que o recibo diria.
+ * Os dois saem mesmo quando caem na mesma caixa de entrada. Não são duplicata:
+ * um responde "sua presença está registrada", o outro responde "eis a lista".
  *
  * ## A lista é lida na hora de escrever
  *
@@ -145,23 +144,22 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
   }
 
   private messagesFor(fact: RsvpFact, roster: GuestRoster | null): EmailMessage[] {
-    const messages: EmailMessage[] = [];
-
-    // O recibo é cortesia para quem não recebe o relatório. Quem recebe os dois
-    // ganharia duas notificações do mesmo fato, e a segunda só irrita.
-    if (!this.isAdmin(fact.guestEmail)) {
-      messages.push(
-        this.compose({
-          to: [fact.guestEmail],
-          rendered: guestReceiptEmail({
-            firstName: fact.guestFirstName,
-            attending: fact.attending,
-            invitationUrl: this.deps.invitationUrl,
-          }),
-          idempotencyKey: `rsvp-${fact.rsvpId}-${fact.slug}-convidado`,
+    // O recibo sai sempre, inclusive quando quem respondeu também é admin.
+    // Chegou a ser suprimido nesse caso, em nome de reduzir volume, e foi um
+    // erro: os dois e-mails dizem coisas diferentes. O recibo é a cortesia que o
+    // convidado recebe pela resposta dele; o relatório é ferramenta de quem
+    // organiza. Quem acumula os dois papéis quer as duas coisas.
+    const messages: EmailMessage[] = [
+      this.compose({
+        to: [fact.guestEmail],
+        rendered: guestReceiptEmail({
+          firstName: fact.guestFirstName,
+          attending: fact.attending,
+          invitationUrl: this.deps.invitationUrl,
         }),
-      );
-    }
+        idempotencyKey: `rsvp-${fact.rsvpId}-${fact.slug}-convidado`,
+      }),
+    ];
 
     if (this.deps.adminRecipients.length > 0) {
       const report = adminReportEmail({
@@ -186,14 +184,6 @@ export class EmailNotifyingEventPublisher implements DomainEventPublisher {
     }
 
     return messages;
-  }
-
-  /** Compara sem diferenciar maiúscula nem espaço em volta, como servidor faz. */
-  private isAdmin(email: string): boolean {
-    const normalized = email.trim().toLowerCase();
-    return this.deps.adminRecipients.some(
-      (recipient) => recipient.trim().toLowerCase() === normalized,
-    );
   }
 
   private compose(input: {

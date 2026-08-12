@@ -30,10 +30,10 @@ import { IvyMessagerEmailSender } from '@/shared/infrastructure/messager/ivy-mes
  * o mesmo endereço: oito e-mails por execução. Verificar integração não justifica
  * entupir caixa de entrada de ninguém.
  *
- * Agora o padrão manda **um**: o relatório com o gráfico cheio, que é a única
- * peça que precisa de olho humano. Health e credencial errada não enviam nada.
- * A bateria completa (cinco e-mails) existe atrás de `RSVP_SMOKE_FULL=1`, para
- * quando alguém estiver mexendo nos templates de propósito.
+ * Agora o padrão publica **uma** confirmação, que gera os dois e-mails que ela
+ * deve gerar: o recibo do convidado e o relatório com o gráfico cheio. Health e
+ * credencial errada não enviam nada. A bateria completa (seis e-mails) existe
+ * atrás de `RSVP_SMOKE_FULL=1`, para quem estiver mexendo nos templates.
  *
  * Sem `IVY_MESSAGER_TOKEN` os casos são pulados em vez de falharem: um smoke test
  * que quebra por falta de credencial vira ruído.
@@ -195,16 +195,14 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
   });
 
   /**
-   * O único envio da execução padrão.
+   * O único envio da execução padrão: uma confirmação, os dois e-mails que ela
+   * gera. Dois é o número certo aqui, e o caso afirma isso, porque já houve uma
+   * versão que suprimia o recibo quando convidado e admin eram o mesmo endereço.
    *
-   * Escolhido por ser a peça que o olho humano precisa conferir: gráfico cheio e
-   * lista longa. Usa a lista de demonstração mesmo havendo banco, porque conferir
-   * uma barra de 0% não prova nada sobre o desenho.
-   *
-   * Como o endereço do convidado é o mesmo do admin, o publisher suprime o
-   * recibo: chega **um** e-mail, e isso é parte do que este caso verifica.
+   * Usa a lista de demonstração mesmo havendo banco: conferir uma barra de 0%
+   * não prova nada sobre o desenho do gráfico.
    */
-  it('o relatório com gráfico e lista completa chega montado', async () => {
+  it('a confirmação entrega recibo e relatório, um de cada', async () => {
     const enviados: string[] = [];
     const contando: EmailSender = {
       async send(message) {
@@ -230,13 +228,15 @@ describe.skipIf(TOKEN === undefined)('Ivy Messager ao vivo', () => {
       ),
     ]);
 
-    // A garantia que motivou esta mudança: uma resposta, um e-mail na caixa.
-    expect(enviados).toHaveLength(1);
-    expect(enviados[0]).toContain('confirmou presença');
+    // Dois, nem mais nem menos: o recibo do convidado e o relatório do admin.
+    expect(enviados).toHaveLength(2);
+    expect(enviados[0]).toContain('confirmada');
+    expect(enviados[1]).toContain('confirmou presença');
 
     console.info(
-      `[smoke] um e-mail enviado: "${enviados[0]}" com ${DEMO_ROSTER.attendingCount} vão, ` +
-        `${DEMO_ROSTER.notAttendingCount} não vão, ${DEMO_ROSTER.total} responderam`,
+      `[smoke] dois e-mails enviados: "${enviados[0]}" e "${enviados[1]}", ` +
+        `com ${DEMO_ROSTER.attendingCount} vão, ${DEMO_ROSTER.notAttendingCount} não vão, ` +
+        `${DEMO_ROSTER.total} responderam`,
     );
   });
 

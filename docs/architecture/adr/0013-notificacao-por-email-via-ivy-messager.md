@@ -67,9 +67,12 @@ deveria: evento é fato pontual, não fotografia do banco. Por isso o publisher
 consulta `GetGuestRoster`, um caso de uso de leitura, uma vez por lote. É a única
 consulta de estado neste caminho, e ela vive do lado de fora do domínio.
 
-Quando os dois papéis caem na mesma caixa de entrada, o recibo é suprimido e sai
-só o relatório. Uma resposta, um e-mail por endereço: o relatório é superconjunto
-do recibo, então a segunda mensagem só teria valor de incômodo.
+Os dois saem mesmo quando caem na mesma caixa de entrada. Houve uma versão que
+suprimia o recibo nesse caso, em nome de reduzir volume, e ela durou um dia: o
+relatório parece superconjunto do recibo, mas não é. Um responde à pessoa que
+confirmou, o outro serve a quem organiza, e quem acumula os dois papéis quer as
+duas coisas. A lição é sobre a economia errada: cortar mensagem contando campo
+repetido, em vez de contar propósito.
 
 ## Consequências
 

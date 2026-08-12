@@ -112,10 +112,10 @@ escrever: o evento é um fato pontual e não carrega o estado atual. Se a consul
 falhar, o relatório sai **sem** o gráfico em vez de não sair, porque saber que
 alguém respondeu vale mais que o gráfico.
 
-Uma resposta gera **um** e-mail por caixa de entrada. Quando quem responde é o
-próprio admin, o recibo é suprimido e sai só o relatório: dois e-mails sobre o
-mesmo fato para o mesmo endereço é spam, e o relatório já diz tudo que o recibo
-diria.
+Os dois saem sempre, inclusive quando caem na mesma caixa de entrada porque quem
+respondeu também é admin. Não são duplicata: um diz "sua presença está
+registrada", o outro diz "eis a lista". Quem acumula os dois papéis quer as duas
+coisas.
 
 O corpo **não repete data, endereço nem traje**, de propósito. E-mail é retrato:
 se o local mudar, a caixa de entrada guarda a versão velha para sempre e o
@@ -143,10 +143,10 @@ publisher, os mesmos templates e os mesmos eventos de domínio que a Server Acti
 usa. Um `curl` provaria que o serviço funciona; isto prova que a **integração**
 funciona, que é a pergunta útil.
 
-**Manda um e-mail de verdade**: o relatório com o gráfico cheio e a lista longa,
-que é a única peça que precisa de olho humano. O health check e o caso de
-credencial errada não enviam nada, e o próprio caso verifica que saiu **uma**
-mensagem, não duas.
+**Manda dois e-mails de verdade**: publica uma confirmação e entrega o recibo do
+convidado e o relatório com o gráfico cheio, que é exatamente o que uma resposta
+real produz. O health check e o caso de credencial errada não enviam nada, e o
+caso afirma que saíram **dois**, nem mais nem menos.
 
 > Fica fora de `npm run verify` por construção: a suíte normal inclui só
 > `*.spec.ts` e esta inclui só `*.live.ts`, então nenhum arquivo casa nos dois.
@@ -159,7 +159,7 @@ npm run email:smoke:full
 
 Acrescenta comprovante de envio pelo adapter, idempotência (dois envios, um
 e-mail), e os fluxos de confirmação e de mudança de ideia, usando a lista real do
-banco quando há `DATABASE_URL`. **Manda cinco e-mails de verdade.**
+banco quando há `DATABASE_URL`. **Manda seis e-mails de verdade.**
 
 ## Scripts
 
@@ -176,8 +176,8 @@ banco quando há `DATABASE_URL`. **Manda cinco e-mails de verdade.**
 | `npm run db:generate` | gera migração a partir do schema Drizzle                                |
 | `npm run db:migrate`  | aplica migrações no Neon                                                |
 | `npm run db:studio`   | abre o Drizzle Studio. **é aqui que se lê a lista de confirmados hoje** |
-| `npm run email:smoke` | **envia um e-mail de verdade** e valida a integração de ponta a ponta   |
-| `npm run email:smoke:full` | a bateria toda dos templates. **manda cinco e-mails de verdade**  |
+| `npm run email:smoke` | **envia dois e-mails de verdade** e valida a integração de ponta a ponta |
+| `npm run email:smoke:full` | a bateria toda dos templates. **manda seis e-mails de verdade**   |
 | `npm run db:inspect`  | imprime colunas, índices e contagens do banco, sem dado de convidado    |
 
 ---
