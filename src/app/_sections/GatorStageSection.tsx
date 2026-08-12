@@ -2,7 +2,7 @@
 
 import { motion, useMotionValue, useTransform } from 'motion/react';
 import { useGatorStage } from '@/graphics/scroll-journey/gator-stage';
-import { GATOR_MOUTH_OFFSET, TrumpetGator } from '@/graphics/scroll-journey/TrumpetGator';
+import { PondGator } from '@/graphics/scroll-journey/PondGator';
 import { usePrefersReducedMotion } from '@/ui/hooks/use-environment';
 import { invitationCopy } from '../_content/invitation-copy';
 
@@ -11,50 +11,55 @@ import { invitationCopy } from '../_content/invitation-copy';
  *
  * **É isto que impede a sobreposição.** Enquanto o jacaré era um enfeite plantado
  * numa fração da altura da página, qualquer conteúdo podia aterrissar em cima
- * dele — foi o que o cartão do mapa fez. Um `<section>` com altura mínima reserva
- * o próprio espaço: o navegador empurra o que vem depois, e nada mais pode ocupar
- * essa faixa. Não é calibragem, é layout.
+ * dele — foi o que o cartão do mapa fez. Um `<section>` ocupa espaço: o navegador
+ * empurra o que vem depois, hoje e em qualquer seção futura.
  *
- * A **boca** fica no centro geométrico da seção, de propósito: `biteProgress`
- * chega a 1 quando esse centro alinha com o centro da viewport, e o vaga-lume
- * converge para o centro da viewport. Os dois se encontram por construção.
+ * A altura vem do **conteúdo**, não de um `min-h` em unidades de viewport. Fixar
+ * `74svh` reservava uma faixa quase vazia, e o vão entre o mapa e o jacaré ficava
+ * grande o bastante para o convidado desistir antes de chegar lá. Aqui a seção
+ * mede o que o desenho precisa e nada além — e é essa altura que também define,
+ * naturalmente, quanto de rolagem a animação leva para acontecer.
  */
 export function GatorStageSection() {
   const { stageRef, biteProgress } = useGatorStage();
   const prefersReducedMotion = usePrefersReducedMotion();
 
   /*
-   * Coreografia, toda em cima de `biteProgress`:
+   * Coreografia, toda sobre `biteProgress` (0 = palco entrando, 1 = palco dentro):
    *
-   *   0,00 → 0,28  emerge da água
-   *   0,28 → 0,90  abre a boca progressivamente
-   *   0,90 → 1,00  fecha de uma vez: a mordida
-   *   depois de 1  engole, a barriga acende forte, o trompete comemora
+   *   0,00 → 0,20  emerge da água
+   *   0,20 → 0,58  abre a boca progressivamente
+   *   0,24 → 0,66  o vaga-lume entra em quadro e mergulha na goela
+   *   0,66 → 0,76  fecha de uma vez: a mordida
+   *   0,68 → 0,75  a luz se apaga: engolido
+   *   0,76 → 0,95  engole e a barriga acende forte
    *
-   * Os valores acima de 1 são alcançáveis: `biteProgress` continua subindo
-   * enquanto o palco sobe além do centro da tela.
+   * Tudo termina em 0,95 de propósito: 1 é garantidamente alcançável, valores
+   * acima disso dependem da altura do rodapé e não são de se confiar.
    */
-  const animatedJaw = useTransform(biteProgress, [0.28, 0.9, 1], [0.08, 1, 0.02]);
-  const animatedGulp = useTransform(biteProgress, [1, 1.06, 1.16], [1, 1.08, 1]);
-  const animatedGlow = useTransform(biteProgress, [1, 1.1], [0, 1]);
-  const animatedNotes = useTransform(biteProgress, [1.06, 1.18], [0, 1]);
-  const animatedRise = useTransform(biteProgress, [0, 0.3], [120, 0]);
-  const animatedFade = useTransform(biteProgress, [0, 0.16], [0, 1]);
+  const animatedRise = useTransform(biteProgress, [0, 0.2], [90, 0]);
+  const animatedFade = useTransform(biteProgress, [0, 0.14], [0, 1]);
+  const animatedJaw = useTransform(biteProgress, [0.2, 0.58, 0.66, 0.76], [0.06, 1, 1, 0.02]);
+  const animatedApproach = useTransform(biteProgress, [0.24, 0.66], [0, 1]);
+  const animatedSpark = useTransform(biteProgress, [0.22, 0.32, 0.68, 0.75], [0, 1, 1, 0]);
+  const animatedGulp = useTransform(biteProgress, [0.76, 0.83, 0.92], [1, 1.08, 1]);
+  const animatedGlow = useTransform(biteProgress, [0.76, 0.95], [0, 1]);
 
   /*
    * Quem pediu menos movimento recebe o desfecho, não a animação: jacaré parado,
-   * boca entreaberta, barriga já acesa. A recompensa da história continua lá.
+   * boca entreaberta, barriga acesa, vaga-lume já engolido.
    */
   const still = {
-    jaw: useMotionValue(0.22),
+    jaw: useMotionValue(0.2),
     one: useMotionValue(1),
     zero: useMotionValue(0),
   };
 
   const jawOpen = prefersReducedMotion ? still.jaw : animatedJaw;
+  const approach = prefersReducedMotion ? still.one : animatedApproach;
+  const fireflyOpacity = prefersReducedMotion ? still.zero : animatedSpark;
   const gulp = prefersReducedMotion ? still.one : animatedGulp;
   const bellyGlow = prefersReducedMotion ? still.one : animatedGlow;
-  const notesOpacity = prefersReducedMotion ? still.one : animatedNotes;
   const opacity = prefersReducedMotion ? still.one : animatedFade;
   const rise = prefersReducedMotion ? still.zero : animatedRise;
 
@@ -63,36 +68,25 @@ export function GatorStageSection() {
       ref={stageRef}
       id="lago"
       aria-labelledby="lago-caption"
-      className="relative flex min-h-[74svh] w-full flex-col items-center justify-end overflow-hidden px-5 pb-12"
+      className="relative flex w-full flex-col items-center justify-center gap-3 px-5 py-10"
     >
-      {/*
-        A boca é ancorada no centro da seção. O deslocamento vem do próprio
-        viewBox do desenho (ver GATOR_MOUTH_OFFSET) para que seja a BOCA, e não o
-        centro da ilustração, a coincidir com o centro do palco.
-      */}
-      {/*
-        Dois elementos, e não um: o Motion escreve `transform` para animar `y`,
-        então o deslocamento da boca precisa morar num nó de fora — misturar os
-        dois faz um sobrescrever o outro.
-      */}
-      <div
+      <motion.div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 w-[260px] sm:w-[320px]"
-        style={{ transform: `translate(-${GATOR_MOUTH_OFFSET.x}, -${GATOR_MOUTH_OFFSET.y})` }}
+        style={{ opacity, y: rise }}
+        className="pointer-events-none w-[250px] sm:w-[300px]"
       >
-        <motion.div style={{ opacity, y: rise }}>
-          <TrumpetGator
-            jawOpen={jawOpen}
-            bellyGlow={bellyGlow}
-            gulp={gulp}
-            notesOpacity={notesOpacity}
-          />
-        </motion.div>
-      </div>
+        <PondGator
+          jawOpen={jawOpen}
+          approach={approach}
+          fireflyOpacity={fireflyOpacity}
+          bellyGlow={bellyGlow}
+          gulp={gulp}
+        />
+      </motion.div>
 
       {/* Legenda: dá conteúdo real à seção, então ela não parece um vão vazio
           caso a ilustração não renderize por qualquer motivo. */}
-      <p id="lago-caption" className="text-cream/45 font-script relative text-center text-xl">
+      <p id="lago-caption" className="text-cream/45 font-script text-center text-xl">
         {invitationCopy.gator.caption}
       </p>
     </section>

@@ -3,83 +3,82 @@
 import { motion, useTransform, type MotionValue } from 'motion/react';
 
 /**
- * O jacaré trompetista do lago — desenho original, no estilo do resto do convite.
+ * O jacaré do lago — desenho original, no estilo do resto do convite.
  *
- * Fica no fim da trilha e **engole o vaga-lume** que acompanhou a leitura. Toda
- * a animação é dirigida por scroll: nada aqui roda sozinho.
+ * ## O vaga-lume mora aqui dentro. De propósito.
+ *
+ * Esta é a decisão central do componente. Antes, o vaga-lume era um elemento
+ * `fixed` na viewport e a boca vivia numa seção do documento: dois sistemas de
+ * coordenadas diferentes, unidos por conversões entre `vh`, `%` e progresso de
+ * scroll. Cada conversão era uma chance de errar — e errava, em resoluções
+ * diferentes e em telas móveis onde `vh` e `svh` divergem.
+ *
+ * Agora o vaga-lume que é engolido é um `<g>` **deste mesmo SVG**, voando até a
+ * boca em `(60, 94)` do viewBox. Os dois estão no mesmo espaço vetorial: se o
+ * SVG escala, os dois escalam juntos. O encontro é exato em qualquer resolução,
+ * qualquer altura de página, qualquer aparelho — não por calibragem, mas porque
+ * não existe conversão nenhuma entre eles.
+ *
+ * O vaga-lume da trilha (camada de fundo) apenas se apaga um pouco antes, e este
+ * entra em quadro vindo de fora do viewBox. A troca acontece fora da tela.
  *
  * ## Anatomia: tudo se sobrepõe, nada encosta
  *
- * Membro desenhado *ao lado* do corpo lê como adesivo colado. Aqui cada peça
- * nasce **dentro** do tronco e sai dele:
- *
- *  - as coxas partem de dentro da elipse do corpo e só depois viram pé;
- *  - os braços partem do ombro, sob a silhueta do tronco;
- *  - a cauda começa 25px dentro do corpo;
- *  - o crânio invade o tronco por ~16px, então não existe emenda no pescoço.
- *
- * A ordem de pintura também importa: cauda e membros de trás primeiro, tronco por
- * cima (cobrindo as junções), membros da frente depois, cabeça por último.
+ * Membro desenhado *ao lado* do corpo lê como adesivo colado. Cada peça nasce
+ * **dentro** do tronco e sai dele; a ordem de pintura é cauda e membros de trás,
+ * tronco por cima cobrindo as junções, membros da frente, cabeça por último.
  *
  * ## Contraste com o lago
  *
- * O fundo é verde-escuro, então um jacaré verde-escuro some. Três recursos:
- * paleta deslocada para o claro (sálvia e oliva em vez de musgo), **contorno**
- * escuro em toda silhueta — o truque clássico de desenho animado — e um halo
- * escuro difuso atrás do bicho, que o descola da água.
+ * Fundo verde-escuro engole jacaré verde-escuro. Paleta deslocada para o claro,
+ * **contorno** escuro em toda silhueta — o truque clássico de desenho animado — e
+ * um halo escuro difuso atrás, que o descola da água.
  *
  * ## Como a boca abre
  *
- * Crânio e olhos **não giram** — se girassem, os olhos desceriam junto com o
- * focinho e o rosto desmontaria. Giram apenas as duas maxilas, em torno da mesma
- * dobradiça escondida dentro do crânio: a de cima sobe pouco, a de baixo desce
- * muito. É assim que jacaré abre a boca de verdade, e é o que faz a mordida ler.
- *
- * ## Onde fica a boca
- *
- * O centro da goela aberta fica em `(60, 94)` no viewBox de `240 × 220` — ver
- * `GATOR_MOUTH_OFFSET` para a conta. O componente pai desloca o jacaré por esses
- * percentuais para que a **boca**, e não o centro do desenho, caia sobre o ponto
- * da trilha onde o vaga-lume chega. Mexeu no desenho, mexa na constante.
+ * Crânio e olhos **não giram** — se girassem, os olhos desceriam com o focinho e
+ * o rosto desmontaria. Giram só as duas maxilas, na mesma dobradiça escondida: a
+ * de cima sobe pouco, a de baixo desce muito.
  */
-
-/**
- * Deslocamento da caixa para que a BOCA fique sobre o ponto de ancoragem.
- *
- * Conferido girando as duas maxilas na abertura máxima: em `x ≈ 60` a goela vai
- * de `y ≈ 77` a `y ≈ 114`, então `(60, 94)` cai com folga dentro dela.
- */
-export const GATOR_MOUTH_OFFSET = { x: '25%', y: '42.5%' } as const;
 
 const OUTLINE = '#223D28';
 const LIMB = '#6E9A5F';
 const LIMB_BACK = '#4E7047';
 
-export function TrumpetGator({
+/** Onde a goela abre, em unidades do viewBox. O vaga-lume termina aqui. */
+const MOUTH = { x: 60, y: 94 } as const;
+
+export function PondGator({
   jawOpen,
+  approach,
+  fireflyOpacity,
   bellyGlow,
   gulp,
-  notesOpacity,
 }: {
   /** 0 = boca fechada, 1 = escancarada. */
   jawOpen: MotionValue<number>;
+  /** 0 = vaga-lume fora de quadro, 1 = dentro da boca. */
+  approach: MotionValue<number>;
+  fireflyOpacity: MotionValue<number>;
   bellyGlow: MotionValue<number>;
   gulp: MotionValue<number>;
-  notesOpacity: MotionValue<number>;
 }) {
   /*
-   * Uma abertura, duas maxilas: a de baixo faz o grosso do movimento.
-   *
-   * Atenção ao sinal. Em SVG o eixo Y aponta para **baixo**, então uma rotação
+   * Atenção ao sinal. Em SVG o eixo Y aponta para **baixo**, então rotação
    * positiva (horária na tela) *levanta* a ponta de um focinho voltado para a
-   * esquerda, e uma negativa a abaixa — o contrário da intuição de plano
-   * cartesiano. Inverter isto abre a boca ao avesso.
+   * esquerda, e negativa a abaixa — o contrário da intuição cartesiana. Inverter
+   * isto abre a boca ao avesso.
    */
   const upperJawRotate = useTransform(jawOpen, [0, 1], [0, 15]);
   const lowerJawRotate = useTransform(jawOpen, [0, 1], [0, -28]);
-  // A língua acompanha a mandíbula, senão fica flutuando na goela.
   const tongueRotate = useTransform(jawOpen, [0, 1], [0, -24]);
-  // O brilho externo é mais generoso que o interno: é o que faz "acender".
+
+  // Trajeto do vaga-lume: entra de fora do viewBox, pelo alto à esquerda, e
+  // termina exatamente sobre a boca. Deslocamento zero = dentro da goela.
+  const fireflyX = useTransform(approach, [0, 1], [-104, 0]);
+  const fireflyY = useTransform(approach, [0, 1], [-112, 0]);
+  const fireflyScale = useTransform(approach, [0, 1], [1.2, 0.75]);
+
   const bloomOpacity = useTransform(bellyGlow, [0, 1], [0, 0.85]);
 
   return (
@@ -94,11 +93,6 @@ export function TrumpetGator({
           <stop offset="0%" stopColor="#F2E4C9" />
           <stop offset="100%" stopColor="#D8C3A5" />
         </linearGradient>
-        <linearGradient id="gator-brass" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#F7E3AE" />
-          <stop offset="55%" stopColor="#E9C46A" />
-          <stop offset="100%" stopColor="#B8901F" />
-        </linearGradient>
         <radialGradient id="gator-firefly-glow" cx="0.5" cy="0.5" r="0.5">
           <stop offset="0%" stopColor="#FFFDF5" stopOpacity="1" />
           <stop offset="35%" stopColor="#FFE9A8" stopOpacity="0.9" />
@@ -109,17 +103,19 @@ export function TrumpetGator({
           <stop offset="0%" stopColor="#04140F" stopOpacity="0.55" />
           <stop offset="100%" stopColor="#04140F" stopOpacity="0" />
         </radialGradient>
-        <filter id="gator-bloom" x="-80%" y="-80%" width="260%" height="260%">
+        <filter id="gator-bloom" x="-90%" y="-90%" width="280%" height="280%">
           <feGaussianBlur stdDeviation="9" />
+        </filter>
+        <filter id="gator-spark-bloom" x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur stdDeviation="4" />
         </filter>
       </defs>
 
-      {/* Halo escuro: descola o bicho da água sem precisar de borda dura */}
-      <ellipse cx="128" cy="146" rx="118" ry="96" fill="url(#gator-halo)" />
+      {/* Halo escuro: descola o bicho da água sem borda dura */}
+      <ellipse cx="124" cy="146" rx="116" ry="94" fill="url(#gator-halo)" />
 
       {/* ---- Peças de trás: nascem dentro do tronco ---------------------- */}
 
-      {/* Cauda — começa 25px dentro do corpo, some sob ele */}
       <path
         d="M150 152 C196 158 222 130 216 98 C213 82 194 80 191 96 C187 118 176 132 150 134 Z"
         fill={LIMB_BACK}
@@ -128,21 +124,12 @@ export function TrumpetGator({
         strokeLinejoin="round"
       />
 
-      {/* Perna de trás: coxa sai de dentro do tronco, depois o pé */}
       <path
         d="M164 158 C176 176 178 188 174 196"
         stroke={LIMB_BACK}
         strokeWidth="26"
         strokeLinecap="round"
         fill="none"
-      />
-      <path
-        d="M164 158 C176 176 178 188 174 196"
-        stroke={OUTLINE}
-        strokeWidth="30"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.28"
       />
       <ellipse
         cx="178"
@@ -152,15 +139,6 @@ export function TrumpetGator({
         fill={LIMB_BACK}
         stroke={OUTLINE}
         strokeWidth="3"
-      />
-
-      {/* Braço erguido com o trompete — sai do ombro, por trás do tronco */}
-      <path
-        d="M170 116 C192 100 202 84 204 70"
-        stroke={LIMB_BACK}
-        strokeWidth="19"
-        strokeLinecap="round"
-        fill="none"
       />
 
       {/* ---- Tronco: pintado por cima, cobre todas as junções ------------ */}
@@ -176,7 +154,6 @@ export function TrumpetGator({
           strokeWidth="3.5"
         />
 
-        {/* Barriga */}
         <ellipse
           cx="124"
           cy="150"
@@ -195,8 +172,8 @@ export function TrumpetGator({
           opacity="0.65"
         />
 
-        {/* O vaga-lume aceso lá dentro. Três camadas: bloom externo, núcleo e
-            estouro branco — é o que faz a barriga acender de verdade. */}
+        {/* O vaga-lume aceso lá dentro. Três camadas — bloom, núcleo e estouro
+            branco — é o que faz a barriga realmente acender. */}
         <motion.circle
           cx="124"
           cy="150"
@@ -222,7 +199,25 @@ export function TrumpetGator({
         />
       </motion.g>
 
-      {/* ---- Peças da frente --------------------------------------------- */}
+      {/* ---- Braços: os dois em repouso, sem instrumento ----------------- */}
+
+      <path
+        d="M100 124 C84 138 84 154 94 162"
+        stroke={LIMB}
+        strokeWidth="17"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <ellipse cx="97" cy="164" rx="11" ry="9" fill={LIMB} stroke={OUTLINE} strokeWidth="2.5" />
+
+      <path
+        d="M166 126 C174 142 170 156 160 162"
+        stroke={LIMB}
+        strokeWidth="17"
+        strokeLinecap="round"
+        fill="none"
+      />
+      <ellipse cx="157" cy="164" rx="11" ry="9" fill={LIMB} stroke={OUTLINE} strokeWidth="2.5" />
 
       {/* Perna da frente */}
       <path
@@ -234,19 +229,8 @@ export function TrumpetGator({
       />
       <ellipse cx="92" cy="198" rx="22" ry="10" fill={LIMB} stroke={OUTLINE} strokeWidth="3" />
 
-      {/* Braço apoiado na barriga */}
-      <path
-        d="M100 124 C84 138 84 154 94 162"
-        stroke={LIMB}
-        strokeWidth="17"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <ellipse cx="97" cy="164" rx="11" ry="9" fill={LIMB} stroke={OUTLINE} strokeWidth="2.5" />
+      {/* ---- Cabeça: invade o tronco, sem emenda no pescoço -------------- */}
 
-      {/* ---- Cabeça: invade o tronco, então não há emenda no pescoço ----- */}
-
-      {/* Goela, atrás das maxilas */}
       <path d="M102 80 C74 84 42 88 24 86 L24 104 C50 112 82 110 102 106 Z" fill="#7E2D3F" />
       <motion.path
         d="M96 92 C74 96 48 100 32 98 C48 106 76 106 96 102 Z"
@@ -254,13 +238,9 @@ export function TrumpetGator({
         style={{ rotate: tongueRotate, transformBox: 'fill-box', transformOrigin: '100% 0%' }}
       />
 
-      {/* Maxila inferior — desce bastante; dobradiça no topo-direita */}
+      {/* Maxila inferior — desce bastante */}
       <motion.g
-        style={{
-          rotate: lowerJawRotate,
-          transformBox: 'fill-box',
-          transformOrigin: '100% 0%',
-        }}
+        style={{ rotate: lowerJawRotate, transformBox: 'fill-box', transformOrigin: '100% 0%' }}
       >
         <path
           d="M102 90 C78 93 46 95 27 92 C17 90 15 102 27 105 C52 111 82 110 102 107 Z"
@@ -275,13 +255,9 @@ export function TrumpetGator({
         />
       </motion.g>
 
-      {/* Maxila superior — sobe pouco; mesma dobradiça, canto inferior-direita */}
+      {/* Maxila superior — sobe pouco, mesma dobradiça */}
       <motion.g
-        style={{
-          rotate: upperJawRotate,
-          transformBox: 'fill-box',
-          transformOrigin: '100% 100%',
-        }}
+        style={{ rotate: upperJawRotate, transformBox: 'fill-box', transformOrigin: '100% 100%' }}
       >
         <path
           d="M102 66 C76 56 42 56 25 67 C15 73 16 84 26 85 C52 88 82 88 102 88 Z"
@@ -298,7 +274,7 @@ export function TrumpetGator({
         <circle cx="36" cy="66" r="2.6" fill={OUTLINE} />
       </motion.g>
 
-      {/* Crânio e olhos: PARADOS. Se girassem junto, o rosto desmontaria. */}
+      {/* Crânio e olhos: PARADOS */}
       <path
         d="M96 60 C112 56 130 64 134 80 C137 94 128 104 112 104 C100 104 94 96 94 86 Z"
         fill="url(#gator-skin)"
@@ -331,40 +307,29 @@ export function TrumpetGator({
       <circle cx="101" cy="48.5" r="1.5" fill="#FFFDF5" />
       <circle cx="126" cy="52.5" r="1.3" fill="#FFFDF5" />
 
-      {/* ---- Trompete: a mão fecha em volta do bocal --------------------- */}
-
-      <g transform="translate(202 66) rotate(-32)">
-        <rect
-          x="-4"
-          y="-5"
-          width="30"
-          height="10"
-          rx="5"
-          fill="url(#gator-brass)"
-          stroke={OUTLINE}
-          strokeWidth="2.5"
+      {/*
+        O VAGA-LUME. Último na ordem de pintura, então voa na frente de tudo até
+        entrar na goela. Deslocamento zero = exatamente sobre MOUTH.
+      */}
+      <motion.g
+        style={{
+          x: fireflyX,
+          y: fireflyY,
+          scale: fireflyScale,
+          opacity: fireflyOpacity,
+          transformBox: 'fill-box',
+          transformOrigin: 'center',
+        }}
+      >
+        <circle
+          cx={MOUTH.x}
+          cy={MOUTH.y}
+          r="13"
+          fill="#FFE9A8"
+          opacity="0.5"
+          filter="url(#gator-spark-bloom)"
         />
-        <path
-          d="M26 -15 L46 -24 L46 24 L26 15 Z"
-          fill="url(#gator-brass)"
-          stroke={OUTLINE}
-          strokeWidth="2.5"
-          strokeLinejoin="round"
-        />
-        <rect x="4" y="-11" width="4" height="7" rx="2" fill="#B8901F" />
-        <rect x="12" y="-11" width="4" height="7" rx="2" fill="#B8901F" />
-      </g>
-      {/* Mão fechando sobre o bocal — sem isso o trompete flutua */}
-      <ellipse cx="203" cy="67" rx="12" ry="11" fill={LIMB} stroke={OUTLINE} strokeWidth="3" />
-
-      {/* Notas musicais — o jacaré comemora a refeição */}
-      <motion.g style={{ opacity: notesOpacity }} className="animate-float">
-        <g fill="#F7E3AE" stroke={OUTLINE} strokeWidth="1.5">
-          <circle cx="214" cy="26" r="5" />
-          <rect x="217" y="6" width="2.8" height="21" rx="1.4" />
-          <circle cx="190" cy="14" r="4" />
-          <rect x="192.6" y="-2" width="2.4" height="17" rx="1.2" />
-        </g>
+        <circle cx={MOUTH.x} cy={MOUTH.y} r="4.2" fill="#FFFDF5" />
       </motion.g>
     </svg>
   );

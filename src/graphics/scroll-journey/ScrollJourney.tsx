@@ -104,26 +104,23 @@ export function ScrollJourney() {
   const tail3 = useSpring(scrollYProgress, { stiffness: 30, damping: 16, mass: 0.7 });
 
   /**
-   * Aproximação final: o vaga-lume abandona a trilha e mergulha na boca.
+   * O vaga-lume da trilha se apaga quando o palco do jacaré entra em cena.
    *
-   * `biteProgress` chega a 1 quando o centro do palco do jacaré alinha com o
-   * centro da viewport — e é exatamente lá que a boca está. Então o destino é
-   * sempre `(50%, 50vh)`, qualquer que seja a altura da página ou o número de
-   * seções. Quem garante o encontro é a seção medida, não uma fração adivinhada.
+   * Ele **não** voa até a boca — essa tentativa foi abandonada. Ela exigia
+   * traduzir uma posição do documento para uma coordenada de viewport, e a
+   * tradução passava por `vh`, `%` e progresso de scroll, divergindo em telas
+   * móveis (onde `vh` e `svh` não são a mesma coisa) e em alturas de página
+   * diferentes.
+   *
+   * Quem é engolido é um vaga-lume desenhado **dentro do SVG do jacaré**, no
+   * mesmo sistema de coordenadas da boca (ver `PondGator`). Este aqui só sai de
+   * cena antes, e a troca acontece fora do quadro. É o que torna o encontro exato
+   * em qualquer resolução: não há encontro entre sistemas diferentes.
    */
-  const veer = useTransform(biteProgress, [0.5, 1], [0, 1]);
+  const fireflyAlive = useTransform(biteProgress, [0.14, 0.26], [1, 0]);
 
-  /** 1 enquanto o vaga-lume voa; some no instante da mordida. */
-  const fireflyAlive = useTransform(biteProgress, [0.96, 1], [1, 0]);
-
-  const fireflyTop = useTransform([lead, veer], ([progress = 0, pull = 0]: number[]) => {
-    const onTrail = progress * 100;
-    return `${onTrail + (50 - onTrail) * pull}vh`;
-  });
-  const fireflyLeft = useTransform([lead, veer], ([progress = 0, pull = 0]: number[]) => {
-    const onTrail = curveX(progress);
-    return `${onTrail + (50 - onTrail) * pull}%`;
-  });
+  const fireflyTop = useTransform(lead, (progress) => `${progress * 100}vh`);
+  const fireflyLeft = useTransform(lead, (progress) => `${curveX(progress)}%`);
 
   // Quem pediu menos movimento não recebe um bicho perseguindo a rolagem.
   if (prefersReducedMotion) return null;

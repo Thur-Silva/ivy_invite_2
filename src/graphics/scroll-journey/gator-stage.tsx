@@ -6,49 +6,51 @@ import { createContext, useContext, useMemo, useRef, type ReactNode, type RefObj
 interface GatorStage {
   /** Vai na `<section>` do palco: é o que o Motion mede. */
   readonly stageRef: RefObject<HTMLElement | null>;
-  /**
-   * 0 quando o palco começa a entrar na tela, **1 no instante exato em que o
-   * centro do palco encontra o centro da viewport** — que é onde a boca está.
-   */
+  /** 0 quando o palco começa a entrar na tela, 1 quando termina de entrar. */
   readonly biteProgress: MotionValue<number>;
 }
 
 const GatorStageContext = createContext<GatorStage | null>(null);
 
 /**
- * Coordena o vaga-lume (camada de fundo) com o jacaré (seção no fluxo).
+ * Coordena o vaga-lume da trilha (camada de fundo) com o jacaré (seção no fluxo).
  *
- * ## Por que existe
+ * ## A escolha do `offset` é a parte que importa
  *
- * Antes o jacaré era plantado numa fração fixa da altura do documento (0,9) e o
- * encontro com o vaga-lume saía de uma dedução matemática elegante — mas que
- * assumia o layout. Bastou a página ganhar uma seção para o cartão do mapa cair
- * exatamente em cima dele.
+ * `['start end', 'end end']` significa: **0** quando o topo do palco toca a base
+ * da tela, **1** quando a base do palco toca a base da tela — ou seja, quando o
+ * palco terminou de entrar por baixo.
  *
- * A troca é deliberada: **medir é mais robusto que deduzir.** O jacaré agora vive
- * numa `<section>` de verdade, que ocupa espaço no fluxo e por definição não pode
- * ser sobreposta por nada. E o instante da mordida deixa de ser um número mágico:
- * vem de `offset: ['start end', 'center center']`, ou seja, `biteProgress` chega a
- * 1 quando o centro do palco alinha com o centro da tela.
+ * Isso não é estilo, é a única janela que **sempre se completa**. A tentativa
+ * anterior usava `'center center'` (centro do palco no centro da tela), que exige
+ * cerca de meia viewport de conteúdo depois da seção para ser alcançável. O
+ * rodapé tem ~200px. Resultado: `biteProgress` empacava em ~0,8, a mordida nunca
+ * disparava, e o comportamento mudava conforme a altura da tela.
  *
- * Como a **boca** é posicionada no centro do palco e o vaga-lume converge para o
- * centro da viewport, os dois se encontram por construção — em qualquer altura de
- * página, com qualquer quantidade de seções, em qualquer tela. O Motion cuida da
- * medição e do resize.
+ * Com `'end end'`, rolar até o fim sempre leva a base do palco à base da tela — e
+ * de fato a ultrapassa, porque o rodapé ainda vem depois. O progresso chega a 1
+ * em qualquer resolução, com qualquer quantidade de conteúdo.
+ *
+ * ## O que este progresso NÃO precisa garantir
+ *
+ * Ele não posiciona nada. O encontro entre vaga-lume e boca acontece dentro do
+ * SVG do jacaré, no mesmo sistema de coordenadas (ver `PondGator`). Aqui só se
+ * decide *quando*, nunca *onde* — que é justamente o que torna o resultado
+ * independente de resolução.
  */
 export function GatorStageProvider({ children }: { children: ReactNode }) {
   const stageRef = useRef<HTMLElement | null>(null);
 
   const { scrollYProgress } = useScroll({
     target: stageRef,
-    offset: ['start end', 'center center'],
+    offset: ['start end', 'end end'],
   });
 
   // Mola suave: o bicho tem peso, não fica colado na rolagem.
   const biteProgress = useSpring(scrollYProgress, {
-    stiffness: 55,
+    stiffness: 60,
     damping: 26,
-    mass: 1,
+    mass: 0.9,
   });
 
   const stage = useMemo<GatorStage>(() => ({ stageRef, biteProgress }), [biteProgress]);
