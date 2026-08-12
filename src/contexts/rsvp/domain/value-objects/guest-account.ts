@@ -1,8 +1,19 @@
 import { ValueObject } from '@/shared/kernel/value-object';
 import { InvalidGuestAccountError } from '../errors/invalid-guest-account.error';
 
-/** Provedores de identidade que o convite aceita. */
-export const ACCOUNT_PROVIDERS = ['GOOGLE', 'FACEBOOK'] as const;
+/**
+ * Provedores de identidade que o convite aceita.
+ *
+ * Lista de um item só, por decisão de produto: o Facebook foi descartado. Segue
+ * uma lista, e não uma constante, porque o custo é zero e porque a regra do
+ * domínio é "um conjunto fechado de provedores", não "só existe o Google".
+ * Voltar a aceitar outro é acrescentar um valor aqui e um provider no Auth.js.
+ *
+ * O enum do Postgres ainda tem `FACEBOOK`, e isso é intencional: remover valor
+ * de enum no Postgres exige recriar o tipo, e um valor que nunca é gravado não
+ * custa nada. O domínio é a autoridade; o banco só é mais permissivo.
+ */
+export const ACCOUNT_PROVIDERS = ['GOOGLE'] as const;
 
 export type AccountProviderValue = (typeof ACCOUNT_PROVIDERS)[number];
 
@@ -11,7 +22,7 @@ interface GuestAccountProps {
   /** Id da pessoa no provedor. Estável mesmo se o e-mail ou o nome mudarem. */
   subject: string;
   email: string;
-  /** Nome como o provedor o conhece. Pode vir vazio no Facebook. */
+  /** Nome como o provedor o conhece. Pode vir vazio. */
   displayName: string;
 }
 
@@ -39,7 +50,7 @@ const ONLY_LETTERS = new RegExp('^\\p{L}+$', 'u');
  * ## Por que o `subject` e não o e-mail
  *
  * E-mail muda. A pessoa troca de provedor, corrige um alias, migra a conta. O
- * `subject` é o identificador interno do Google/Facebook e não muda nunca. Usar
+ * `subject` é o identificador interno do Google e não muda nunca. Usar
  * e-mail como chave criaria respostas duplicadas no dia em que alguém trocasse.
  */
 export class GuestAccount extends ValueObject<GuestAccountProps> {

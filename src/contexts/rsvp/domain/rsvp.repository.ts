@@ -9,7 +9,7 @@ import type { RespondentIdentity } from './value-objects/respondent-identity';
  *
  * São três buscas porque uma resposta tem três identidades, em ordem de força:
  *
- *  1. **a conta verificada** (`findByAccount`), provada por Google ou Facebook.
+ *  1. **a conta verificada** (`findByAccount`), provada pelo Google.
  *     É a que carrega a regra "uma resposta por convidado";
  *  2. **o nome** (`findByGuestKey`), que impede duas pessoas de reivindicarem o
  *     mesmo convidado;

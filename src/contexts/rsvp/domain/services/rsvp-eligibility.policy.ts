@@ -23,8 +23,8 @@ export type RsvpEligibility =
  * Desde que responder exige login, a regra "uma resposta por convidado" se apoia
  * na conta verificada, não mais no aparelho. É mais forte e mais justa:
  *
- *  - **mais forte**, porque burlar exige criar contas de verdade no Google ou no
- *    Facebook, não apagar um cookie;
+ *  - **mais forte**, porque burlar exige criar contas de verdade no Google, não
+ *    apagar um cookie;
  *  - **mais justa**, porque o bloqueio por aparelho reprovava gente honesta. Mãe
  *    e pai que dividem o mesmo celular são duas pessoas e devem poder responder
  *    as duas. Com contas distintas, agora podem.

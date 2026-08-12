@@ -29,14 +29,11 @@ const serverEnvSchema = z.object({
   AUTH_SECRET: z.string().min(16).optional(),
 
   /*
-   * Credenciais de OAuth. Cada provedor é opcional: sem as duas variáveis, o
-   * botão correspondente simplesmente não aparece. Isso mantém o projeto
-   * rodando em clone limpo e permite publicar só com o Google, se preferirem.
+   * Credenciais do Google. Opcionais: sem as duas, o botão simplesmente não
+   * aparece e o resto do convite continua funcionando em clone limpo.
    */
   AUTH_GOOGLE_ID: z.string().min(1).optional(),
   AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
-  AUTH_FACEBOOK_ID: z.string().min(1).optional(),
-  AUTH_FACEBOOK_SECRET: z.string().min(1).optional(),
 
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 });
@@ -47,8 +44,6 @@ const parsed = serverEnvSchema.safeParse({
   AUTH_SECRET: process.env.AUTH_SECRET,
   AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
   AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
-  AUTH_FACEBOOK_ID: process.env.AUTH_FACEBOOK_ID,
-  AUTH_FACEBOOK_SECRET: process.env.AUTH_FACEBOOK_SECRET,
   NODE_ENV: process.env.NODE_ENV,
 });
 

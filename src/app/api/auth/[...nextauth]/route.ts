@@ -5,7 +5,7 @@ import { handlers } from '@/shared/auth/auth';
  *
  * Único arquivo de rota de API do projeto. Todo o resto é Server Action, porque
  * não há consumidor externo (ver ADR-0004); aqui a rota existe por imposição do
- * protocolo, já que o Google e o Facebook precisam de uma URL fixa para onde
- * redirecionar depois do consentimento.
+ * protocolo, já que o Google precisa de uma URL fixa para onde redirecionar
+ * depois do consentimento.
  */
 export const { GET, POST } = handlers;

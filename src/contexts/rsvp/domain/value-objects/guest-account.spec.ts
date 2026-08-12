@@ -14,14 +14,15 @@ const account = (overrides: Partial<typeof base> = {}) =>
 
 describe('GuestAccount', () => {
   it('normaliza provedor e e-mail', () => {
-    const created = account({ provider: 'FaceBook', email: '  Maria.Clara@GMAIL.com ' });
+    const created = account({ provider: 'GoOgLe', email: '  Maria.Clara@GMAIL.com ' });
 
-    expect(created.provider).toBe('FACEBOOK');
+    expect(created.provider).toBe('GOOGLE');
     expect(created.email).toBe('maria.clara@gmail.com');
   });
 
   it.each([
     ['provedor não suportado', { provider: 'twitter' }],
+    ['Facebook, que foi descontinuado', { provider: 'facebook' }],
     ['sem identificador', { subject: '   ' }],
     ['e-mail sem arroba', { email: 'arthur.cruz' }],
     ['e-mail sem domínio', { email: 'arthur@' }],

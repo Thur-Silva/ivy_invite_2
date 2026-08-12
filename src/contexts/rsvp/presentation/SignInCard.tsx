@@ -1,21 +1,10 @@
 import type { SupportedProvider } from '@/shared/auth/auth';
 import { CrownGlyph } from '@/ui/ornaments/Glyphs';
 import { signInWithProvider } from './actions/auth.actions';
-import { FacebookGlyph, GoogleGlyph } from './ProviderGlyphs';
-
-const PROVIDER_STYLE: Record<SupportedProvider, { label: string; className: string }> = {
-  google: {
-    label: 'Entrar com Google',
-    className: 'bg-cream text-pond-950 hover:bg-white',
-  },
-  facebook: {
-    label: 'Entrar com Facebook',
-    className: 'bg-[#1877F2] text-white hover:bg-[#1568d8]',
-  },
-};
+import { GoogleGlyph } from './GoogleGlyph';
 
 /**
- * Ocupa o lugar do campo "Como podemos te chamar" até o convidado entrar.
+ * Ocupa o lugar do campo de nome até o convidado entrar.
  *
  * Server Component: os botões são `<form>` com Server Action, então funcionam
  * sem JavaScript, igual ao resto do convite. O Auth.js precisa de um POST para
@@ -24,6 +13,9 @@ const PROVIDER_STYLE: Record<SupportedProvider, { label: string; className: stri
  * A promessa de privacidade não é enfeite. Pedir login num convite de festa
  * levanta a pergunta "por que vocês querem minha conta?", e a resposta precisa
  * estar visível antes do clique, não escondida numa política.
+ *
+ * Continua percorrendo uma lista mesmo com um provedor só. Custa uma linha e
+ * deixa o caminho aberto para voltar a ter dois sem reescrever a tela.
  */
 export function SignInCard({ providers }: { providers: readonly SupportedProvider[] }) {
   return (
@@ -42,8 +34,8 @@ export function SignInCard({ providers }: { providers: readonly SupportedProvide
 
       {providers.length === 0 ? (
         <p className="border-blush-500/40 bg-blush-500/10 text-blush-300 rounded-2xl border px-4 py-3 text-xs leading-relaxed">
-          Nenhum provedor de login configurado ainda. Preencha as credenciais do Google ou do
-          Facebook no <code className="font-mono">.env.local</code> para liberar esta etapa.
+          Login ainda não configurado. Preencha <code className="font-mono">AUTH_GOOGLE_ID</code> e{' '}
+          <code className="font-mono">AUTH_GOOGLE_SECRET</code> para liberar esta etapa.
         </p>
       ) : (
         <div className="flex w-full flex-col gap-3">
@@ -51,14 +43,10 @@ export function SignInCard({ providers }: { providers: readonly SupportedProvide
             <form key={provider} action={signInWithProvider.bind(null, provider)}>
               <button
                 type="submit"
-                className={`flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full px-5 py-3.5 text-sm font-semibold transition active:scale-[0.98] ${PROVIDER_STYLE[provider].className}`}
+                className="bg-cream text-pond-950 flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full px-5 py-3.5 text-sm font-semibold transition hover:bg-white active:scale-[0.98]"
               >
-                {provider === 'google' ? (
-                  <GoogleGlyph className="h-5 w-5" />
-                ) : (
-                  <FacebookGlyph className="h-5 w-5" />
-                )}
-                {PROVIDER_STYLE[provider].label}
+                <GoogleGlyph className="h-5 w-5" />
+                Entrar com Google
               </button>
             </form>
           ))}

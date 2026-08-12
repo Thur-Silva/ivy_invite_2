@@ -9,7 +9,14 @@ import type { AccountProviderValue } from '../../../domain/value-objects/guest-a
  */
 export const attendanceDecisionEnum = pgEnum('attendance_decision', ['ATTENDING', 'NOT_ATTENDING']);
 
-/** Espelha `AccountProvider`. Mesma ideia: o banco recusa um terceiro valor. */
+/**
+ * Provedores aceitos pelo banco.
+ *
+ * Mais permissivo que o domínio de propósito. Hoje `ACCOUNT_PROVIDERS` tem só
+ * `GOOGLE`, mas `FACEBOOK` continua aqui porque remover valor de enum no
+ * Postgres exige recriar o tipo e reescrever a coluna, e um valor que nunca é
+ * gravado não custa nada. Quem manda é o Value Object; isto é rede de proteção.
+ */
 export const accountProviderEnum = pgEnum('account_provider', ['GOOGLE', 'FACEBOOK']);
 
 /**
@@ -49,7 +56,7 @@ export const rsvpsTable = pgTable(
     decision: attendanceDecisionEnum('decision').notNull(),
 
     /*
-     * Conta verificada por Google ou Facebook.
+     * Conta verificada pelo Google.
      *
      * Guardamos o `subject` e não só o e-mail porque e-mail muda: a pessoa troca
      * de provedor, corrige um alias, migra a conta. O `subject` é o id interno

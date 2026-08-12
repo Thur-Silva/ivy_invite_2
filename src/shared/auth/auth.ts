@@ -1,5 +1,4 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth';
-import Facebook from 'next-auth/providers/facebook';
 import Google from 'next-auth/providers/google';
 import { serverEnv } from '@/shared/config/server-env';
 
@@ -8,7 +7,19 @@ import { serverEnv } from '@/shared/config/server-env';
  *
  * O convite não tem cadastro, senha nem recuperação de conta. O que ele precisa
  * é de uma coisa só: **provar que quem responde é uma pessoa real e distinta**.
- * Google e Facebook resolvem isso sem que a gente guarde uma única senha.
+ * O Google resolve isso sem que a gente guarde uma única senha.
+ *
+ * ## Só Google
+ *
+ * O Facebook foi avaliado e descartado. O convite circula por WhatsApp entre
+ * famílias, e conta do Google é praticamente universal em celular Android e em
+ * quem usa Gmail. O segundo provedor traria um app para publicar, uma revisão da
+ * Meta para passar e um botão a mais na tela, em troca de quase nenhum convidado
+ * a mais.
+ *
+ * A estrutura continua preparada para vários: `SupportedProvider`,
+ * `enabledProviders` e a lista de botões seguem plurais. Voltar a ter dois é
+ * acrescentar um provider aqui e um valor em `ACCOUNT_PROVIDERS`.
  *
  * Estratégia de sessão em JWT, sem adapter de banco. O Auth.js não precisa de
  * tabelas próprias porque não há nada para persistir entre visitas: os dados da
@@ -16,8 +27,38 @@ import { serverEnv } from '@/shared/config/server-env';
  * fazem sentido para o negócio.
  */
 
+/**
+ * Rede de proteção contra `AUTH_URL` apontando para a máquina de alguém.
+ *
+ * O Auth.js monta o `redirect_uri` a partir de `AUTH_URL` quando ela existe, e
+ * só infere do cabeçalho da requisição quando não existe. Uma `AUTH_URL` com
+ * `localhost` cadastrada em produção manda o convidado para a máquina dele
+ * depois de autenticar no Google, e o login quebra por inteiro. É um erro fácil
+ * de cometer: basta copiar o `.env` local inteiro para o painel da Vercel.
+ *
+ * Em ambiente Vercel o valor correto é sempre o inferido dos cabeçalhos, então
+ * uma `AUTH_URL` local ali é sempre engano. Descartamos e avisamos, em vez de
+ * confiar e derrubar o login.
+ */
+function discardLocalhostAuthUrl(): void {
+  if (process.env.VERCEL !== '1') return;
+
+  for (const key of ['AUTH_URL', 'NEXTAUTH_URL'] as const) {
+    const value = process.env[key];
+    if (value !== undefined && /localhost|127\.0\.0\.1/.test(value)) {
+      console.warn(
+        `[auth] ${key}="${value}" em ambiente Vercel. Ignorando e inferindo a URL ` +
+          'dos cabeçalhos. Remova a variável do painel para silenciar este aviso.',
+      );
+      delete process.env[key];
+    }
+  }
+}
+
+discardLocalhostAuthUrl();
+
 /** Provedores que o convite aceita. Espelha `AccountProvider` no domínio. */
-export type SupportedProvider = 'google' | 'facebook';
+export type SupportedProvider = 'google';
 
 interface ProviderOption {
   readonly id: SupportedProvider;
@@ -25,7 +66,7 @@ interface ProviderOption {
 }
 
 /**
- * Só entram os provedores com credencial configurada.
+ * Só entra o provedor com credencial configurada.
  *
  * Sem isso, um botão configurado pela metade levaria o convidado a uma tela de
  * erro do Google. Faltando a credencial, o botão não existe, e o clone limpo do
@@ -43,16 +84,6 @@ function buildProviders(): { providers: NextAuthConfig['providers']; enabled: Pr
       }),
     );
     enabled.push({ id: 'google', label: 'Entrar com Google' });
-  }
-
-  if (serverEnv.AUTH_FACEBOOK_ID !== undefined && serverEnv.AUTH_FACEBOOK_SECRET !== undefined) {
-    providers.push(
-      Facebook({
-        clientId: serverEnv.AUTH_FACEBOOK_ID,
-        clientSecret: serverEnv.AUTH_FACEBOOK_SECRET,
-      }),
-    );
-    enabled.push({ id: 'facebook', label: 'Entrar com Facebook' });
   }
 
   return { providers, enabled };

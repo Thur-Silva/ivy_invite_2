@@ -8,7 +8,7 @@ import 'next-auth/jwt';
  */
 declare module 'next-auth' {
   interface Session {
-    /** `google` ou `facebook`. */
+    /** Hoje sempre `google`. Fica string para aceitar outro provedor depois. */
     provider?: string;
     /** Id da pessoa no provedor. Estável mesmo se o e-mail mudar. */
     providerSubject?: string;

@@ -18,8 +18,8 @@ const MARIA: AuthenticatedAccount = {
 };
 
 const JOAO: AuthenticatedAccount = {
-  provider: 'facebook',
-  subject: 'facebook|2002',
+  provider: 'google',
+  subject: 'google-oauth|2002',
   email: 'joao.pedro@outlook.com',
   displayName: 'João Pedro',
 };
@@ -208,17 +208,20 @@ describe('SubmitRsvp', () => {
       expect(rsvps.snapshot()[0]?.isAttending()).toBe(true);
     });
 
-    it('trata o mesmo subject em provedores diferentes como pessoas diferentes', async () => {
-      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
-
+    it('recusa provedor fora da lista aceita', async () => {
       const result = await submit({
-        guestName: 'Outra Pessoa',
+        guestName: 'Maria Clara',
         decision: 'ATTENDING',
-        account: { ...MARIA, provider: 'facebook', email: 'outra@facebook.com' },
+        account: { ...MARIA, provider: 'facebook' },
       });
 
-      expect(result.ok && result.value.status).toBe('RECORDED');
-      expect(rsvps.snapshot()).toHaveLength(2);
+      // Provedor não aceito é defeito, não erro de formulário: a sessão só
+      // chega aqui depois de o Auth.js validar, então isso não vem do convidado.
+      expect(result).toMatchObject({
+        ok: false,
+        error: { kind: 'UNAVAILABLE' },
+      });
+      expect(rsvps.snapshot()).toHaveLength(0);
     });
   });
 

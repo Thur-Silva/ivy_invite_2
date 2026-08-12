@@ -3,8 +3,8 @@
 Convite digital, mobile-first, para o aniversário de 2 anos da Ivy. Tema: **A
 Princesa e o Sapo**.
 
-Uma página, quatro atos: lago encantado → introdução e data → confirmação de
-presença → como chegar.
+Uma página, uma rolagem só: lago encantado, introdução e data, confirmação de
+presença, traje, como chegar, e um jacaré que engole o vaga-lume no fim.
 
 ```
 Next.js 16 · React 19 · TypeScript strict · Tailwind CSS v4
@@ -30,7 +30,7 @@ desenvolver a interface.
 
 ```bash
 cp .env.example .env.local     # e preencha DATABASE_URL com a string do Neon
-npm run db:migrate             # aplica drizzle/0000_create_rsvps.sql
+npm run db:migrate             # aplica as migrações de drizzle/
 npm run dev
 ```
 
@@ -66,22 +66,29 @@ invertida, o endereço vazio ou a coordenada fora do Brasil.
 
 ## Login do convidado
 
-Confirmar presença exige entrar com Google ou Facebook. É o que sustenta a regra
+Confirmar presença exige entrar com o Google. É o que sustenta a regra
 "uma resposta por convidado": burlar passa a exigir criar contas de verdade, não
 apagar um cookie. Do login tiramos o primeiro nome do e-mail e já preenchemos o
 campo, que continua editável.
 
 Sem credenciais configuradas o projeto **sobe normalmente**: o cartão de login
-avisa que nenhum provedor está disponível, e o resto do convite funciona. Para
-liberar, preencha as variáveis `AUTH_*` do `.env.example`, que trazem o passo a
-passo de cada provedor.
+avisa que o login ainda não está configurado, e o resto do convite funciona. Para
+liberar, preencha `AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET`. O `.env.example` traz o
+passo a passo no console do Google.
 
-Dois detalhes que costumam morder:
+> **Não defina `AUTH_URL` nem `NEXTAUTH_URL`, em nenhum ambiente.**
+>
+> O Auth.js infere a URL dos cabeçalhos da requisição, e é isso que faz o mesmo
+> código funcionar em localhost e no domínio publicado. Cadastrar a variável com
+> o endereço local no painel da Vercel faz o Google devolver o convidado para
+> `localhost` depois do consentimento, e o login quebra inteiro. O código descarta
+> o valor quando detecta localhost rodando na Vercel, mas o certo é não cadastrar.
 
-- **o Facebook não aceita `localhost`** nos URIs de redirecionamento. Em
-  desenvolvimento, use só o Google, ou levante um túnel HTTPS;
-- **o app do Facebook precisa estar publicado**, senão apenas contas listadas
-  como testadoras conseguem entrar.
+Só o Google, por decisão de produto. O Facebook foi avaliado e descartado: exige
+app publicado e revisão da Meta, não aceita `localhost` em desenvolvimento, e
+traria quase nenhum convidado a mais num público que já usa Android e Gmail. A
+estrutura continua plural (`SupportedProvider`, `ACCOUNT_PROVIDERS`), então voltar
+a ter dois é acrescentar um provider e um valor no enum do domínio.
 
 ## Scripts
 
@@ -92,12 +99,13 @@ Dois detalhes que costumam morder:
 | `npm run verify`      | **typecheck + lint + testes**. Rode antes de todo commit                |
 | `npm run typecheck`   | `tsc --noEmit`                                                          |
 | `npm run lint`        | ESLint, incluindo a Regra da Dependência entre camadas                  |
-| `npm run test`        | Vitest (32 testes, ~1s, sem banco)                                      |
+| `npm run test`        | Vitest (65 testes, ~2s, sem banco)                                      |
 | `npm run test:watch`  | Vitest em watch                                                         |
 | `npm run format`      | Prettier                                                                |
 | `npm run db:generate` | gera migração a partir do schema Drizzle                                |
 | `npm run db:migrate`  | aplica migrações no Neon                                                |
 | `npm run db:studio`   | abre o Drizzle Studio. **é aqui que se lê a lista de confirmados hoje** |
+| `npm run db:inspect`  | imprime colunas, índices e contagens do banco, sem dado de convidado    |
 
 ---
 
@@ -106,9 +114,9 @@ Dois detalhes que costumam morder:
 1. Importe o repositório na Vercel (o preset Next.js é detectado automaticamente).
 2. Em _Settings → Environment Variables_, adicione nos três ambientes:
    **`DATABASE_URL`** (Neon), **`AUTH_SECRET`**, **`RSVP_DEVICE_SALT`** e as
-   credenciais `AUTH_GOOGLE_*` / `AUTH_FACEBOOK_*`.
-3. Volte ao console do Google e do Facebook e acrescente o domínio da Vercel aos
-   URIs de redirecionamento. Sem isso o login falha só em produção.
+   credenciais `AUTH_GOOGLE_ID` e `AUTH_GOOGLE_SECRET`.
+3. Volte ao console do Google e acrescente o domínio da Vercel aos URIs de
+   redirecionamento. Sem isso o login falha só em produção.
 4. Deploy.
 
 Sem `DATABASE_URL`, a aplicação **falha ao subir em produção** de propósito.

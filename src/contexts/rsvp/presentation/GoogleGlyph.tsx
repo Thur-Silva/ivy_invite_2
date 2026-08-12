@@ -1,14 +1,13 @@
 import { cn } from '@/ui/cn';
 
 /**
- * Marcas do Google e do Facebook nas cores oficiais.
+ * O "G" do Google nas cores oficiais.
  *
- * Única exceção à paleta do convite, e à regra de glifos autorais do ADR-0012:
- * botão de login social é reconhecido pela marca, não pelo estilo do site.
- * Redesenhar o "G" em tons de verde economizaria coerência visual e custaria
- * confiança na hora que ela mais importa.
+ * Única exceção à regra de glifos autorais do ADR-0012. Botão de login social é
+ * reconhecido pela marca, não pelo estilo do site: redesenhar o "G" em tons de
+ * verde economizaria coerência visual e custaria confiança na hora em que ela
+ * mais importa, que é a de entregar uma conta.
  */
-
 export function GoogleGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={cn('h-5 w-5', className)}>
@@ -27,17 +26,6 @@ export function GoogleGlyph({ className }: { className?: string }) {
       <path
         fill="#EA4335"
         d="M12 4.75c1.76 0 3.34.61 4.59 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.62l4.01 3.1C6.23 6.86 8.88 4.75 12 4.75Z"
-      />
-    </svg>
-  );
-}
-
-export function FacebookGlyph({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className={cn('h-5 w-5', className)}>
-      <path
-        fill="currentColor"
-        d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07Z"
       />
     </svg>
   );

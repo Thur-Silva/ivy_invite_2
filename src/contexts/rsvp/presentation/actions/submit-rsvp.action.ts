@@ -133,7 +133,7 @@ export async function submitRsvpAction(
     return {
       status: 'locked',
       reason: 'UNAUTHENTICATED',
-      message: 'Sua sessão expirou. Entre de novo com Google ou Facebook para confirmar.',
+      message: 'Sua sessão expirou. Entre de novo com o Google para confirmar.',
     };
   }
 
