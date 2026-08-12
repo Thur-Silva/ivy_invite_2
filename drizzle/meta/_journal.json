@@ -22,6 +22,13 @@
       "when": 1786535501348,
       "tag": "0002_add_guest_account",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786556131583,
+      "tag": "0003_add_announcement_state",
+      "breakpoints": true
     }
   ]
 }

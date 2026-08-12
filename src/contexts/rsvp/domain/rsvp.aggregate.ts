@@ -16,7 +16,20 @@ interface RsvpState {
   identity: RespondentIdentity;
   respondedAt: Date;
   updatedAt: Date;
+  /** Última decisão que o convite chegou a anunciar. Ver `reconsider`. */
+  announcedDecision: AttendanceDecision;
+  announcedAt: Date;
 }
+
+/**
+ * Silêncio entre dois anúncios da mesma resposta.
+ *
+ * Quinze minutos porque é o tempo de alguém abrir o convite, tocar em "eu vou",
+ * pensar melhor, tocar em "não vou" e voltar atrás. Esse vaivém é uma pessoa
+ * decidindo, não três notícias, e mandar três e-mails a respeito dele é o
+ * caminho mais curto para o convite virar spam.
+ */
+const ANNOUNCEMENT_COOLDOWN_MS = 15 * 60 * 1000;
 
 /**
  * Aggregate Root. One guest's answer to Ivy's invitation.
@@ -54,6 +67,9 @@ export class Rsvp extends AggregateRoot<RsvpId> {
       identity: input.identity,
       respondedAt: input.respondedAt,
       updatedAt: input.respondedAt,
+      // A primeira resposta sempre é notícia, seja "vou" ou "não vou".
+      announcedDecision: input.decision,
+      announcedAt: input.respondedAt,
     });
 
     rsvp.record(
@@ -77,6 +93,8 @@ export class Rsvp extends AggregateRoot<RsvpId> {
     identity: RespondentIdentity;
     respondedAt: Date;
     updatedAt: Date;
+    announcedDecision: AttendanceDecision;
+    announcedAt: Date;
   }): Rsvp {
     return new Rsvp(input.id, {
       guestName: input.guestName,
@@ -85,6 +103,8 @@ export class Rsvp extends AggregateRoot<RsvpId> {
       identity: input.identity,
       respondedAt: input.respondedAt,
       updatedAt: input.updatedAt,
+      announcedDecision: input.announcedDecision,
+      announcedAt: input.announcedAt,
     });
   }
 
@@ -99,6 +119,27 @@ export class Rsvp extends AggregateRoot<RsvpId> {
    * A identidade também é atualizada: a mesma pessoa volta com o cookie renovado
    * ou de outra rede, e o registro precisa passar a refletir os sinais mais
    * recentes. Sem isso, o acesso seguinte deixaria de reconhecê-la.
+   *
+   * ## Trocar de ideia não é o mesmo que ter notícia
+   *
+   * O estado muda a cada toque; o **anúncio** não. `RsvpDecisionChanged` só é
+   * gravado quando as duas condições valem:
+   *
+   * 1. a decisão nova difere da última **anunciada**, não da última gravada. Sair
+   *    de "vou" e voltar para "vou" devolve o mundo ao que já foi contado, e
+   *    contar de novo seria contar nada;
+   * 2. passou o silêncio de {@link ANNOUNCEMENT_COOLDOWN_MS} desde o último
+   *    anúncio. Quem alterna está decidindo, e decidir em voz alta não é notícia.
+   *
+   * As duas decisões anunciam igual: "vou" e "não vou" valem a mesma coisa para
+   * quem conta cabeça, e silenciar a recusa esconderia justamente o número que
+   * mais dói errar.
+   *
+   * **Custo assumido:** uma troca feita dentro do silêncio e nunca revista não
+   * gera e-mail nenhum. O estado fica correto no banco e na lista, e o próximo
+   * relatório (de qualquer convidado) já sai com o número certo, então o buraco
+   * se fecha sozinho a cada nova resposta. Fechá-lo na hora exigiria um
+   * agendador, que é infraestrutura demais para dezenas de convidados.
    */
   reconsider(input: {
     guestName: GuestName;
@@ -113,7 +154,11 @@ export class Rsvp extends AggregateRoot<RsvpId> {
 
     if (sameDecision && sameName && sameIdentity) return;
 
-    const previousDecision = this.state.decision;
+    const announcedDecision = this.state.announcedDecision;
+    const isNews = !announcedDecision.equals(input.decision);
+    const silencePassed =
+      input.changedAt.getTime() - this.state.announcedAt.getTime() >= ANNOUNCEMENT_COOLDOWN_MS;
+    const worthAnnouncing = isNews && silencePassed;
 
     this.state = {
       ...this.state,
@@ -122,15 +167,20 @@ export class Rsvp extends AggregateRoot<RsvpId> {
       decision: input.decision,
       identity: input.identity,
       updatedAt: input.changedAt,
+      ...(worthAnnouncing
+        ? { announcedDecision: input.decision, announcedAt: input.changedAt }
+        : {}),
     };
 
-    if (!sameDecision) {
+    if (worthAnnouncing) {
       this.record(
         new RsvpDecisionChanged(
           this.id,
           input.guestName,
           input.account,
-          previousDecision,
+          // O "antes" que interessa é o que a pessoa leu no último e-mail, não um
+          // estado intermediário que ninguém chegou a ver.
+          announcedDecision,
           input.decision,
           input.changedAt,
         ),
@@ -166,6 +216,15 @@ export class Rsvp extends AggregateRoot<RsvpId> {
 
   get updatedAt(): Date {
     return this.state.updatedAt;
+  }
+
+  /** Última decisão que virou e-mail. O repositório precisa persistir isto. */
+  get announcedDecision(): AttendanceDecision {
+    return this.state.announcedDecision;
+  }
+
+  get announcedAt(): Date {
+    return this.state.announcedAt;
   }
 
   isAttending(): boolean {

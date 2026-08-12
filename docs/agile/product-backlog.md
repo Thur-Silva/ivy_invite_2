@@ -262,6 +262,17 @@ Cenário: o recibo do convidado não carrega regra de negócio
   Então ele vê a própria resposta e o caminho para o convite
   E não vê contagem, lista de outros convidados nem instrução de uso
 
+Cenário: o convidado fica alternando entre vou e não vou
+  Dado que ele já respondeu e foi notificado
+  Quando ele troca de decisão mais de uma vez em poucos minutos
+  Então nenhum e-mail novo sai
+  E a lista continua refletindo a última decisão dele
+
+Cenário: uma mudança de ideia de verdade
+  Dado que passaram mais de 15 minutos do último aviso
+  Quando ele troca de decisão, para vou ou para não vou
+  Então sai um e-mail com a decisão nova
+
 Cenário: quem responde é o próprio admin
   Dado que o e-mail de quem responde está em RSVP_ADMIN_EMAILS
   Quando ele confirma presença

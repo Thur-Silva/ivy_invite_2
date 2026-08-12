@@ -117,6 +117,26 @@ respondeu também é admin. Não são duplicata: um diz "sua presença está
 registrada", o outro diz "eis a lista". Quem acumula os dois papéis quer as duas
 coisas.
 
+### Alternar entre vou e não vou não vira uma fila de e-mails
+
+Quem abre o convite, toca em "eu vou", pensa melhor e toca em "não vou" está
+decidindo, não produzindo três notícias. O agregado guarda **o que já foi
+anunciado** (`announced_decision`, `announced_at`), separado do estado atual, e
+só emite `RsvpDecisionChanged` quando as duas condições valem:
+
+1. a decisão nova difere da última **anunciada**, não da última gravada. Sair de
+   "vou" e voltar para "vou" devolve o mundo ao que já foi contado;
+2. passaram 15 minutos desde o último anúncio.
+
+As duas decisões valem igual: "não vou" notifica tanto quanto "vou", porque é
+justamente o número que mais dói errar. O que muda é a frequência, nunca qual
+resposta merece aviso.
+
+O estado no banco continua acompanhando cada toque. O que fica em silêncio é o
+e-mail. O custo assumido: uma troca feita dentro dos 15 minutos e nunca revista
+não gera aviso próprio, e só aparece no próximo relatório, que sempre traz a
+lista inteira atualizada.
+
 O corpo **não repete data, endereço nem traje**, de propósito. E-mail é retrato:
 se o local mudar, a caixa de entrada guarda a versão velha para sempre e o
 convidado confia nela. O e-mail confirma o fato e aponta para o convite, que é a

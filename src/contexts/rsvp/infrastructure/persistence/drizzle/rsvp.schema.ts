@@ -74,6 +74,17 @@ export const rsvpsTable = pgTable(
 
     respondedAt: timestamp('responded_at', { withTimezone: true }).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),
+
+    /*
+     * O que já foi anunciado por e-mail, e quando.
+     *
+     * Diferente de `decision`/`updated_at`, que mudam a cada toque. É o par que
+     * permite ao agregado calar quando alguém fica alternando entre vou e não
+     * vou: sem persistir isso, cada invocação serverless começaria sem memória
+     * do que já contou e o silêncio nunca valeria nada.
+     */
+    announcedDecision: attendanceDecisionEnum('announced_decision').notNull(),
+    announcedAt: timestamp('announced_at', { withTimezone: true }).notNull(),
   },
   (table) => [
     uniqueIndex('rsvps_account_idx').on(table.accountProvider, table.accountSubject),

@@ -159,6 +159,37 @@ describe('SubmitRsvp', () => {
       expect(rsvps.snapshot()).toHaveLength(1);
     });
 
+    /**
+     * O comportamento visto de fora do caso de uso: alternar no formulário
+     * grava, mas não vira e-mail. A regra mora no agregado; aqui se verifica que
+     * ela sobrevive ao caminho completo, incluindo ida e volta ao repositório.
+     */
+    it('alternar entre vou e não vou não publica evento a cada troca', async () => {
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
+      events.published.length = 0;
+
+      clock.advanceMinutes(2);
+      await submit({ guestName: 'Maria Clara', decision: 'NOT_ATTENDING' });
+      clock.advanceMinutes(3);
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
+      clock.advanceMinutes(4);
+      await submit({ guestName: 'Maria Clara', decision: 'NOT_ATTENDING' });
+
+      expect(events.published).toHaveLength(0);
+      // O banco acompanhou cada toque, mesmo em silêncio.
+      expect(rsvps.snapshot()[0]?.isAttending()).toBe(false);
+    });
+
+    it('volta a publicar depois que o silêncio entre anúncios passa', async () => {
+      await submit({ guestName: 'Maria Clara', decision: 'ATTENDING' });
+      events.published.length = 0;
+
+      clock.advanceMinutes(20);
+      await submit({ guestName: 'Maria Clara', decision: 'NOT_ATTENDING' });
+
+      expect(events.names()).toEqual(['RsvpDecisionChanged']);
+    });
+
     it('deixa a pessoa corrigir o nome que veio preenchido', async () => {
       await submit({ guestName: 'Maria', decision: 'ATTENDING' });
 

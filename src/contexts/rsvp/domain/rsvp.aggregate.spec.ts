@@ -10,6 +10,12 @@ const ID = RsvpId.fromString('rsvp-1');
 const RESPONDED_AT = new Date('2026-08-11T14:00:00Z');
 const LATER = new Date('2026-08-12T09:30:00Z');
 
+/** Dentro do silêncio de 15 minutos entre anúncios. */
+const TWO_MINUTES_LATER = new Date('2026-08-11T14:02:00Z');
+const TEN_MINUTES_LATER = new Date('2026-08-11T14:10:00Z');
+/** Primeiro instante fora do silêncio. */
+const FIFTEEN_MINUTES_LATER = new Date('2026-08-11T14:15:00Z');
+
 const ACCOUNT = GuestAccount.create({
   provider: 'google',
   subject: 'google|1001',
@@ -123,6 +129,98 @@ describe('Rsvp', () => {
     });
   });
 
+  /**
+   * Alternar entre "vou" e "não vou" é uma pessoa decidindo, não uma sequência
+   * de notícias. O estado acompanha cada toque; o anúncio, não.
+   */
+  describe('vaivém entre vou e não vou', () => {
+    const flip = (rsvp: Rsvp, decision: AttendanceDecision, changedAt: Date) =>
+      rsvp.reconsider({
+        guestName: GuestName.create('Maria Clara'),
+        decision,
+        account: ACCOUNT,
+        identity: IDENTITY,
+        changedAt: changedAt,
+      });
+
+    it('não anuncia nada quando a pessoa alterna e volta ao ponto de partida', () => {
+      const rsvp = submit(AttendanceDecision.ATTENDING);
+      rsvp.pullDomainEvents();
+
+      flip(rsvp, AttendanceDecision.NOT_ATTENDING, TWO_MINUTES_LATER);
+      flip(rsvp, AttendanceDecision.ATTENDING, TEN_MINUTES_LATER);
+
+      expect(rsvp.pullDomainEvents()).toHaveLength(0);
+      // O estado seguiu cada toque, mesmo sem ninguém ser avisado.
+      expect(rsvp.isAttending()).toBe(true);
+      expect(rsvp.updatedAt).toEqual(TEN_MINUTES_LATER);
+    });
+
+    it('cala durante o silêncio, mesmo terminando diferente', () => {
+      const rsvp = submit(AttendanceDecision.ATTENDING);
+      rsvp.pullDomainEvents();
+
+      flip(rsvp, AttendanceDecision.NOT_ATTENDING, TWO_MINUTES_LATER);
+
+      expect(rsvp.pullDomainEvents()).toHaveLength(0);
+      expect(rsvp.isAttending()).toBe(false);
+    });
+
+    it('anuncia de novo depois que o silêncio passa', () => {
+      const rsvp = submit(AttendanceDecision.ATTENDING);
+      rsvp.pullDomainEvents();
+
+      flip(rsvp, AttendanceDecision.NOT_ATTENDING, FIFTEEN_MINUTES_LATER);
+
+      const events = rsvp.pullDomainEvents();
+      expect(events.map((event) => event.name)).toEqual(['RsvpDecisionChanged']);
+      expect(events[0]?.payload()).toMatchObject({
+        previousDecision: 'ATTENDING',
+        currentDecision: 'NOT_ATTENDING',
+      });
+    });
+
+    it('as duas decisões anunciam igual: recusar não é mais silencioso que aceitar', () => {
+      const recusou = submit(AttendanceDecision.NOT_ATTENDING);
+      expect(recusou.pullDomainEvents().map((event) => event.name)).toEqual(['RsvpDeclined']);
+
+      flip(recusou, AttendanceDecision.ATTENDING, FIFTEEN_MINUTES_LATER);
+      expect(recusou.pullDomainEvents().map((event) => event.name)).toEqual([
+        'RsvpDecisionChanged',
+      ]);
+    });
+
+    it('conta o silêncio a partir do último anúncio, não do último toque', () => {
+      const rsvp = submit(AttendanceDecision.ATTENDING);
+      rsvp.pullDomainEvents();
+
+      // Vaivém dentro do silêncio: nada anunciado, e o relógio do silêncio
+      // continua correndo desde a resposta inicial.
+      flip(rsvp, AttendanceDecision.NOT_ATTENDING, TWO_MINUTES_LATER);
+      flip(rsvp, AttendanceDecision.ATTENDING, TEN_MINUTES_LATER);
+      expect(rsvp.pullDomainEvents()).toHaveLength(0);
+
+      // Se o relógio tivesse reiniciado a cada toque, isto ainda estaria calado.
+      flip(rsvp, AttendanceDecision.NOT_ATTENDING, FIFTEEN_MINUTES_LATER);
+      expect(rsvp.pullDomainEvents()).toHaveLength(1);
+    });
+
+    it('o "antes" do e-mail é o que a pessoa leu, não um estado intermediário', () => {
+      const rsvp = submit(AttendanceDecision.ATTENDING);
+      rsvp.pullDomainEvents();
+
+      // Ninguém foi avisado desta: aconteceu dentro do silêncio.
+      flip(rsvp, AttendanceDecision.NOT_ATTENDING, TWO_MINUTES_LATER);
+      rsvp.pullDomainEvents();
+
+      flip(rsvp, AttendanceDecision.ATTENDING, LATER);
+      const events = rsvp.pullDomainEvents();
+
+      // O último e-mail dizia ATTENDING, então voltar a ATTENDING não é notícia.
+      expect(events).toHaveLength(0);
+    });
+  });
+
   it('rehydrates from storage without replaying history', () => {
     const rsvp = Rsvp.rehydrate({
       id: ID,
@@ -132,6 +230,8 @@ describe('Rsvp', () => {
       identity: IDENTITY,
       respondedAt: RESPONDED_AT,
       updatedAt: LATER,
+      announcedDecision: AttendanceDecision.ATTENDING,
+      announcedAt: RESPONDED_AT,
     });
 
     expect(rsvp.pullDomainEvents()).toHaveLength(0);

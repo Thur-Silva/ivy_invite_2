@@ -32,6 +32,8 @@ export const RsvpMapper = {
       }),
       respondedAt: row.respondedAt,
       updatedAt: row.updatedAt,
+      announcedDecision: AttendanceDecision.fromValue(row.announcedDecision),
+      announcedAt: row.announcedAt,
     });
   },
 
@@ -50,6 +52,8 @@ export const RsvpMapper = {
       respondentNetwork: rsvp.identity.network,
       respondedAt: rsvp.respondedAt,
       updatedAt: rsvp.updatedAt,
+      announcedDecision: rsvp.announcedDecision.value,
+      announcedAt: rsvp.announcedAt,
     };
   },
 };

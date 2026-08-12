@@ -128,6 +128,10 @@ export class NeonRsvpRepository implements RsvpRepository {
           respondentDevice: row.respondentDevice,
           respondentNetwork: row.respondentNetwork,
           updatedAt: row.updatedAt,
+          // Sem estes dois no SET, o silêncio entre anúncios nunca avançaria e
+          // toda troca voltaria a virar e-mail.
+          announcedDecision: row.announcedDecision,
+          announcedAt: row.announcedAt,
         },
       });
   }

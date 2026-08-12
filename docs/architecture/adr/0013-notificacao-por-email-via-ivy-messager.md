@@ -29,7 +29,7 @@ que e-mail existe.
 | `CompositeDomainEventPublisher` | infrastructure      | Log de auditoria **e** e-mail assinam juntos           |
 | `DeferredDomainEventPublisher`  | infrastructure      | `after()` do Next: envia depois da resposta            |
 
-Seis escolhas que sustentam o resto:
+Sete escolhas que sustentam o resto:
 
 **1. O e-mail não repete data, endereço nem traje.** Instinto óbvio, e armadilha.
 E-mail é retrato: se o local mudar, a caixa de entrada guarda a versão velha para
@@ -74,7 +74,22 @@ confirmou, o outro serve a quem organiza, e quem acumula os dois papéis quer as
 duas coisas. A lição é sobre a economia errada: cortar mensagem contando campo
 repetido, em vez de contar propósito.
 
-## Consequências
+**7. Quem decide o que é notícia é o agregado, não o assinante de e-mail.** A
+idempotência do serviço cobre "a mesma mensagem saiu duas vezes"; não cobre
+"a pessoa mudou de ideia quatro vezes em cinco minutos", que são quatro fatos
+distintos e legítimos. O `Rsvp` passou a guardar `announcedDecision` e
+`announcedAt`, separados do estado atual, e só emite `RsvpDecisionChanged` quando
+a decisão nova difere da última **anunciada** e passaram 15 minutos do último
+anúncio.
+
+Poderia ter virado um filtro no publisher, e ficaria errado. "Trocar de ideia não
+é o mesmo que ter notícia" é regra do negócio, não detalhe de entrega: vale
+igual para um painel, um webhook ou uma mensagem no WhatsApp. Vivendo no
+agregado, ela é testável sem simular envio, e o estado que ela precisa é
+persistido pelo mesmo `save` que já existia.
+
+As duas decisões continuam anunciando igual. Silenciar recusa seria esconder
+justamente o número que mais dói errar.
 
 **Boas:** o caso de uso não mudou uma linha; trocar de provedor de e-mail é
 reescrever um adapter; 30 testes cobrem a política de retentativa e o fan-out sem
@@ -90,10 +105,12 @@ tocar a rede; o log de auditoria continuou existindo em paralelo.
 - **Idempotência é por instância do serviço, dentro de 15 minutos.** Limitação
   documentada por quem o opera. Sob escalonamento horizontal, um retry pode cair
   em outra instância e reenviar.
-- **Mudança de ideia dentro da janela não gera segundo aviso.** Confirmar, recusar
-  e confirmar de novo em 15 minutos reusa a chave e o e-mail não sai. Estado final
-  na tela e no banco está correto; o convidado só não recebe o terceiro aviso.
-  Preferimos isso a arriscar duplicata.
+- **Uma troca feita dentro do silêncio e nunca revista não gera aviso próprio.**
+  É o preço direto da escolha 7. O estado fica correto no banco e na lista, e o
+  próximo relatório, de qualquer convidado, já sai com o número certo: o buraco
+  se fecha sozinho a cada nova resposta. Fechá-lo na hora exigiria um agendador
+  que reavaliasse o silêncio ao expirar, e isso é infraestrutura demais para
+  dezenas de convidados.
 - **O evento passou a carregar o e-mail da conta.** Assinante precisa saber para
   quem escrever, e voltar ao repositório transformaria "reagir a um fato" em
   "consultar estado". Como o payload virou dado pessoal,
