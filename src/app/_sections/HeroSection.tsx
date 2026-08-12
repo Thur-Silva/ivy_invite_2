@@ -34,15 +34,24 @@ export function HeroSection({ celebration }: { celebration: CelebrationView }) {
 
       <HeroTitle name={honoree.name} turningAge={honoree.turningAge} />
 
+      {/*
+        `-me-[...]` igual ao `tracking` não é enfeite.
+
+        `letter-spacing` acrescenta o espaço DEPOIS de cada letra, inclusive da
+        última. Num texto centralizado, essa sobra entra na conta da largura e
+        empurra o texto visivelmente para a esquerda: com `0.3em` a 18px, são
+        ~5px de deslocamento, o bastante para o subtítulo não bater com o "Ivy"
+        logo acima. A margem negativa devolve exatamente a sobra da última letra.
+      */}
       <Reveal delay={0.35}>
-        <p className="border-gold-500/30 bg-pond-900/50 text-gold-400 mt-7 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs tracking-[0.18em] uppercase backdrop-blur-sm">
-          {invitationCopy.hero.theme}
+        <p className="border-gold-500/30 bg-pond-900/50 text-gold-400 mt-7 inline-flex items-center rounded-full border px-4 py-2 text-xs uppercase backdrop-blur-sm">
+          <span className="-me-[0.18em] tracking-[0.18em]">{invitationCopy.hero.theme}</span>
         </p>
       </Reveal>
 
       <Reveal delay={0.5} className="absolute bottom-8 left-0 flex w-full justify-center">
-        <span className="text-cream/45 flex flex-col items-center gap-2 text-[0.65rem] tracking-[0.2em] uppercase">
-          {invitationCopy.hero.scrollCue}
+        <span className="text-cream/45 flex flex-col items-center gap-2 text-center text-[0.65rem] uppercase">
+          <span className="-me-[0.2em] tracking-[0.2em]">{invitationCopy.hero.scrollCue}</span>
           <svg
             viewBox="0 0 24 24"
             aria-hidden="true"

@@ -18,16 +18,27 @@ export function DressCodeCard({ celebration }: { celebration: CelebrationView })
         {dressCode.guidance}
       </p>
 
-      <ul className="flex flex-wrap items-start justify-center gap-4">
+      {/*
+        Grade de 4 colunas, não `flex-wrap`.
+
+        Com `flex-wrap` e itens de largura fixa, quatro amostras somavam 304px
+        contra os ~272px disponíveis num celular de 360px: a quarta caía sozinha
+        numa segunda linha, centralizada, e o conjunto lia como quebrado. Na
+        grade as colunas dividem o que existe, então as quatro ficam sempre na
+        mesma linha e alinhadas entre si, com os nomes quebrando de forma igual.
+      */}
+      <ul className="grid w-full grid-cols-4 gap-x-2 gap-y-3">
         {dressCode.palette.map((color) => (
-          <li key={color.hex} className="flex w-16 flex-col items-center gap-2">
+          <li key={color.hex} className="flex flex-col items-center gap-2">
             <span
               // A cor vem do domínio, então é estilo inline mesmo: não há como
               // uma classe estática do Tailwind conhecer um hex configurável.
               style={{ backgroundColor: color.hex }}
-              className="border-cream/25 block h-11 w-11 rounded-full border shadow-[0_6px_18px_-8px_rgba(0,0,0,0.9)]"
+              className="border-cream/25 block aspect-square w-11 max-w-full rounded-full border shadow-[0_6px_18px_-8px_rgba(0,0,0,0.9)]"
             />
-            <span className="text-cream/60 text-[0.7rem] leading-tight">{color.name}</span>
+            <span className="text-cream/60 text-center text-[0.7rem] leading-tight text-balance">
+              {color.name}
+            </span>
           </li>
         ))}
       </ul>

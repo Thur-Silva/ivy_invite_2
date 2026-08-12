@@ -19,11 +19,22 @@ const letter: Variants = {
   },
 };
 
+/**
+ * O subtítulo abre o espaçamento entre letras enquanto aparece.
+ *
+ * `marginRight` acompanha o `letterSpacing` com o sinal trocado, e isso é
+ * necessário, não decorativo: `letter-spacing` acrescenta o espaço depois de
+ * **cada** letra, inclusive da última. Essa sobra entra na largura do elemento e
+ * desloca todo o texto centralizado para a esquerda. Com `0.6em` a 18px são uns
+ * 11px de desvio, e como o valor é animado, o texto **derivava** para a direita
+ * durante a animação em vez de ficar parado sob o "Ivy".
+ */
 const subtitle: Variants = {
-  hidden: { opacity: 0, letterSpacing: '0.6em' },
+  hidden: { opacity: 0, letterSpacing: '0.6em', marginRight: '-0.6em' },
   visible: {
     opacity: 1,
     letterSpacing: '0.3em',
+    marginRight: '-0.3em',
     transition: { duration: 1.1, delay: 0.75, ease: [0.22, 1, 0.36, 1] },
   },
 };

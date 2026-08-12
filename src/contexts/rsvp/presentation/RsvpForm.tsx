@@ -133,16 +133,24 @@ export function RsvpForm({
         >
           <DeviceTraitsField />
 
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor={nameFieldId}
-              className="font-display text-gold-400 text-sm tracking-wide"
-            >
-              Confira seu nome
-            </label>
-            <p className="text-cream/45 -mt-1 text-xs">
-              Preenchemos com o que achamos no seu e-mail. Corrija se não for assim que te chamam.
-            </p>
+          <div className="flex flex-col gap-2.5">
+            {/*
+              Rótulo e dica são um bloco só, com respiro menor entre si do que
+              entre o bloco e o campo. Antes eram três irmãos num `gap-2` com um
+              `-mt-1` puxando a dica para cima: hack que deixava os espaços
+              desiguais e mudava conforme o texto quebrasse de linha.
+            */}
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor={nameFieldId}
+                className="font-display text-gold-400 text-sm tracking-wide"
+              >
+                Confira seu nome
+              </label>
+              <p className="text-cream/45 text-xs leading-relaxed">
+                Preenchemos com o que achamos no seu e-mail. Corrija se não for assim que te chamam.
+              </p>
+            </div>
             <input
               id={nameFieldId}
               name={RSVP_FIELD_NAMES.guestName}
@@ -167,8 +175,15 @@ export function RsvpForm({
             />
           </div>
 
-          <fieldset className="flex flex-col gap-3">
-            <legend className="font-display text-gold-400 mb-1 text-sm tracking-wide">
+          {/*
+            `fieldset` fica como bloco comum, sem `flex`. `legend` é renderizado
+            fora do fluxo normal pelo navegador, então dentro de um container
+            flex ele ignora o `gap` e o espaçamento passa a depender de um `mb`
+            que soma ou não com o gap dependendo do browser. Com bloco simples,
+            o respiro vem só do `mb` do próprio legend e é previsível.
+          */}
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="font-display text-gold-400 mb-3 p-0 text-sm tracking-wide">
               Você vem à festa da Ivy?
             </legend>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -233,8 +248,14 @@ export function RsvpForm({
             {isPending ? 'Enviando…' : 'Enviar minha resposta'}
           </button>
 
-          <p className="text-cream/35 flex flex-wrap items-center justify-center gap-x-2 text-[0.7rem]">
-            <span>Conectado como {accountEmail}</span>
+          {/*
+            `gap-y` importa: sem ele, quando o e-mail é longo e o "trocar de
+            conta" cai para a linha de baixo, as duas linhas se encostam.
+            `break-all` no e-mail evita que um endereço sem espaços estoure a
+            largura do cartão em tela estreita.
+          */}
+          <p className="text-cream/35 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-[0.7rem] leading-relaxed">
+            <span className="break-all">Conectado como {accountEmail}</span>
             <button
               type="button"
               onClick={() => void signOutGuest()}
