@@ -1,5 +1,5 @@
 /**
- * Fireflies (vaga-lumes) — one `THREE.Points` draw call.
+ * Fireflies (vaga-lumes). One `THREE.Points` draw call.
  *
  * Every firefly's drift and blink is computed on the GPU from per-particle
  * attributes, so the CPU only updates a single `uTime` uniform per frame.

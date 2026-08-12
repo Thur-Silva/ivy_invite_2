@@ -1,5 +1,5 @@
 /**
- * Shared Kernel — base class for broken domain invariants.
+ * Shared Kernel. Base class for broken domain invariants.
  *
  * Domain errors are *expected* business outcomes, not crashes. They carry a
  * stable machine-readable `code` (used by the Application layer to translate

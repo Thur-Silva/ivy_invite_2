@@ -3,20 +3,20 @@
 import { motion, useTransform, type MotionValue } from 'motion/react';
 
 /**
- * O jacaré do lago — desenho original, no estilo do resto do convite.
+ * O jacaré do lago. Desenho original, no estilo do resto do convite.
  *
  * ## O vaga-lume mora aqui dentro. De propósito.
  *
  * Esta é a decisão central do componente. Antes, o vaga-lume era um elemento
  * `fixed` na viewport e a boca vivia numa seção do documento: dois sistemas de
  * coordenadas diferentes, unidos por conversões entre `vh`, `%` e progresso de
- * scroll. Cada conversão era uma chance de errar — e errava, em resoluções
+ * scroll. Cada conversão era uma chance de errar. E errava, em resoluções
  * diferentes e em telas móveis onde `vh` e `svh` divergem.
  *
  * Agora o vaga-lume que é engolido é um `<g>` **deste mesmo SVG**, voando até a
  * boca em `(60, 94)` do viewBox. Os dois estão no mesmo espaço vetorial: se o
  * SVG escala, os dois escalam juntos. O encontro é exato em qualquer resolução,
- * qualquer altura de página, qualquer aparelho — não por calibragem, mas porque
+ * qualquer altura de página, qualquer aparelho. Não por calibragem, mas porque
  * não existe conversão nenhuma entre eles.
  *
  * O vaga-lume da trilha (camada de fundo) apenas se apaga um pouco antes, e este
@@ -31,12 +31,12 @@ import { motion, useTransform, type MotionValue } from 'motion/react';
  * ## Contraste com o lago
  *
  * Fundo verde-escuro engole jacaré verde-escuro. Paleta deslocada para o claro,
- * **contorno** escuro em toda silhueta — o truque clássico de desenho animado — e
+ * **contorno** escuro em toda silhueta. O truque clássico de desenho animado. E
  * um halo escuro difuso atrás, que o descola da água.
  *
  * ## Como a boca abre
  *
- * Crânio e olhos **não giram** — se girassem, os olhos desceriam com o focinho e
+ * Crânio e olhos **não giram**. Se girassem, os olhos desceriam com o focinho e
  * o rosto desmontaria. Giram só as duas maxilas, na mesma dobradiça escondida: a
  * de cima sobe pouco, a de baixo desce muito.
  */
@@ -66,7 +66,7 @@ export function PondGator({
   /*
    * Atenção ao sinal. Em SVG o eixo Y aponta para **baixo**, então rotação
    * positiva (horária na tela) *levanta* a ponta de um focinho voltado para a
-   * esquerda, e negativa a abaixa — o contrário da intuição cartesiana. Inverter
+   * esquerda, e negativa a abaixa. O contrário da intuição cartesiana. Inverter
    * isto abre a boca ao avesso.
    */
   const upperJawRotate = useTransform(jawOpen, [0, 1], [0, 15]);
@@ -172,8 +172,8 @@ export function PondGator({
           opacity="0.65"
         />
 
-        {/* O vaga-lume aceso lá dentro. Três camadas — bloom, núcleo e estouro
-            branco — é o que faz a barriga realmente acender. */}
+        {/* O vaga-lume aceso lá dentro. Três camadas. Bloom, núcleo e estouro
+            branco. É o que faz a barriga realmente acender. */}
         <motion.circle
           cx="124"
           cy="150"
@@ -238,7 +238,7 @@ export function PondGator({
         style={{ rotate: tongueRotate, transformBox: 'fill-box', transformOrigin: '100% 0%' }}
       />
 
-      {/* Maxila inferior — desce bastante */}
+      {/* Maxila inferior. Desce bastante */}
       <motion.g
         style={{ rotate: lowerJawRotate, transformBox: 'fill-box', transformOrigin: '100% 0%' }}
       >
@@ -255,7 +255,7 @@ export function PondGator({
         />
       </motion.g>
 
-      {/* Maxila superior — sobe pouco, mesma dobradiça */}
+      {/* Maxila superior. Sobe pouco, mesma dobradiça */}
       <motion.g
         style={{ rotate: upperJawRotate, transformBox: 'fill-box', transformOrigin: '100% 100%' }}
       >

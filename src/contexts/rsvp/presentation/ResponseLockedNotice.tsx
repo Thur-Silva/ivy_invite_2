@@ -8,14 +8,14 @@ import { LilyGlyph } from '@/ui/ornaments/Glyphs';
  *
  * Duas situações distintas, duas saídas distintas:
  *
- *  - **DEVICE** — este aparelho já confirmou por alguém. O caminho é a outra
+ *  - **DEVICE**. Este aparelho já confirmou por alguém. O caminho é a outra
  *    pessoa responder do celular dela. Se quiserem alterar a resposta que já
  *    existe, basta digitar aquele mesmo nome, então o botão volta ao formulário.
- *  - **NAME** — o nome já respondeu de outro aparelho. Aqui não há saída pelo
+ *  - **NAME**. O nome já respondeu de outro aparelho. Aqui não há saída pelo
  *    site: ou usam o celular original, ou falam com os anfitriões.
  *
  * O tom importa. É um convite de festa infantil, e a pessoa acabou de levar um
- * "não" — o texto explica o motivo sem soar como catraca de estádio.
+ * "não". O texto explica o motivo sem soar como catraca de estádio.
  */
 export function ResponseLockedNotice({
   reason,

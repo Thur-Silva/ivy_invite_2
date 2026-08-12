@@ -36,7 +36,7 @@ export class SequentialIdGenerator implements IdGenerator {
 /**
  * Identidade previsível: cada sinal vira hex legível repetido até 64 caracteres.
  *
- * Não usa crypto de propósito — os testes precisam que "o celular da Maria" e
+ * Não usa crypto de propósito. Os testes precisam que "o celular da Maria" e
  * "o celular do João" sejam distinguíveis na saída de uma asserção que falhou.
  * O contrato que importa é apenas "mesmo sinal, mesmo digest".
  */

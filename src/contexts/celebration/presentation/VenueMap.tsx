@@ -5,7 +5,7 @@ import type { CelebrationView } from '../application/dto/celebration.view';
  * Location block: address, an inline map preview and two navigation deep links.
  *
  * The `<iframe>` is `loading="lazy"` so the map costs nothing until the guest
- * scrolls near it — it sits at the bottom of the page, well below the RSVP form
+ * scrolls near it. It sits at the bottom of the page, well below the RSVP form
  * that actually matters. The buttons are what most guests tap; the embed exists
  * to make the place feel real.
  */

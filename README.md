@@ -1,4 +1,4 @@
-# Convite da Ivy — 2 anos
+# Convite da Ivy. 2 anos
 
 Convite digital, mobile-first, para o aniversário de 2 anos da Ivy. Tema: **A
 Princesa e o Sapo**.
@@ -59,26 +59,26 @@ confirmados:
 **Como pegar as coordenadas:** abra o Google Maps, clique com o botão direito no
 ponto exato da entrada e copie os dois números do topo do menu.
 
-Depois de editar, rode `npm run test` — há testes que quebram se a data estiver
+Depois de editar, rode `npm run test`. Há testes que quebram se a data estiver
 invertida, o endereço vazio ou a coordenada fora do Brasil.
 
 ---
 
 ## Scripts
 
-| Comando               | O que faz                                                                |
-| --------------------- | ------------------------------------------------------------------------ |
-| `npm run dev`         | servidor de desenvolvimento                                              |
-| `npm run build`       | build de produção                                                        |
-| `npm run verify`      | **typecheck + lint + testes** — rode antes de todo commit                |
-| `npm run typecheck`   | `tsc --noEmit`                                                           |
-| `npm run lint`        | ESLint, incluindo a Regra da Dependência entre camadas                   |
-| `npm run test`        | Vitest (32 testes, ~1s, sem banco)                                       |
-| `npm run test:watch`  | Vitest em watch                                                          |
-| `npm run format`      | Prettier                                                                 |
-| `npm run db:generate` | gera migração a partir do schema Drizzle                                 |
-| `npm run db:migrate`  | aplica migrações no Neon                                                 |
-| `npm run db:studio`   | abre o Drizzle Studio — **é aqui que se lê a lista de confirmados hoje** |
+| Comando               | O que faz                                                               |
+| --------------------- | ----------------------------------------------------------------------- |
+| `npm run dev`         | servidor de desenvolvimento                                             |
+| `npm run build`       | build de produção                                                       |
+| `npm run verify`      | **typecheck + lint + testes**. Rode antes de todo commit                |
+| `npm run typecheck`   | `tsc --noEmit`                                                          |
+| `npm run lint`        | ESLint, incluindo a Regra da Dependência entre camadas                  |
+| `npm run test`        | Vitest (32 testes, ~1s, sem banco)                                      |
+| `npm run test:watch`  | Vitest em watch                                                         |
+| `npm run format`      | Prettier                                                                |
+| `npm run db:generate` | gera migração a partir do schema Drizzle                                |
+| `npm run db:migrate`  | aplica migrações no Neon                                                |
+| `npm run db:studio`   | abre o Drizzle Studio. **é aqui que se lê a lista de confirmados hoje** |
 
 ---
 
@@ -89,7 +89,7 @@ invertida, o endereço vazio ou a coordenada fora do Brasil.
    string do Neon, nos três ambientes.
 3. Deploy.
 
-Sem `DATABASE_URL`, a aplicação **falha ao subir em produção** de propósito —
+Sem `DATABASE_URL`, a aplicação **falha ao subir em produção** de propósito.
 melhor um erro de deploy que um convite que aceita respostas e joga fora.
 
 O convite é publicado com `robots: noindex`: é privado, feito para circular por
@@ -101,11 +101,11 @@ WhatsApp.
 
 O código não está organizado por tipo de arquivo, e sim por **Bounded Context** e
 depois por **camada**. Dependências apontam sempre para dentro, e isso é
-verificado pelo ESLint — não é convenção, é build.
+verificado pelo ESLint. Não é convenção, é build.
 
 ```
 src/
-├── app/                    Next.js App Router — só composição de página
+├── app/                    Next.js App Router. Só composição de página
 ├── contexts/
 │   ├── rsvp/               ◀ CORE: domain · application · infrastructure · presentation
 │   └── celebration/        ◀ SUPPORTING: dados da festa (config + ACL de mapas)
@@ -126,11 +126,11 @@ Leitura recomendada, nesta ordem:
 
 ### Em uma frase, por camada
 
-- **domain** — regras. Não sabe que existe React, Next, Postgres ou Zod.
-- **application** — casos de uso. Orquestra o domínio através de portas.
-- **infrastructure** — adapters. Neon, config da festa, links de mapa, e o
+- **domain**. Regras. Não sabe que existe React, Next, Postgres ou Zod.
+- **application**. Casos de uso. Orquestra o domínio através de portas.
+- **infrastructure**. Adapters. Neon, config da festa, links de mapa, e o
   Composition Root (único lugar com `new` de implementação concreta).
-- **presentation** — React, Server Actions, CSS. Traduz intenção do usuário em
+- **presentation**. React, Server Actions, CSS. Traduz intenção do usuário em
   comando e resultado em pixel.
 
 ---

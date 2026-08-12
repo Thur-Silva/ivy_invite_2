@@ -1,5 +1,5 @@
 /**
- * Shared Kernel — Domain Event contract.
+ * Shared Kernel. Domain Event contract.
  *
  * A Domain Event records something that already happened in the domain,
  * expressed in the Ubiquitous Language and named in the past tense

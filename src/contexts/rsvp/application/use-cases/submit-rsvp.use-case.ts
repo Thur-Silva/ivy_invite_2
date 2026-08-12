@@ -30,14 +30,14 @@ export interface SubmitRsvpDependencies {
 type SubmitRsvpResult = Result<SubmitRsvpOutcome, SubmitRsvpFailure>;
 
 /**
- * Use Case — "a guest answers Ivy's invitation".
+ * Use Case. "a guest answers Ivy's invitation".
  *
  * Orquestração apenas; toda regra vive no agregado, nos Value Objects e no
  * `RsvpEligibilityPolicy`. Na ordem:
  *
  *  1. traduz primitivos em Value Objects (invariantes acontecem aqui);
  *  2. transforma o endereço de rede numa impressão digital opaca;
- *  3. lê as duas identidades da resposta — por nome e por aparelho;
+ *  3. lê as duas identidades da resposta. Por nome e por aparelho;
  *  4. pergunta à política de domínio o que fazer;
  *  5. cria, atualiza ou recusa;
  *  6. persiste e só então publica os eventos;
@@ -60,7 +60,7 @@ export class SubmitRsvp {
 
       return await this.record(guestName.value, decision.value, identity);
     } catch (error) {
-      // Anything reaching here is a defect or an infrastructure outage — never
+      // Anything reaching here is a defect or an infrastructure outage. Never
       // a business outcome. The guest gets one honest, retryable message.
       console.error('[rsvp] falha ao registrar confirmação', error);
       return fail({
@@ -94,7 +94,7 @@ export class SubmitRsvp {
         registeredGuestName: eligibility.registeredGuestName.value,
         message:
           `Este aparelho já confirmou presença como ${eligibility.registeredGuestName.value}. ` +
-          'Cada convidado responde por si — peça para a outra pessoa responder pelo celular dela.',
+          'Cada convidado responde por si. Peça para a outra pessoa responder pelo celular dela.',
       });
     }
 

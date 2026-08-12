@@ -13,7 +13,7 @@ interface RespondentIdentityProps {
 }
 
 /**
- * Quem enviou a resposta — em três sinais, nenhum deles reversível.
+ * Quem enviou a resposta. Em três sinais, nenhum deles reversível.
  *
  * **Nada aqui é IP, user agent ou token cru.** São digests SHA-256 com salt,
  * produzidos pela porta `RespondentIdentifier`. O domínio recusa qualquer coisa
@@ -74,7 +74,7 @@ export class RespondentIdentity extends ValueObject<RespondentIdentityProps> {
    * que o cookie tenha sumido.
    *
    * O `NeonRsvpRepository` traduz esta mesma regra para SQL. Se ela mudar aqui,
-   * tem de mudar lá — está anotado nos dois lugares.
+   * tem de mudar lá. Está anotado nos dois lugares.
    */
   isSameRespondentAs(other: RespondentIdentity): boolean {
     if (this.props.token === other.token) return true;

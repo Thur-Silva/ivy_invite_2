@@ -28,8 +28,8 @@ function resolveRepository(): RsvpRepository {
 
   if (serverEnv.NODE_ENV === 'production') {
     throw new Error(
-      'DATABASE_URL não configurada. Em produção as confirmações precisam de um banco durável — ' +
-        'defina a variável no projeto da Vercel antes do deploy.',
+      'DATABASE_URL não configurada. Em produção as confirmações precisam de um banco ' +
+        'durável. Defina a variável no projeto da Vercel antes do deploy.',
     );
   }
 
@@ -45,7 +45,7 @@ function resolveRepository(): RsvpRepository {
  * Salt padrão para o hash de aparelho.
  *
  * Existe para o projeto rodar sem configuração. Está no repositório, portanto
- * **não é segredo** — defina `RSVP_DEVICE_SALT` na Vercel antes de publicar.
+ * **não é segredo**. Defina `RSVP_DEVICE_SALT` na Vercel antes de publicar.
  */
 const FALLBACK_DEVICE_SALT = 'ivy-2-anos-lago-encantado-salt-padrao';
 

@@ -1,4 +1,4 @@
-# ADR-0007 — Dados da festa em arquivo de configuração, não no banco
+# ADR-0007. Dados da festa em arquivo de configuração, não no banco
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -46,9 +46,9 @@ numa fonte só.
 
 ## Alternativas consideradas
 
-| Alternativa                          | Por que não                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| Tabela `celebrations` no Neon        | Migração, seed e consulta em runtime para um dado que muda três vezes — e a página deixaria de ser estática. |
-| Variáveis de ambiente                | Sem tipagem estruturada, sem histórico, painel da Vercel é pior editor que um `.ts` comentado.               |
-| CMS headless (Sanity, Contentful)    | Editor amigável, mas mais um serviço, mais uma key e mais uma latência num convite de uma página.            |
-| Valores fixos direto nos componentes | Espalha a mesma data por 4 arquivos e garante que um deles vai ficar desatualizado.                          |
+| Alternativa                          | Por que não                                                                                                 |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Tabela `celebrations` no Neon        | Migração, seed e consulta em runtime para um dado que muda três vezes. E a página deixaria de ser estática. |
+| Variáveis de ambiente                | Sem tipagem estruturada, sem histórico, painel da Vercel é pior editor que um `.ts` comentado.              |
+| CMS headless (Sanity, Contentful)    | Editor amigável, mas mais um serviço, mais uma key e mais uma latência num convite de uma página.           |
+| Valores fixos direto nos componentes | Espalha a mesma data por 4 arquivos e garante que um deles vai ficar desatualizado.                         |

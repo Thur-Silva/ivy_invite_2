@@ -1,7 +1,7 @@
 import type { Identifier } from './identifier';
 
 /**
- * Shared Kernel — Entity base class.
+ * Shared Kernel. Entity base class.
  *
  * An Entity is defined by its identity, not by its attributes: two entities
  * are the same if their ids match, even when every other field differs.

@@ -9,8 +9,8 @@ import { waterFragmentShader, waterVertexShader } from './shaders/water.shader';
  * Full-screen animated water plane.
  *
  * Sized from the R3F viewport, so it fills the canvas at any aspect ratio with
- * no resize listener of its own. `uTime` is advanced through the material ref —
- * the imperative escape hatch — rather than by mutating a memoized object.
+ * no resize listener of its own. `uTime` is advanced through the material ref.
+ * the imperative escape hatch. Rather than by mutating a memoized object.
  */
 export function WaterSurface() {
   const viewport = useThree((state) => state.viewport);

@@ -5,15 +5,15 @@ import type { AttendanceDecisionValue } from '../../domain/value-objects/attenda
  * Command crossing into the Application layer.
  *
  * Primitives only: the Presentation layer must not need to know how to build a
- * `GuestName` or an `AttendanceDecision` — translating primitives into Value
+ * `GuestName` or an `AttendanceDecision`. Translating primitives into Value
  * Objects (and rejecting what cannot be translated) is the Use Case's job.
  */
 export interface SubmitRsvpCommand {
   readonly guestName: string;
   readonly decision: string;
   /**
-   * Sinais crus de quem está respondendo — IP, user agent, idioma, traços do
-   * navegador e token de sessão — como o adapter de entrada os viu.
+   * Sinais crus de quem está respondendo. IP, user agent, idioma, traços do
+   * navegador e token de sessão. Como o adapter de entrada os viu.
    *
    * Viram `RespondentIdentity` dentro do caso de uso e **nunca** são persistidos
    * crus: o que chega ao banco são três digests irreversíveis.
@@ -27,7 +27,7 @@ export type SubmissionStatus =
   | 'RECORDED'
   /** The guest had answered before and changed their mind. */
   | 'UPDATED'
-  /** Same answer as before — nothing changed. */
+  /** Same answer as before. Nothing changed. */
   | 'UNCHANGED';
 
 /** Read model returned to the Presentation layer. Serializable by design. */

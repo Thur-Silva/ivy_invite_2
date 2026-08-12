@@ -18,7 +18,7 @@ const variants: Variants = {
  *
  * `whileInView` + `once` rather than a scroll-linked animation: on a phone the
  * guest scrolls fast, and content that keeps re-animating reads as broken.
- * Users with `prefers-reduced-motion` get the content immediately — Motion
+ * Users with `prefers-reduced-motion` get the content immediately. Motion
  * respects the media query and snaps to the final state.
  */
 export function Reveal({

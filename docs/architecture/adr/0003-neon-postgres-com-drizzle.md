@@ -1,11 +1,11 @@
-# ADR-0003 — Neon Postgres com Drizzle (driver HTTP)
+# ADR-0003. Neon Postgres com Drizzle (driver HTTP)
 
 - **Status:** aceito
 - **Data:** 2026-08-11
 
 ## Contexto
 
-As confirmações precisam sobreviver a reinício de servidor — é o único dado que
+As confirmações precisam sobreviver a reinício de servidor. É o único dado que
 o site produz e perdê-lo significa não saber quantas pessoas vêm à festa.
 
 O deploy é na Vercel ([ADR-0004](./0004-server-actions-como-adapter-de-entrada.md)),
@@ -38,7 +38,7 @@ do driver **HTTP** (`drizzle-orm/neon-http`).
 - sem pool para esgotar: cada statement é uma requisição HTTP;
 - free tier cobre este projeto com folga;
 - SQL gerado é visível e revisável nas migrações;
-- o enum no banco repete a invariante `AttendanceDecision` — um bug de aplicação
+- o enum no banco repete a invariante `AttendanceDecision`. Um bug de aplicação
   não corrompe a lista de convidados.
 
 **Ruins:**
@@ -48,14 +48,14 @@ do driver **HTTP** (`drizzle-orm/neon-http`).
   precisar de duas escritas atômicas exige trocar para o driver WebSocket;
 - cold start do Neon (~500ms) no primeiro acesso após inatividade;
 - `InMemoryRsvpRepository` em dev pode esconder um bug que só aparece com SQL
-  real — mitigado pelo PBI-05, que adiciona teste de integração.
+  real. Mitigado pelo PBI-05, que adiciona teste de integração.
 
 ## Alternativas consideradas
 
-| Alternativa                             | Por que não                                                                                                          |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Google Sheets como banco                | Familiar para os anfitriões, mas frágil, lento e sem restrição de unicidade — a idempotência do RSVP viraria código. |
-| Vercel Postgres / Supabase              | Equivalentes; Neon foi escolha explícita do time.                                                                    |
-| Prisma                                  | Cliente maior, geração de código no build e menos previsível em serverless que Drizzle.                              |
-| SQL puro com `@neondatabase/serverless` | Elimina o ORM, mas perde tipagem do schema e migrações versionadas.                                                  |
-| Só WhatsApp (sem banco)                 | Zero infraestrutura, mas nenhuma lista consolidada — o anfitrião teria que contar mensagens à mão.                   |
+| Alternativa                             | Por que não                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Google Sheets como banco                | Familiar para os anfitriões, mas frágil, lento e sem restrição de unicidade. A idempotência do RSVP viraria código. |
+| Vercel Postgres / Supabase              | Equivalentes; Neon foi escolha explícita do time.                                                                   |
+| Prisma                                  | Cliente maior, geração de código no build e menos previsível em serverless que Drizzle.                             |
+| SQL puro com `@neondatabase/serverless` | Elimina o ORM, mas perde tipagem do schema e migrações versionadas.                                                 |
+| Só WhatsApp (sem banco)                 | Zero infraestrutura, mas nenhuma lista consolidada. O anfitrião teria que contar mensagens à mão.                   |

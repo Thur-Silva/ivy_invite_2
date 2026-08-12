@@ -10,7 +10,7 @@ import { rsvpsTable } from './drizzle/rsvp.schema';
 import { RsvpMapper } from './rsvp.mapper';
 
 /**
- * Driven adapter — `RsvpRepository` backed by Neon serverless Postgres.
+ * Driven adapter. `RsvpRepository` backed by Neon serverless Postgres.
  *
  * Uses the HTTP driver (`neon-http`): one round trip per statement, no
  * connection pool to exhaust, which is the right fit for Vercel functions that
@@ -39,7 +39,7 @@ export class NeonRsvpRepository implements RsvpRepository {
    *
    *     mesmo token  OU  (mesmo aparelho E mesma rede)
    *
-   * A regra canônica vive no Value Object. **Se ela mudar lá, muda aqui** — a
+   * A regra canônica vive no Value Object. **Se ela mudar lá, muda aqui**. A
    * duplicação é o preço de deixar o banco filtrar em vez de carregar a tabela
    * inteira para a memória, e está anotada nos dois lados.
    */

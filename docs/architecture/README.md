@@ -1,6 +1,6 @@
-# Arquitetura — Convite dos 2 anos da Ivy
+# Arquitetura. Convite dos 2 anos da Ivy
 
-> Documento vivo. Se o código divergir daqui, um dos dois está errado — conserte o que for mais barato e registre a decisão em um [ADR](./adr).
+> Documento vivo. Se o código divergir daqui, um dos dois está errado. Conserte o que for mais barato e registre a decisão em um [ADR](./adr).
 
 ## 1. Por que DDD em um convite de aniversário?
 
@@ -9,7 +9,7 @@ duas telas e uma tabela.
 
 O objetivo aqui é outro: usar um escopo pequeno e real para exercitar os
 conceitos **à risca**, com um custo de erro baixo. Toda a estrutura abaixo é
-defensável em revisão de código — nenhuma peça existe "porque DDD manda". Onde
+defensável em revisão de código. Nenhuma peça existe "porque DDD manda". Onde
 o padrão canônico seria excessivo, a decisão de simplificar está registrada num
 ADR em vez de acontecer no silêncio.
 
@@ -45,7 +45,7 @@ flowchart LR
       NEON["Neon Postgres"]
     end
 
-    PAGE["src/app — composição da página"]
+    PAGE["src/app. Composição da página"]
     PAGE --> RSVP
     PAGE --> CEL
     CEL -. "ACL: GoogleMapsLinkProvider" .-> MAPS
@@ -65,7 +65,7 @@ flowchart LR
 
 ### 2.3 Ubiquitous Language
 
-O idioma do código do domínio é **inglês** (decisão do time — ver
+O idioma do código do domínio é **inglês** (decisão do time. Ver
 [ADR-0010](./adr/0010-ubiquitous-language-em-ingles.md)), com o glossário
 PT-BR ↔ EN mantido em [`ubiquitous-language.md`](./ubiquitous-language.md).
 Mensagens voltadas ao convidado são em português, porque o convidado é o leitor.
@@ -125,7 +125,7 @@ essa amarra, a arquitetura sobrevive até o primeiro "só dessa vez".
 
 ```
 src/
-├── app/                          Next.js App Router — só composição
+├── app/                          Next.js App Router. Só composição
 │   ├── layout.tsx                fontes, metadata, viewport, backdrop
 │   ├── page.tsx                  ponto de encontro dos dois contextos
 │   ├── _sections/                Hero, Story, Rsvp, Venue, Closing
@@ -153,7 +153,7 @@ src/
 │   └── testing/                  dublês: FixedClock, SequentialIdGenerator…
 │
 ├── graphics/
-│   ├── enchanted-pond/           lago WebGL (R3F + GLSL) — fundo fixo
+│   ├── enchanted-pond/           lago WebGL (R3F + GLSL). Fundo fixo
 │   └── scroll-journey/           trilha, marcadores, vaga-lume e pétalas (ADR-0011)
 └── ui/                           cn, Reveal, HeroTitle, hooks de ambiente,
                                   ornamentos e glifos SVG (ADR-0012)
@@ -182,7 +182,7 @@ sequenceDiagram
     else já respondeu antes
         U->>D: rsvp.reconsider(...) → RsvpDecisionChanged (ou nada)
     end
-    U->>R: save(rsvp) — INSERT … ON CONFLICT (guest_key)
+    U->>R: save(rsvp). INSERT … ON CONFLICT (guest_key)
     U->>P: publish(eventos drenados após o commit)
     U-->>A: Result.ok({ status: RECORDED | UPDATED | UNCHANGED })
     A-->>F: RsvpFormState
@@ -196,7 +196,7 @@ Dois pontos que definem o desenho:
    nome é plausível?"). Duplicar a regra no Zod criaria uma segunda fonte de
    verdade que envelhece sozinha.
 2. **Eventos só depois da escrita.** `pullDomainEvents()` roda após o `save`.
-   Nada é anunciado para um trabalho que não aconteceu — e uma falha de
+   Nada é anunciado para um trabalho que não aconteceu. E uma falha de
    notificação nunca derruba um RSVP já gravado.
 
 ## 5. Decisões que sustentam o resto
@@ -223,14 +223,14 @@ por três semanas:
 
 | Nível               | O que cobre                                                           | Ferramenta      | Estado                                                |
 | ------------------- | --------------------------------------------------------------------- | --------------- | ----------------------------------------------------- |
-| Unidade — domínio   | invariantes de `GuestName`, eventos e idempotência de `Rsvp`          | Vitest          | ✅ 21 testes                                          |
-| Unidade — aplicação | critérios de aceite do PBI-02, incluindo repositório fora do ar       | Vitest + dublês | ✅ 8 testes                                           |
+| Unidade. Domínio    | invariantes de `GuestName`, eventos e idempotência de `Rsvp`          | Vitest          | ✅ 21 testes                                          |
+| Unidade. Aplicação  | critérios de aceite do PBI-02, incluindo repositório fora do ar       | Vitest + dublês | ✅ 8 testes                                           |
 | Configuração        | `celebration.config.ts` produz agregado válido; coordenadas no Brasil | Vitest          | ✅ 3 testes                                           |
-| Integração com Neon | `NeonRsvpRepository` contra Postgres real                             | —               | ⏳ PBI-05                                             |
+| Integração com Neon | `NeonRsvpRepository` contra Postgres real                             |                 | ⏳ PBI-05                                             |
 | E2E mobile          | preencher e enviar o formulário num device real                       | manual          | ✅ checklist no [DoD](../agile/definition-of-done.md) |
 
 O ponto arquitetural: **32 testes rodam em menos de 1 segundo, sem banco, sem
-servidor e sem navegador**. Isso é consequência direta das portas — não de
+servidor e sem navegador**. Isso é consequência direta das portas. Não de
 mocks espalhados.
 
 ## 7. Requisitos não funcionais assumidos
@@ -251,7 +251,7 @@ Registrado aqui para não parecer esquecimento:
 - **Sem rate limiting.** Um script pode inundar a tabela de RSVPs. Aceito no
   Sprint 1 (o link é privado, distribuído por WhatsApp); virou PBI-11.
 - **Sem transação multi-statement.** O driver HTTP do Neon não tem. Hoje é
-  irrelevante — `save` é um único `INSERT … ON CONFLICT`. Se um caso de uso
+  irrelevante. `save` é um único `INSERT … ON CONFLICT`. Se um caso de uso
   precisar de duas escritas, troque para o driver WebSocket antes.
 - **`guest_key` colide homônimos.** Duas "Maria Silva" diferentes viram a mesma
   linha. É uma escolha consciente, discutida no [ADR-0009](./adr/0009-chave-natural-do-convidado.md).

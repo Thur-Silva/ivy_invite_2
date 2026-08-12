@@ -1,7 +1,7 @@
 import { ValueObject } from '@/shared/kernel/value-object';
 import { UnknownAttendanceDecisionError } from '../errors/unknown-attendance-decision.error';
 
-/** The two answers the invitation accepts — "vou" / "não vou". */
+/** The two answers the invitation accepts. "vou" / "não vou". */
 export const ATTENDANCE_DECISIONS = ['ATTENDING', 'NOT_ATTENDING'] as const;
 
 export type AttendanceDecisionValue = (typeof ATTENDANCE_DECISIONS)[number];

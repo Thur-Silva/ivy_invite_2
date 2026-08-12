@@ -1,4 +1,4 @@
-# ADR-0004 — Server Actions como adapter de entrada (sem REST)
+# ADR-0004. Server Actions como adapter de entrada (sem REST)
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -31,7 +31,7 @@ Regras que a Action obedece:
 3. Nunca deixa exceção escapar: o caso de uso devolve `Result`
    ([ADR-0008](./0008-invariantes-lancam-result-na-aplicacao.md)).
 4. O formulário é um `<form action={...}>` real com `<input type="radio">`
-   nativos — sem `preventDefault`, sem gate de validação no cliente.
+   nativos. Sem `preventDefault`, sem gate de validação no cliente.
 
 ## Consequências
 
@@ -48,18 +48,18 @@ Regras que a Action obedece:
 **Ruins:**
 
 - **acoplamento ao Next.js na borda.** Trocar de framework significa reescrever
-  este adapter — aceito, porque é exatamente o papel de um adapter, e ele tem
+  este adapter. Aceito, porque é exatamente o papel de um adapter, e ele tem
   ~50 linhas sem lógica;
 - Server Actions são endpoints POST acessíveis diretamente. Sem autenticação (o
-  RSVP é público por natureza), o risco residual é flood — registrado como
+  RSVP é público por natureza), o risco residual é flood. Registrado como
   PBI-11;
 - sem API pública, um app nativo futuro precisaria de um Route Handler novo. Não
   há app nativo no horizonte.
 
 ## Alternativas consideradas
 
-| Alternativa                              | Por que não                                                                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `POST /api/rsvp` + `fetch` no cliente    | Quebra sem JS, exige tratar rede/JSON/erro à mão e cria um contrato para manter — sem nenhum consumidor externo que justifique. |
-| tRPC                                     | Tipagem ponta a ponta que Server Actions já dão nativamente, com uma dependência a mais.                                        |
-| Serviço de formulário (Formspree, Tally) | Zero código, mas nenhum domínio, nenhuma idempotência e nenhum controle sobre a experiência — contraria o objetivo do projeto.  |
+| Alternativa                              | Por que não                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `POST /api/rsvp` + `fetch` no cliente    | Quebra sem JS, exige tratar rede/JSON/erro à mão e cria um contrato para manter. Sem nenhum consumidor externo que justifique. |
+| tRPC                                     | Tipagem ponta a ponta que Server Actions já dão nativamente, com uma dependência a mais.                                       |
+| Serviço de formulário (Formspree, Tally) | Zero código, mas nenhum domínio, nenhuma idempotência e nenhum controle sobre a experiência. Contraria o objetivo do projeto.  |

@@ -17,7 +17,7 @@ Scrum enxuto, dimensionado para um time pequeno e um prazo fixo e inegociável
 
 ## Cadência
 
-Sprints de **1 semana** — o prazo total até a festa é de ~4 semanas, então
+Sprints de **1 semana**. O prazo total até a festa é de ~4 semanas, então
 sprints de duas semanas dariam apenas dois pontos de correção de rota. Uma
 semana dá quatro.
 
@@ -56,10 +56,10 @@ semana dá quatro.
 
 Story points em Fibonacci (1, 2, 3, 5, 8, 13), Planning Poker.
 
-- **1–3 pts**: sei exatamente como fazer, é escrever
+- **1 a 3 pts**: sei exatamente como fazer, é escrever
 - **5 pts**: sei o caminho, tem detalhe a resolver
 - **8 pts**: tem decisão de desenho a tomar
-- **13 pts**: grande demais — quebrar ou virar spike
+- **13 pts**: grande demais. Quebrar ou virar spike
 
 Regra: **13 nunca entra em sprint**. Se o time estima 13, a história não passou no
 DoR (item _Small_).

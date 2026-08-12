@@ -1,4 +1,4 @@
-# ADR-0001 — Registrar decisões arquiteturais como ADR
+# ADR-0001. Registrar decisões arquiteturais como ADR
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -11,7 +11,7 @@ tempo. Exatamente o cenário em que decisões viram folclore: seis meses depois
 ninguém lembra por que o mapa não usa API key, e a "correção" reintroduz o
 problema original.
 
-DDD depende de decisões explícitas — Bounded Context, tipo de relação entre
+DDD depende de decisões explícitas. Bounded Context, tipo de relação entre
 contextos, onde uma invariante mora. Sem registro, a linguagem ubíqua degrada e
 a camada de domínio começa a importar ORM "só dessa vez".
 
@@ -32,7 +32,7 @@ imutável em `docs/architecture/adr/`.
 decisão registrada, não a preferência de quem escreveu; onboarding é ler 10
 arquivos curtos.
 
-**Ruins:** custo por decisão (~10 minutos). Aceito — é menor que uma reunião
+**Ruins:** custo por decisão (~10 minutos). Aceito. É menor que uma reunião
 sobre algo já decidido.
 
 ## Alternativas consideradas

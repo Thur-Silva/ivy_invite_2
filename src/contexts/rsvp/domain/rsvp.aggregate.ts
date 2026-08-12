@@ -17,15 +17,15 @@ interface RsvpState {
 }
 
 /**
- * Aggregate Root — one guest's answer to Ivy's invitation.
+ * Aggregate Root. One guest's answer to Ivy's invitation.
  *
  * Consistency boundary: a guest has exactly one answer at any time, e cada
  * resposta pertence a quem a criou. Answering again is not a new `Rsvp`; it is a
- * state transition on the existing one — por isso o caso de uso procura o
+ * state transition on the existing one. Por isso o caso de uso procura o
  * agregado por chave de convidado **e** por identidade antes de decidir entre
  * criar, atualizar ou recusar.
  *
- * The aggregate never reads the clock or generates ids itself — both arrive as
+ * The aggregate never reads the clock or generates ids itself. Both arrive as
  * arguments, so its behaviour is fully deterministic and unit-testable.
  */
 export class Rsvp extends AggregateRoot<RsvpId> {
@@ -92,7 +92,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
    *
    * A identidade também é atualizada: a mesma pessoa volta com o cookie renovado
    * ou de outra rede, e o registro precisa passar a refletir os sinais mais
-   * recentes — sem isso, o acesso seguinte deixaria de reconhecê-la.
+   * recentes. Sem isso, o acesso seguinte deixaria de reconhecê-la.
    */
   reconsider(input: {
     guestName: GuestName;
@@ -141,7 +141,7 @@ export class Rsvp extends AggregateRoot<RsvpId> {
     return this.state.decision;
   }
 
-  /** Sinais de quem criou — e mantém — esta resposta. */
+  /** Sinais de quem criou. E mantém. Esta resposta. */
   get identity(): RespondentIdentity {
     return this.state.identity;
   }

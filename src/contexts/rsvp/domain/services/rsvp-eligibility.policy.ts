@@ -13,7 +13,7 @@ export type RsvpEligibility =
   | { readonly kind: 'NAME_ANSWERED_ELSEWHERE' };
 
 /**
- * Domain Service — decide se uma resposta pode ser registrada.
+ * Domain Service. Decide se uma resposta pode ser registrada.
  *
  * Existe como serviço de domínio porque a regra **atravessa agregados**: ela
  * compara a tentativa atual com outras `Rsvp` que já existem. Colocá-la dentro
@@ -27,12 +27,12 @@ export type RsvpEligibility =
  * As duas regras que ela codifica:
  *
  *  1. **Um aparelho responde por uma pessoa só.** Quem já confirmou não pode
- *     confirmar por mais ninguém — nem por acompanhante, nem por parente.
+ *     confirmar por mais ninguém. Nem por acompanhante, nem por parente.
  *  2. **Uma resposta pertence a quem a criou.** Digitar o nome de alguém em
  *     outro celular não sobrescreve a resposta dessa pessoa.
  *
  * A regra 2 é o que fecha o buraco da regra 1: sem ela, bastaria trocar de
- * aparelho — ou o mesmo aparelho assumir a resposta de outro — para o limite
+ * aparelho. Ou o mesmo aparelho assumir a resposta de outro. Para o limite
  * deixar de valer.
  */
 export const RsvpEligibilityPolicy = {

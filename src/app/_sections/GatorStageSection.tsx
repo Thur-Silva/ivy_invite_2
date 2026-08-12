@@ -7,17 +7,17 @@ import { usePrefersReducedMotion } from '@/ui/hooks/use-environment';
 import { invitationCopy } from '../_content/invitation-copy';
 
 /**
- * O palco do jacaré — uma seção de verdade, no fluxo do documento.
+ * O palco do jacaré. Uma seção de verdade, no fluxo do documento.
  *
  * **É isto que impede a sobreposição.** Enquanto o jacaré era um enfeite plantado
  * numa fração da altura da página, qualquer conteúdo podia aterrissar em cima
- * dele — foi o que o cartão do mapa fez. Um `<section>` ocupa espaço: o navegador
+ * dele. Foi o que o cartão do mapa fez. Um `<section>` ocupa espaço: o navegador
  * empurra o que vem depois, hoje e em qualquer seção futura.
  *
  * A altura vem do **conteúdo**, não de um `min-h` em unidades de viewport. Fixar
  * `74svh` reservava uma faixa quase vazia, e o vão entre o mapa e o jacaré ficava
  * grande o bastante para o convidado desistir antes de chegar lá. Aqui a seção
- * mede o que o desenho precisa e nada além — e é essa altura que também define,
+ * mede o que o desenho precisa e nada além. E é essa altura que também define,
  * naturalmente, quanto de rolagem a animação leva para acontecer.
  */
 export function GatorStageSection() {

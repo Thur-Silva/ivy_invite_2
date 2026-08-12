@@ -13,7 +13,7 @@ export const RSVP_SESSION_COOKIE = 'ivy_rsvp_session';
  * texto que qualquer um edita no DevTools.
  *
  * **O que a assinatura não resolve:** ninguém é impedido de *apagar* o próprio
- * cookie e receber um token novo. Nenhum cookie resolve isso — é por essa razão
+ * cookie e receber um token novo. Nenhum cookie resolve isso. É por essa razão
  * que o token é apenas um dos três sinais de `RespondentIdentity`, e não o único.
  */
 export const SignedSessionToken = {

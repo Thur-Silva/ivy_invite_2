@@ -25,7 +25,7 @@ export class GeoCoordinates extends ValueObject<{ latitude: number; longitude: n
     return this.props.longitude;
   }
 
-  /** `lat,lng` — the format every maps provider accepts. */
+  /** `lat,lng`. The format every maps provider accepts. */
   toPair(): string {
     return `${this.props.latitude},${this.props.longitude}`;
   }

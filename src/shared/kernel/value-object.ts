@@ -1,5 +1,5 @@
 /**
- * Shared Kernel — Value Object base class.
+ * Shared Kernel. Value Object base class.
  *
  * A Value Object has no identity: two instances holding the same attributes
  * are interchangeable. They are immutable by construction (`Object.freeze`)

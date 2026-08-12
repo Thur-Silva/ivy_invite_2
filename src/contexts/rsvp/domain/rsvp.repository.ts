@@ -3,7 +3,7 @@ import type { GuestKey } from './value-objects/guest-key';
 import type { RespondentIdentity } from './value-objects/respondent-identity';
 
 /**
- * Port (driven side of the hexagon) — the collection of `Rsvp` aggregates as
+ * Port (driven side of the hexagon). The collection of `Rsvp` aggregates as
  * the domain wishes it existed.
  *
  * As duas buscas existem porque uma resposta tem **duas identidades**: o nome do

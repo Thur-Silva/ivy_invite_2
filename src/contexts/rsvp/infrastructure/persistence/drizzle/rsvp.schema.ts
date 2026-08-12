@@ -4,7 +4,7 @@ import type { AttendanceDecisionValue } from '../../../domain/value-objects/atte
 /**
  * Postgres enum mirroring the `AttendanceDecision` Value Object.
  * The database refuses any third value, so a bug in the app cannot corrupt the
- * guest list — the invariant is enforced twice, on purpose.
+ * guest list. The invariant is enforced twice, on purpose.
  */
 export const attendanceDecisionEnum = pgEnum('attendance_decision', ['ATTENDING', 'NOT_ATTENDING']);
 
@@ -20,7 +20,7 @@ export type AttendanceDecisionEnumInSync =
  *
  * `guest_key` is UNIQUE: it is the natural key that makes "answering again" an
  * update instead of a duplicate, and it lets `save()` be a single atomic
- * `INSERT ... ON CONFLICT` — which matters because the Neon HTTP driver has no
+ * `INSERT .. ON CONFLICT`. Which matters because the Neon HTTP driver has no
  * multi-statement transactions.
  */
 /**
@@ -45,7 +45,7 @@ export const rsvpsTable = pgTable(
     respondentToken: text('respondent_token').notNull().unique(),
     /** Digest de navegador + SO + idioma + resolução + fuso. */
     respondentDevice: text('respondent_device').notNull(),
-    /** Digest do endereço de rede — nunca o IP cru. */
+    /** Digest do endereço de rede. Nunca o IP cru. */
     respondentNetwork: text('respondent_network').notNull(),
     respondedAt: timestamp('responded_at', { withTimezone: true }).notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull(),

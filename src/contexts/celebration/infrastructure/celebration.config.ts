@@ -44,7 +44,7 @@ export const celebrationConfig = {
     headline: 'Traje',
     guidance:
       'Venha confortável, na paleta do reino: tons de verde e bege. ' +
-      'Nada de gala — é festa de criança e tem grama por perto.',
+      'Nada de gala. É festa de criança e tem grama por perto.',
     palette: [
       { name: 'Verde musgo', hex: '#4F6F52' },
       { name: 'Verde sálvia', hex: '#8BA888' },

@@ -7,7 +7,7 @@ const MAX_LENGTH = 60;
 
 /** Letters (any script, incl. accents), spaces, hyphen, apostrophe and dot. */
 const ALLOWED_CHARACTERS = new RegExp("^[\\p{L}\\p{M} .'-]+$", 'u');
-/** At least one actual letter — rejects inputs like "..." or "--". */
+/** At least one actual letter. Rejects inputs like "..." or "--". */
 const HAS_LETTER = new RegExp('\\p{L}', 'u');
 
 /**
@@ -17,7 +17,7 @@ const HAS_LETTER = new RegExp('\\p{L}', 'u');
  *  - not blank once trimmed;
  *  - between 2 and 60 characters;
  *  - only letters, spaces, hyphen, apostrophe and dot (no digits, no emoji,
- *    no URLs — this is the first line of defence against form spam);
+ *    no URLs. This is the first line of defence against form spam);
  *  - inner whitespace collapsed, so "Maria   Clara" is stored as "Maria Clara".
  */
 export class GuestName extends ValueObject<{ value: string }> {
@@ -46,7 +46,7 @@ export class GuestName extends ValueObject<{ value: string }> {
     return GuestKey.deriveFrom(this.props.value);
   }
 
-  /** First word — used by the Presentation layer for a warmer confirmation. */
+  /** First word. Used by the Presentation layer for a warmer confirmation. */
   firstName(): string {
     return this.props.value.split(' ')[0] ?? this.props.value;
   }

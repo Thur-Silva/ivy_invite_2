@@ -6,12 +6,12 @@ import type {
 } from '@/shared/application/ports/respondent-identifier';
 
 /**
- * Adapter — SHA-256 com salt sobre cada sinal de identificação.
+ * Adapter. SHA-256 com salt sobre cada sinal de identificação.
  *
  * **Por que digest e não o dado cru.** O convite é de uma festa infantil: IP,
  * user agent e resolução de tela de cada convidado são dados pessoais (LGPD,
- * art. 5º I). O digest responde à única pergunta que o sistema faz — "este
- * aparelho já respondeu?" — e não responde a nenhuma outra. Um vazamento do
+ * art. 5º I). O digest responde à única pergunta que o sistema faz. "este
+ * aparelho já respondeu?". E não responde a nenhuma outra. Um vazamento do
  * banco não revela de onde ninguém acessou.
  *
  * **Por que o salt.** IPv4 tem 4 bilhões de valores: sem salt, qualquer um com o
@@ -29,7 +29,7 @@ export class HashedRespondentIdentifier implements RespondentIdentifier {
       token: this.digest('token', signals.sessionToken),
       // Assinatura do aparelho: cabeçalhos que o servidor lê sozinho, mais os
       // traços que o navegador reporta. Sem JavaScript, os traços vêm vazios e a
-      // assinatura fica mais fraca — porém estável, que é o que importa.
+      // assinatura fica mais fraca. Porém estável, que é o que importa.
       device: this.digest(
         'device',
         [signals.userAgent, signals.acceptLanguage, signals.clientTraits].join('~'),

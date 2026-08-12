@@ -2,7 +2,7 @@ import type { DomainEventPublisher } from '@/shared/application/ports/domain-eve
 import type { DomainEvent } from '@/shared/kernel/domain-event';
 
 /**
- * Adapter — writes domain events to the platform log (Vercel Runtime Logs).
+ * Adapter. Writes domain events to the platform log (Vercel Runtime Logs).
  *
  * Deliberately the simplest thing that could possibly work for Sprint 1: it
  * gives the hosts an auditable trail and keeps the publishing seam exercised,

@@ -7,9 +7,9 @@ import { SmoothScroll } from './_components/SmoothScroll';
 
 /**
  * Type scale of the invitation:
- *  - Cinzel Decorative — regal display type for names and headings;
- *  - Great Vibes — the storybook script used sparingly, for asides;
- *  - Quicksand — rounded, friendly body type that stays legible at 14px.
+ *  - Cinzel Decorative. Regal display type for names and headings;
+ *  - Great Vibes. The storybook script used sparingly, for asides;
+ *  - Quicksand. Rounded, friendly body type that stays legible at 14px.
  *
  * `latin-ext` is required: "não", "presença" and "vitória-régia" all need it.
  */
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     'Convite para o aniversário de 2 anos da Ivy. Confirme sua presença e veja como chegar à festa.',
   applicationName: 'Convite da Ivy',
   openGraph: {
-    title: 'Ivy faz 2 anos — A Princesa e o Sapo',
+    title: 'Ivy faz 2 anos • A Princesa e o Sapo',
     description: 'Um convite do reino encantado. Confirme sua presença!',
     locale: 'pt_BR',
     type: 'website',

@@ -11,7 +11,7 @@ import { StorySection } from './_sections/StorySection';
 import { VenueSection } from './_sections/VenueSection';
 
 /**
- * O convite — uma rolagem, em atos.
+ * O convite. Uma rolagem, em atos.
  *
  * Este é o ponto de encontro dos dois Bounded Contexts, e o encontro é raso de
  * propósito: Celebration entrega um read model, RSVP é dono do próprio formulário
@@ -30,7 +30,7 @@ import { VenueSection } from './_sections/VenueSection';
  * **Nada decorativo que precise de espaço próprio entra nas camadas negativas.**
  * O jacaré aprendeu isso na prática: enquanto era enfeite de fundo plantado numa
  * fração da altura da página, o cartão do mapa passou por cima dele. Hoje ele tem
- * `GatorStageSection`, uma seção no fluxo — e `GatorStageProvider` é o que liga a
+ * `GatorStageSection`, uma seção no fluxo. E `GatorStageProvider` é o que liga a
  * medição dessa seção ao vaga-lume da camada de fundo.
  */
 export default async function InvitationPage() {

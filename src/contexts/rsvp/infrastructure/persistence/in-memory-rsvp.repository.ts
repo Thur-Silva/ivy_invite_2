@@ -4,7 +4,7 @@ import type { GuestKey } from '../../domain/value-objects/guest-key';
 import type { RespondentIdentity } from '../../domain/value-objects/respondent-identity';
 
 /**
- * Driven adapter — in-memory `RsvpRepository`.
+ * Driven adapter. In-memory `RsvpRepository`.
  *
  * Two uses, both first-class:
  *  - unit tests of the Use Case run with zero infrastructure;
@@ -37,7 +37,7 @@ export class InMemoryRsvpRepository implements RsvpRepository {
     this.byGuestKey.set(rsvp.guestKey.value, rsvp);
   }
 
-  /** Test helper — inspect what was stored. Not part of the port. */
+  /** Test helper. Inspect what was stored. Not part of the port. */
   snapshot(): readonly Rsvp[] {
     return [...this.byGuestKey.values()];
   }

@@ -1,4 +1,4 @@
-# ADR-0002 — Arquitetura hexagonal + DDD dentro do Next.js App Router
+# ADR-0002. Arquitetura hexagonal + DDD dentro do Next.js App Router
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -27,7 +27,7 @@ Tratar o Next.js como **detalhe de entrega**, não como arquitetura.
 4. **Portas no domínio** para conceitos de domínio (`RsvpRepository`), portas na
    aplicação para conceitos técnicos (`Clock`, `IdGenerator`, `EventPublisher`).
 5. **Um Composition Root por contexto**, em `infrastructure/composition-root.ts`
-   — o único lugar onde `new AlgumaCoisaConcreta()` acontece.
+   , o único lugar onde `new AlgumaCoisaConcreta()` acontece.
 6. **A Regra da Dependência é validada pelo ESLint** (`no-restricted-imports`
    por zona, em `eslint.config.mjs`), não pela boa vontade de quem revisa.
 
@@ -43,7 +43,7 @@ Tratar o Next.js como **detalhe de entrega**, não como arquitetura.
 
 **Ruins:**
 
-- mais arquivos e mais indireção do que o problema exige — para gravar duas
+- mais arquivos e mais indireção do que o problema exige. Para gravar duas
   colunas há um agregado, um mapper, um repositório e um caso de uso;
 - um dev acostumado ao Next.js "padrão" precisa do mapa em
   [`README.md`](../README.md#33-mapa-de-diretórios) para se localizar;
@@ -57,7 +57,7 @@ objetivo declarado do projeto.
 
 | Alternativa                                                        | Por que não                                                                                                          |
 | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
-| Next.js idiomático (SQL no componente, `lib/` genérica)            | Mais rápido de escrever, mas sem camada de domínio testável — contraria o requisito.                                 |
+| Next.js idiomático (SQL no componente, `lib/` genérica)            | Mais rápido de escrever, mas sem camada de domínio testável. Contraria o requisito.                                  |
 | Camadas na raiz (`src/domain`, `src/application`, …) sem contextos | Funciona com um contexto; com dois, `domain/` mistura RSVP e Celebration e a fronteira desaparece.                   |
 | Monorepo com pacote `@ivy/domain` separado                         | Isolamento mais forte, mas adiciona workspaces, build encadeado e complexidade de deploy para um site de uma página. |
 | Backend separado (NestJS) + front Next.js                          | Isolamento máximo, custo de infraestrutura e latência que um convite de festa não justifica.                         |

@@ -21,7 +21,7 @@
 /** Posição horizontal da trilha, em % da largura, para `t` ∈ [0, 1]. */
 export function curveX(t: number): number {
   const clamped = Math.min(Math.max(t, 0), 1);
-  // 1,55 ciclos ao longo da página, com amplitude decrescendo até o final —
+  // 1,55 ciclos ao longo da página, com amplitude decrescendo até o final.
   // a trilha "se acalma" quando chega no encerramento.
   return 50 + 27 * Math.sin(clamped * Math.PI * 3.1) * (1 - 0.22 * clamped);
 }
@@ -58,7 +58,7 @@ export const TRAIL_STOPS = [0.22, 0.42, 0.62, 0.8] as const;
 /*
  * Nota histórica: aqui havia uma constante `TRAIL_FINALE` que plantava o jacaré
  * numa fração fixa da altura do documento. A dedução era exata, mas assumia o
- * layout — bastou a página ganhar a seção do traje para o cartão do mapa cair em
+ * layout. Bastou a página ganhar a seção do traje para o cartão do mapa cair em
  * cima dele.
  *
  * O jacaré passou a viver em `GatorStageSection`, uma seção real que reserva o

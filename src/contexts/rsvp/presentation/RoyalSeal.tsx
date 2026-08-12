@@ -31,7 +31,7 @@ export function RoyalSeal({
 
   const body = isAttending
     ? 'Sua presença está guardada no reino. Nos vemos na festa da Ivy!'
-    : 'Vamos sentir sua falta — mas a Ivy manda um beijo de princesa pra você.';
+    : 'Vamos sentir sua falta, mas a Ivy manda um beijo de princesa pra você.';
 
   const note =
     submission === 'UPDATED'

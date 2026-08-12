@@ -1,4 +1,4 @@
-# ADR-0012 — Nenhum emoji de teclado na interface
+# ADR-0012. Nenhum emoji de teclado na interface
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -35,12 +35,12 @@ Nenhum emoji na interface. Cada um foi substituído por um glifo SVG inline em
 
 Ganho concreto além da estética: os glifos **reagem**. O da opção escolhida
 cresce, se inclina e ganha opacidade total via `peer-checked:[&>svg]:…`, o que dá
-confirmação visual sem depender do `input[type=radio]` nativo — que cada sistema
+confirmação visual sem depender do `input[type=radio]` nativo. Que cada sistema
 desenha de um jeito. O alfinete de mapa sobe ao toque; a seta do Waze avança.
 
 **Escopo:** vale para a interface. Na documentação, marcadores funcionais de
 tabela (✅ pronto, 📋 refinado, 💭 ideia, ⚠️ bloqueio) continuam, porque ali são
-legenda e não decoração — e o leitor é o time, não o convidado. O único emoji que
+legenda e não decoração. E o leitor é o time, não o convidado. O único emoji que
 sobrou em `src/` está num fixture de teste, provando que `GuestName` **rejeita**
 emoji.
 
@@ -54,7 +54,7 @@ de emoji.
 
 - **cada ícone novo é trabalho de desenho**, não um caractere colado. É o custo
   aceito, e a barreira que mantém a consistência;
-- SVG inline pesa mais que um caractere no HTML — irrelevante nesta escala
+- SVG inline pesa mais que um caractere no HTML. Irrelevante nesta escala
   (12 SVGs no documento inteiro, todos com poucos paths);
 - glifos autorais podem ser menos reconhecíveis que o emoji correspondente. Por
   isso todos vêm **acompanhados de rótulo em texto** ("Abrir no Google Maps",
@@ -64,7 +64,7 @@ de emoji.
 
 | Alternativa                                  | Por que não                                                                                                                                     |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Biblioteca de ícones (Lucide, Heroicons)     | Consistente e pronta, mas nenhuma tem vitória-régia ou coroa de conto de fadas — o convite ficaria com ícones de painel administrativo.         |
+| Biblioteca de ícones (Lucide, Heroicons)     | Consistente e pronta, mas nenhuma tem vitória-régia ou coroa de conto de fadas. O convite ficaria com ícones de painel administrativo.          |
 | Fonte de emoji própria (Twemoji, Noto Emoji) | Resolve a inconsistência entre plataformas, mas continua sem gradiente, sem animação e adiciona download de fonte.                              |
 | Manter os emoji                              | O ponto de partida, e o que o feedback rejeitou explicitamente.                                                                                 |
 | Simplesmente remover sem substituir          | Era a alternativa aceitável se o desenho não funcionasse; os cartões de opção ficariam corretos mas sem confirmação visual do que está marcado. |

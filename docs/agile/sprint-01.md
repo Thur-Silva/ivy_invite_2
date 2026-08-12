@@ -1,13 +1,13 @@
-# Sprint 1 — "Convite no ar"
+# Sprint 1. "Convite no ar"
 
 - **Período:** 2026-08-11 → 2026-08-15
-- **Data da festa:** 2026-09-12 _(`[PLACEHOLDER]` — a confirmar)_
+- **Data da festa:** 2026-09-12 _(`[PLACEHOLDER]`. A confirmar)_
 - **Sprints restantes até a festa:** 3
 
 ## Sprint Goal
 
 > Um convidado consegue abrir o convite no celular, entender a festa, confirmar
-> presença e abrir a rota até o local — em cima de uma arquitetura em que regra
+> presença e abrir a rota até o local. Em cima de uma arquitetura em que regra
 > de negócio é testável sem banco e sem navegador.
 
 Objetivo único e verificável: se um familiar conseguir fazer isso de ponta a
@@ -27,14 +27,14 @@ ponta no próprio celular, a sprint teve sucesso.
 
 Ordem de execução deliberada: **PBI-00 primeiro** como _walking skeleton_
 (formulário → Server Action → caso de uso → agregado → Postgres), depois PBI-02,
-que é o coração do produto. As duas histórias de leitura vieram por último — se a
+que é o coração do produto. As duas histórias de leitura vieram por último. Se a
 sprint estourasse, o que sobraria inacabado seria enfeite, não função.
 
 **PBI-17 entrou no meio da sprint**, o que contraria a regra 2 do
 [processo](./README.md#regras-que-o-time-se-impôs) ("escopo não cresce dentro da
 sprint"). A exceção foi consciente e é registrada aqui em vez de maquiada: veio de
 feedback direto da PO sobre o incremento demonstrado, o Sprint Goal já estava
-atingido, e a história não tocava em nenhuma camada de negócio — só na de
+atingido, e a história não tocava em nenhuma camada de negócio. Só na de
 apresentação. Uma exceção justificada continua sendo exceção; se virar hábito, a
 regra deixou de existir.
 
@@ -89,7 +89,7 @@ regra deixou de existir.
 de erro (nome inválido, opção não escolhida, banco fora do ar) e a idempotência
 (enviar duas vezes → uma linha).
 
-**Aceite da PO:** ⏳ pendente — depende dos dados reais da festa.
+**Aceite da PO:** ⏳ pendente. Depende dos dados reais da festa.
 
 **Bloqueio para publicar:** `celebration.config.ts` tem data, endereço e
 coordenadas `[PLACEHOLDER]`. É o único item entre o estado atual e o convite no
@@ -105,7 +105,7 @@ ar. Registrado como risco **R1** na [visão](./product-vision.md).
   A tentação de importar Drizzle no domínio para "ir mais rápido" simplesmente
   não compila.
 - **Portas desde o início.** O caso de uso `SubmitRsvp` foi escrito e testado
-  antes de existir qualquer tabela — inclusive o cenário de banco fora do ar.
+  antes de existir qualquer tabela. Inclusive o cenário de banco fora do ar.
 - **Escopo respeitado.** Acompanhantes (PBI-07) e painel (PBI-05) foram
   reconhecidos como valiosos e **não** puxados. Sprint fechou no compromisso.
 
@@ -113,7 +113,7 @@ ar. Registrado como risco **R1** na [visão](./product-vision.md).
 
 - **Regras novas do `react-hooks` v6** (React Compiler) rejeitaram três padrões
   comuns: `setState` em efeito e mutação de valor memoizado. Custou uma refação
-  para `useSyncExternalStore` e refs — resultado ficou melhor, mas foi custo não
+  para `useSyncExternalStore` e refs. Resultado ficou melhor, mas foi custo não
   previsto.
 - **GLSL não tem rede de segurança.** Nenhum teste cobre o shader; quebra visual
   só aparece olhando. Risco aceito, mas real.

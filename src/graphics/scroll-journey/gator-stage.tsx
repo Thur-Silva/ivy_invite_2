@@ -18,7 +18,7 @@ const GatorStageContext = createContext<GatorStage | null>(null);
  * ## A escolha do `offset` é a parte que importa
  *
  * `['start end', 'end end']` significa: **0** quando o topo do palco toca a base
- * da tela, **1** quando a base do palco toca a base da tela — ou seja, quando o
+ * da tela, **1** quando a base do palco toca a base da tela. Ou seja, quando o
  * palco terminou de entrar por baixo.
  *
  * Isso não é estilo, é a única janela que **sempre se completa**. A tentativa
@@ -27,7 +27,7 @@ const GatorStageContext = createContext<GatorStage | null>(null);
  * rodapé tem ~200px. Resultado: `biteProgress` empacava em ~0,8, a mordida nunca
  * disparava, e o comportamento mudava conforme a altura da tela.
  *
- * Com `'end end'`, rolar até o fim sempre leva a base do palco à base da tela — e
+ * Com `'end end'`, rolar até o fim sempre leva a base do palco à base da tela. E
  * de fato a ultrapassa, porque o rodapé ainda vem depois. O progresso chega a 1
  * em qualquer resolução, com qualquer quantidade de conteúdo.
  *
@@ -35,7 +35,7 @@ const GatorStageContext = createContext<GatorStage | null>(null);
  *
  * Ele não posiciona nada. O encontro entre vaga-lume e boca acontece dentro do
  * SVG do jacaré, no mesmo sistema de coordenadas (ver `PondGator`). Aqui só se
- * decide *quando*, nunca *onde* — que é justamente o que torna o resultado
+ * decide *quando*, nunca *onde*. Que é justamente o que torna o resultado
  * independente de resolução.
  */
 export function GatorStageProvider({ children }: { children: ReactNode }) {

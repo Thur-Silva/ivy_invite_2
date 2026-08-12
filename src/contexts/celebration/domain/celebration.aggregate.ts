@@ -23,7 +23,7 @@ interface CelebrationProps {
 }
 
 /**
- * Aggregate Root — the party itself.
+ * Aggregate Root. The party itself.
  *
  * This Bounded Context is a **supporting subdomain**: within Sprint 1 the
  * celebration is authored by the hosts in a config file and is read-only at

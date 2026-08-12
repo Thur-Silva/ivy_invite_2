@@ -20,7 +20,7 @@ interface DressCodeProps {
  * O que os convidados devem vestir.
  *
  * É fato da festa, definido pelos anfitriões, e por isso mora no domínio junto
- * com local e horário — não na cópia da página. A paleta é validada: cor sem
+ * com local e horário. Não na cópia da página. A paleta é validada: cor sem
  * nome ou com hex malformado quebra o boot em vez de renderizar uma amostra
  * cinza no convite.
  */

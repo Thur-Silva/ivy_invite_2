@@ -6,7 +6,7 @@ import { LilyGlyph } from '@/ui/ornaments/Glyphs';
 import { useGatorStage } from './gator-stage';
 import { buildTrailPath, curveX, TRAIL_STOPS } from './trail-path';
 
-/** Calculada uma vez na carga do módulo — a curva nunca muda. */
+/** Calculada uma vez na carga do módulo. A curva nunca muda. */
 const TRAIL_PATH = buildTrailPath();
 
 /**
@@ -19,7 +19,7 @@ const TRAIL_PATH = buildTrailPath();
 function TrailStop({ at, progress }: { at: number; progress: MotionValue<number> }) {
   const lilyOpacity = useTransform(progress, [at - 0.1, at - 0.01], [0.15, 1]);
   const lilyScale = useTransform(progress, [at - 0.1, at - 0.01], [0.45, 1]);
-  // A flor gira conforme a leitura passa por ela — o giro é o que torna o
+  // A flor gira conforme a leitura passa por ela. O giro é o que torna o
   // marcador um evento, e não só um ponto que acende.
   const lilyRotate = useTransform(progress, [at - 0.12, at + 0.12], [-55, 55]);
   const ringScale = useTransform(progress, [at - 0.05, at + 0.1], [0.3, 3.2]);
@@ -78,16 +78,16 @@ function TrailSpark({
  *
  * Três camadas, todas decorativas e `aria-hidden`:
  *
- *  1. **Trilha** (espaço de documento) — caminho sinuoso que se desenha conforme
+ *  1. **Trilha** (espaço de documento). Caminho sinuoso que se desenha conforme
  *     a leitura avança, via `pathLength` ligado ao progresso de scroll;
- *  2. **Marcadores + jacaré** (espaço de documento) — as vitórias-régias acendem
+ *  2. **Marcadores + jacaré** (espaço de documento). As vitórias-régias acendem
  *     e disparam um anel ao serem ultrapassadas; no fim, o jacaré emerge e engole
  *     o vaga-lume;
- *  3. **Vaga-lume + rastro** (espaço de viewport) — desce junto com a rolagem,
+ *  3. **Vaga-lume + rastro** (espaço de viewport). Desce junto com a rolagem,
  *     exatamente sobre a trilha (ver a dedução em `trail-path.ts`).
  *
  * O progresso passa por `useSpring` antes de virar posição: o vaga-lume ganha
- * inércia, ultrapassa um pouco ao parar e volta — a diferença entre "um ponto
+ * inércia, ultrapassa um pouco ao parar e volta. A diferença entre "um ponto
  * amarrado ao scroll" e "um bicho voando".
  *
  * Tudo em `z-index: -1`: a cena fica atrás do conteúdo, e os cartões de
@@ -106,7 +106,7 @@ export function ScrollJourney() {
   /**
    * O vaga-lume da trilha se apaga quando o palco do jacaré entra em cena.
    *
-   * Ele **não** voa até a boca — essa tentativa foi abandonada. Ela exigia
+   * Ele **não** voa até a boca. Essa tentativa foi abandonada. Ela exigia
    * traduzir uma posição do documento para uma coordenada de viewport, e a
    * tradução passava por `vh`, `%` e progresso de scroll, divergindo em telas
    * móveis (onde `vh` e `svh` não são a mesma coisa) e em alturas de página
@@ -145,7 +145,7 @@ export function ScrollJourney() {
           </defs>
 
           {/* Leito da trilha: sempre visível, indica que há caminho adiante.
-              `non-scaling-stroke` é obrigatório aqui — sem ele, o viewBox
+              `non-scaling-stroke` é obrigatório aqui. Sem ele, o viewBox
               esticado deformaria a espessura do traço. */}
           <path
             d={TRAIL_PATH}
@@ -174,7 +174,7 @@ export function ScrollJourney() {
 
         {/*
           O jacaré NÃO mora aqui. Ele vive em `GatorStageSection`, uma seção de
-          verdade no fluxo do documento — foi a lição do cartão do mapa passando
+          verdade no fluxo do documento. Foi a lição do cartão do mapa passando
           por cima dele. Esta camada é só cenário; nada nela reserva espaço.
         */}
       </div>

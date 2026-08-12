@@ -5,7 +5,7 @@ import { AnimatedFlourish } from '@/ui/ornaments/AnimatedFlourish';
 /**
  * Shared frame for every act of the invitation.
  *
- * `max-w-md` is not a compromise for desktop — it is the design: the page is
+ * `max-w-md` is not a compromise for desktop. It is the design: the page is
  * a phone-shaped column, centred on larger screens rather than stretched.
  */
 export function SectionShell({

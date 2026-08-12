@@ -4,7 +4,7 @@ import type { CelebrationView } from '../application/dto/celebration.view';
  * Traje sugerido, com a paleta como amostras de cor.
  *
  * Mostrar a cor vale mais que descrevê-la: "verde musgo" significa uma coisa
- * diferente para cada convidado, enquanto o círculo pintado não deixa dúvida — e
+ * diferente para cada convidado, enquanto o círculo pintado não deixa dúvida. E
  * o nome fica embaixo para quem não distingue bem as cores e para leitor de tela.
  */
 export function DressCodeCard({ celebration }: { celebration: CelebrationView }) {

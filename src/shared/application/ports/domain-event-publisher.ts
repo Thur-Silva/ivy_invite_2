@@ -1,7 +1,7 @@
 import type { DomainEvent } from '@/shared/kernel/domain-event';
 
 /**
- * Port — outbound side effects triggered by facts that already happened.
+ * Port. Outbound side effects triggered by facts that already happened.
  *
  * Publishing is deliberately fire-and-forget from the caller's perspective:
  * a failure to notify must never fail an RSVP that was already stored. The

@@ -1,7 +1,7 @@
 import { cn } from '@/ui/cn';
 
 /**
- * O sapo príncipe, coroa inclusa — a outra metade do tema.
+ * O sapo príncipe, coroa inclusa. A outra metade do tema.
  *
  * A piscada é feita achatando o **próprio grupo dos olhos** em `scaleY`, com
  * duas linhas escuras por trás para o olho fechado ler como um traço. É como

@@ -2,7 +2,7 @@ import { Reveal } from '@/ui/Reveal';
 import { Flourish } from '@/ui/ornaments/Flourish';
 import { invitationCopy } from '../_content/invitation-copy';
 
-/** Closes the fairy tale. No links, no asks — just a goodbye. */
+/** Closes the fairy tale. No links, no asks. Just a goodbye. */
 export function ClosingSection() {
   return (
     <footer className="relative mx-auto flex w-full max-w-md flex-col items-center gap-4 px-6 pt-6 pb-24 text-center">

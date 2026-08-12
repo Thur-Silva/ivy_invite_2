@@ -18,7 +18,7 @@ const MARIA_PHONE: RespondentSignals = {
   networkAddress: '189.10.10.1',
 };
 
-/** Celular do João — aparelho diferente, **mesma rede** que o da Maria. */
+/** Celular do João. Aparelho diferente, **mesma rede** que o da Maria. */
 const JOAO_PHONE: RespondentSignals = {
   sessionToken: 'token-joao',
   userAgent: 'Mozilla/5.0 (Linux; Android 14; Moto G84)',
@@ -29,7 +29,7 @@ const JOAO_PHONE: RespondentSignals = {
 
 /**
  * Critérios de aceite do PBI-02 (confirmar presença) e do PBI-19 (uma resposta
- * por convidado), executáveis. Roda contra o repositório em memória — sem banco.
+ * por convidado), executáveis. Roda contra o repositório em memória. Sem banco.
  */
 describe('SubmitRsvp', () => {
   let rsvps: InMemoryRsvpRepository;
@@ -222,7 +222,7 @@ describe('SubmitRsvp', () => {
         ok: false,
         error: { kind: 'NAME_TAKEN', code: 'GUEST_ALREADY_RESPONDED' },
       });
-      // A resposta original permanece intacta — ninguém sobrescreve ninguém.
+      // A resposta original permanece intacta. Ninguém sobrescreve ninguém.
       expect(rsvps.snapshot()).toHaveLength(1);
       expect(rsvps.snapshot()[0]?.isAttending()).toBe(true);
     });
@@ -279,7 +279,7 @@ describe('SubmitRsvp', () => {
     expect(rsvps.snapshot()).toHaveLength(0);
   });
 
-  it('never throws when the repository is down — it reports UNAVAILABLE', async () => {
+  it('never throws when the repository is down. It reports UNAVAILABLE', async () => {
     const brokenUseCase = new SubmitRsvp({
       rsvps: {
         findByGuestKey: async () => {

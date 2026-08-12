@@ -22,7 +22,7 @@ describe('celebration configuration', () => {
     expect(celebration.venue.fullAddress().length).toBeGreaterThan(10);
   });
 
-  it('places the venue in Brazil — a swapped latitude/longitude is a typo', async () => {
+  it('places the venue in Brazil. A swapped latitude/longitude is a typo', async () => {
     const { venue } = await new StaticCelebrationRepository().current();
 
     expect(venue.coordinates.latitude).toBeGreaterThan(-34);

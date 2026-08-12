@@ -1,7 +1,7 @@
 import type { Venue } from '../../domain/value-objects/venue';
 
 /**
- * Port — how a guest gets from "I read the invitation" to "I am at the party".
+ * Port. How a guest gets from "I read the invitation" to "I am at the party".
  *
  * Abstracted because the map provider is a replaceable third party: the domain
  * knows an address and a coordinate pair, not that Google exists. The adapter

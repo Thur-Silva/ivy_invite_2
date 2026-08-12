@@ -1,7 +1,7 @@
 import { ValueObject } from './value-object';
 
 /**
- * Shared Kernel — base class for aggregate identities.
+ * Shared Kernel. Base class for aggregate identities.
  *
  * Identities are Value Objects: opaque, immutable and compared by value.
  * Each Bounded Context declares its own concrete identity type (e.g. `RsvpId`)

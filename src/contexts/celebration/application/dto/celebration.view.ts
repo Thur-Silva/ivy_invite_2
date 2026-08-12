@@ -1,7 +1,7 @@
 /**
  * Read model handed to the Presentation layer.
  *
- * Plain, serializable data only — it crosses the React Server/Client boundary,
+ * Plain, serializable data only. It crosses the React Server/Client boundary,
  * so no class instances, no `Date` objects with behaviour attached, no domain
  * types. Dates travel as ISO strings and are formatted for display by the
  * Presentation layer using the party's own time zone.

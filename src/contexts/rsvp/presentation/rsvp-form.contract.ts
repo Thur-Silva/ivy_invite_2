@@ -25,7 +25,7 @@ export const RSVP_FIELD_NAMES = {
 
 /**
  * The tokens the form may post. `satisfies` makes this a compile-time mirror of
- * the domain Value Object while keeping the import type-only — so no domain
+ * the domain Value Object while keeping the import type-only. So no domain
  * code is shipped to the browser.
  */
 export const DECISION_OPTIONS = [
@@ -78,7 +78,7 @@ export type RsvpFormState =
       readonly registeredGuestName?: string;
     }
   | {
-      /** Nothing the guest did wrong — retry is the right advice. */
+      /** Nothing the guest did wrong. Retry is the right advice. */
       readonly status: 'failed';
       readonly message: string;
       readonly values: RsvpFormValues;

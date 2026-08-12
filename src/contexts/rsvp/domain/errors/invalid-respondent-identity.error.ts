@@ -3,7 +3,7 @@ import { DomainError } from '@/shared/kernel/domain-error';
 /**
  * Alguém tentou construir uma `RespondentIdentity` com algo que não é digest.
  *
- * Não é erro de convidado — é defeito de programação, e existir como erro de
+ * Não é erro de convidado. É defeito de programação, e existir como erro de
  * domínio é o que impede o acidente mais provável desta feature: gravar IP,
  * user agent ou token cru no banco por engano.
  */

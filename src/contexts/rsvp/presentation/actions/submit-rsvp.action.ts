@@ -20,17 +20,17 @@ const SESSION_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 180;
 /**
  * Coleta os três sinais de identificação e garante o cookie de sessão.
  *
- * **Token (cookie assinado)** — o sinal mais forte: sobrevive a troca de rede,
+ * **Token (cookie assinado)**. O sinal mais forte: sobrevive a troca de rede,
  * de Wi-Fi para 4G e de operadora. Se não existir ou vier adulterado, emite um
  * novo. Assinado com HMAC para que ninguém escreva à mão o token de outra pessoa
  * e assuma a resposta dela.
  *
- * **Aparelho** — `user-agent` e `accept-language`, lidos pelo servidor, mais os
+ * **Aparelho**. `user-agent` e `accept-language`, lidos pelo servidor, mais os
  * traços que o navegador reporta no campo oculto (resolução, densidade, fuso,
  * plataforma). Sem JavaScript o campo vem vazio e a assinatura fica mais fraca,
- * porém estável — que é o que a regra exige.
+ * porém estável. Que é o que a regra exige.
  *
- * **Rede** — `x-forwarded-for`, só confiável atrás de um proxy que o
+ * **Rede**. `x-forwarded-for`, só confiável atrás de um proxy que o
  * *sobrescreve*. A Vercel faz isso, então o primeiro item é o cliente real e o
  * navegador não consegue forjá-lo. Fora desse cenário a leitura vira palpite.
  *
@@ -77,13 +77,13 @@ function resolveNetworkAddress(forwardedFor: string | null, realIp: string | nul
   if (fallback !== undefined && fallback.length > 0) return fallback;
 
   // `next dev` local não tem proxy: todo mundo cai no mesmo endereço fictício.
-  // Proposital — permite testar o bloqueio. Para destravar, apague a linha em
+  // Proposital. Permite testar o bloqueio. Para destravar, apague a linha em
   // `npm run db:studio`.
   return 'endereco-nao-identificado';
 }
 
 /**
- * Driving adapter — the HTTP edge of the RSVP Bounded Context.
+ * Driving adapter. The HTTP edge of the RSVP Bounded Context.
  *
  * The only thing this function is allowed to do: translate a `FormData` payload
  * into a Command, hand it to the Use Case, and translate the `Result` back into

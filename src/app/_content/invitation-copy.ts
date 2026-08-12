@@ -25,7 +25,7 @@ export const invitationCopy = {
     title: 'Confirme sua presença',
     subtitle:
       'Precisamos saber quantas coroas separar. Cada convidado responde por si, ' +
-      'do próprio celular — não dá para confirmar por outra pessoa.',
+      'do próprio celular. Não dá para confirmar por outra pessoa.',
   },
 
   dressCode: {

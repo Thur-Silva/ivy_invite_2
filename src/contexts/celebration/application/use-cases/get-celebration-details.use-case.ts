@@ -3,7 +3,7 @@ import type { CelebrationView } from '../dto/celebration.view';
 import type { NavigationLinkProvider } from '../ports/navigation-link-provider';
 
 /**
- * Use Case (query) — "show me the party details".
+ * Use Case (query). "show me the party details".
  *
  * A query, so it returns a read model instead of a `Result`: there is no
  * business rule to violate and no state to change. Failures here are boot-time

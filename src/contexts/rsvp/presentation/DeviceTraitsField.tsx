@@ -10,7 +10,7 @@ const noopSubscribe = () => () => {};
  * Lê os traços do aparelho que só o navegador conhece.
  *
  * Nenhum deles identifica a pessoa sozinho; juntos, e combinados com os
- * cabeçalhos lidos no servidor, formam uma assinatura estável do aparelho — que
+ * cabeçalhos lidos no servidor, formam uma assinatura estável do aparelho. Que
  * é o que permite reconhecer quem já respondeu mesmo depois de limpar os cookies
  * ou trocar de rede.
  */
@@ -36,7 +36,7 @@ function readDeviceTraits(): string {
  * (string vazia) evita divergência de hidratação.
  *
  * **Sem JavaScript o campo simplesmente não é preenchido** e o envio continua
- * válido — a assinatura degrada para `user-agent` + `accept-language`, mais
+ * válido. A assinatura degrada para `user-agent` + `accept-language`, mais
  * fraca porém estável. O convite nunca deixa de aceitar uma resposta por causa
  * disto.
  */

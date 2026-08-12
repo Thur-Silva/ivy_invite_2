@@ -8,7 +8,7 @@ import { Venue } from '../domain/value-objects/venue';
 import { celebrationConfig, type CelebrationConfig } from './celebration.config';
 
 /**
- * Driven adapter — builds the `Celebration` aggregate from a config file.
+ * Driven adapter. Builds the `Celebration` aggregate from a config file.
  *
  * The mapping is the interesting part: raw strings and numbers only become
  * domain objects by passing through the Value Object factories, so an invalid

@@ -6,13 +6,13 @@ significa: pode ir para o convidado hoje.
 ## 1. Código
 
 - [ ] Critérios de aceite em Gherkin todos atendidos e demonstráveis.
-- [ ] `npm run verify` verde — encadeia:
+- [ ] `npm run verify` verde. Encadeia:
   - `npm run typecheck` (`tsc --noEmit`, zero erro)
   - `npm run lint` (inclui as zonas da Regra da Dependência)
   - `npm run test` (Vitest, zero falha)
 - [ ] `npm run build` conclui sem warning novo.
 - [ ] `npm run format:check` sem pendência.
-- [ ] Sem `any`, sem `@ts-expect-error`, sem `eslint-disable` — ou, se houver,
+- [ ] Sem `any`, sem `@ts-expect-error`, sem `eslint-disable`. Ou, se houver,
       com comentário explicando por que a alternativa é pior.
 - [ ] Nenhum `console.log` de depuração. `console.info`/`error` só onde é log
       intencional de produção.
@@ -41,7 +41,7 @@ significa: pode ir para o convidado hoje.
 - [ ] Verificado em viewport de **360×640** e em **iPhone SE**: sem rolagem
       horizontal, sem texto cortado, sem sobreposição.
 - [ ] Alvos de toque ≥ **48px** (o padrão do projeto é 52px).
-- [ ] Testado em **device físico real** — não só no emulador do DevTools.
+- [ ] Testado em **device físico real**. Não só no emulador do DevTools.
 - [ ] Estados de carregamento e erro têm feedback visível (não só spinner
       infinito).
 - [ ] Funciona com **JavaScript desabilitado** no que é essencial (envio do RSVP).
@@ -87,7 +87,7 @@ Um DoD que ninguém cumpre é pior que nenhum. Dois itens deste checklist **não
 estão automatizados** e dependem de disciplina manual:
 
 - **teste em device físico** (item 4);
-- **contraste medido e auditoria de leitor de tela** (item 5) — o PBI-10 existe
+- **contraste medido e auditoria de leitor de tela** (item 5). O PBI-10 existe
   justamente para transformar isso em verificação sistemática.
 
 Quando um item for pulado, isso é dito no Sprint Review como débito assumido, não

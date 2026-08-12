@@ -44,7 +44,7 @@ describe('RespondentIdentity', () => {
       expect(identity().isSameRespondentAs(afterClearingCookies)).toBe(true);
     });
 
-    it('NÃO reconhece só pela rede — é o que salva o Wi-Fi de casa', () => {
+    it('NÃO reconhece só pela rede. É o que salva o Wi-Fi de casa', () => {
       // Mesmo IP (CGNAT ou Wi-Fi compartilhado), celulares diferentes.
       const otherPhoneSameWifi = identity({ token: digest('9'), device: digest('d') });
 

@@ -38,7 +38,7 @@ export function buildCelebrationLabels(view: CelebrationView): CelebrationLabels
     month: capitalize(part({ month: 'long' })),
     year: part({ year: 'numeric' }),
     timeRange: `${startTime} às ${endTime}`,
-    // Feeds the <time dateTime> attribute — machine-readable, for real.
+    // Feeds the <time dateTime> attribute. Machine-readable, for real.
     machineDate: startsAtIso,
   };
 }

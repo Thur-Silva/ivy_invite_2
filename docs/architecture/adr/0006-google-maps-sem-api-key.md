@@ -1,4 +1,4 @@
-# ADR-0006 — Google Maps sem API key (embed + deep links)
+# ADR-0006. Google Maps sem API key (embed + deep links)
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -7,7 +7,7 @@
 
 O requisito é "localização via Google Maps". O caminho oficial (Maps JavaScript
 API ou Maps Embed API) exige API key, conta de faturamento ativa e restrição de
-referrer — para um site que ficará no ar três semanas e será aberto por umas 50
+referrer. Para um site que ficará no ar três semanas e será aberto por umas 50
 pessoas.
 
 Uma key exposta no cliente sem restrição correta é um risco de cobrança real. E
@@ -34,7 +34,7 @@ Detalhes que importam:
   vez de um ponto anônimo;
 - a **navegação usa coordenadas**, para a rota terminar no portão e não onde o
   geocoder achar que fica o endereço;
-- o `<iframe>` é `loading="lazy"` e fica no fim da página — não custa nada até o
+- o `<iframe>` é `loading="lazy"` e fica no fim da página. Não custa nada até o
   convidado chegar lá;
 - Waze aparece ao lado do Google Maps porque é o que a maioria dos motoristas
   brasileiros usa de fato.
@@ -48,7 +48,7 @@ de 25 linhas.
 **Ruins:**
 
 - URLs "não versionadas": o `output=embed` é estável há anos, mas não tem SLA. Se
-  o Google mudar, o mapa quebra — mitigado por os dois botões de navegação, que
+  o Google mudar, o mapa quebra. Mitigado por os dois botões de navegação, que
   usam endpoints oficialmente documentados, serem o caminho principal;
 - sem controle de estilo do mapa (não combina com a paleta do lago);
 - sem marcador customizado nem interação programável;

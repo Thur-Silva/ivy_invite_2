@@ -4,18 +4,18 @@ Ordenado por valor (topo = próximo a ser puxado). Estimativas em **story points
 (Fibonacci), priorização em **MoSCoW**. Toda história segue INVEST e só entra em
 sprint se passar no [Definition of Ready](./definition-of-ready.md).
 
-| Status | Significado                                     |
-| ------ | ----------------------------------------------- |
-| ✅     | Done — atende ao [DoD](./definition-of-done.md) |
-| 🔄     | Em andamento                                    |
-| 📋     | Ready — refinado, estimado, pode ser puxado     |
-| 💭     | Ideia — precisa de refinamento                  |
+| Status | Significado                                    |
+| ------ | ---------------------------------------------- |
+| ✅     | Done. Atende ao [DoD](./definition-of-done.md) |
+| 🔄     | Em andamento                                   |
+| 📋     | Ready. Refinado, estimado, pode ser puxado     |
+| 💭     | Ideia. Precisa de refinamento                  |
 
 ---
 
 ## Entregue no Sprint 1
 
-### ✅ PBI-00 — Fundação arquitetural (enabler)
+### ✅ PBI-00. Fundação arquitetural (enabler)
 
 > **Como** time, **quero** camadas de domínio, aplicação, infraestrutura e
 > apresentação separadas e verificadas automaticamente, **para** que regra de
@@ -44,7 +44,7 @@ Cenário: regra de negócio testável sem infraestrutura
 
 ---
 
-### ✅ PBI-01 — Ver o convite
+### ✅ PBI-01. Ver o convite
 
 > **Como** Tia Cida, **quero** abrir o link e entender em segundos de quem é a
 > festa, quando é e qual o tema, **para** decidir se vou.
@@ -73,12 +73,12 @@ Cenário: dispositivo que prefere menos animação
 
 ---
 
-### ✅ PBI-02 — Confirmar presença
+### ✅ PBI-02. Confirmar presença
 
 > **Como** convidado, **quero** dizer meu nome e se vou ou não, **para** que os
 > anfitriões saibam com quem contar.
 
-`MUST` · **8 pts** — o coração do produto
+`MUST` · **8 pts**. O coração do produto
 
 ```gherkin
 Cenário: confirmo que vou
@@ -123,12 +123,12 @@ Cenário: sem JavaScript
 
 ---
 
-### ✅ PBI-04 — Mudar de ideia
+### ✅ PBI-04. Mudar de ideia
 
 > **Como** convidado que já respondeu, **quero** trocar minha resposta,
 > **para** avisar que meus planos mudaram.
 
-`MUST` · **3 pts** — implementado junto ao PBI-02 (mesma fronteira de agregado)
+`MUST` · **3 pts**. Implementado junto ao PBI-02 (mesma fronteira de agregado)
 
 ```gherkin
 Cenário: troco vou por não vou
@@ -147,7 +147,7 @@ Cenário: a grafia mais recente é a que vale
 
 ---
 
-### ✅ PBI-03 — Saber onde é e como chegar
+### ✅ PBI-03. Saber onde é e como chegar
 
 > **Como** convidado, **quero** ver o endereço e abrir a rota no meu app de
 > navegação, **para** chegar sem me perder.
@@ -173,16 +173,16 @@ Cenário: o mapa não custa nada até ser visto
 
 ⚠️ **Bloqueio conhecido:** endereço, coordenadas e data em
 `celebration.config.ts` estão marcados `[PLACEHOLDER]`. A publicação depende dos
-anfitriões confirmarem — ver risco R1 da [visão](./product-vision.md).
+anfitriões confirmarem. Ver risco R1 da [visão](./product-vision.md).
 
 ---
 
-### ✅ PBI-17 — Cena que acompanha a leitura
+### ✅ PBI-17. Cena que acompanha a leitura
 
 > **Como** Rafa, **quero** que a página tenha vida enquanto eu rolo, **para** que
 > o convite pareça um conto de fadas e não um formulário bonito.
 
-`SHOULD` · **5 pts** — puxado após feedback da PO no meio do Sprint 1
+`SHOULD` · **5 pts**. Puxado após feedback da PO no meio do Sprint 1
 
 ```gherkin
 Cenário: algo me acompanha do início ao fim
@@ -216,7 +216,7 @@ Cenário: quem prefere menos movimento
 
 ## Sprint 2 (candidato)
 
-### 📋 PBI-05 — Painel do anfitrião
+### 📋 PBI-05. Painel do anfitrião
 
 > **Como** Marina, **quero** ver a lista de quem vem e quem não vem com os
 > totais, **para** fechar o número com o buffet sem pedir ajuda.
@@ -240,29 +240,29 @@ Cenário: sem o token
 
 ---
 
-### 📋 PBI-06 — Notificar os anfitriões a cada resposta
+### 📋 PBI-06. Notificar os anfitriões a cada resposta
 
 > **Como** Marina, **quero** receber um aviso quando alguém responder, **para**
 > acompanhar sem ficar abrindo o painel.
 
 `SHOULD` · **5 pts**
 
-**Notas técnicas:** o seam já existe — implementar `DomainEventPublisher`
+**Notas técnicas:** o seam já existe. Implementar `DomainEventPublisher`
 assinando `RsvpConfirmed` / `RsvpDeclined` / `RsvpDecisionChanged`. Nenhuma
 mudança em domínio ou caso de uso.
 
 ---
 
-### 📋 PBI-11 — Proteção contra flood
+### 📋 PBI-11. Proteção contra flood
 
 > **Como** anfitrião, **quero** que ninguém consiga poluir a lista com centenas
 > de respostas falsas, **para** confiar no número.
 
-`SHOULD` · **3 pts** — risco aceito no Sprint 1, ver [ADR-0004](../architecture/adr/0004-server-actions-como-adapter-de-entrada.md)
+`SHOULD` · **3 pts**. Risco aceito no Sprint 1, ver [ADR-0004](../architecture/adr/0004-server-actions-como-adapter-de-entrada.md)
 
 ---
 
-### 📋 PBI-14 — Teste de integração do repositório Neon
+### 📋 PBI-14. Teste de integração do repositório Neon
 
 > **Como** time, **quero** provar que o upsert por `guest_key` funciona no
 > Postgres real, **para** não descobrir divergência com o in-memory na festa.
@@ -271,16 +271,16 @@ mudança em domínio ou caso de uso.
 
 ---
 
-### 📋 PBI-10 — Acessibilidade AA verificada em device real
+### 📋 PBI-10. Acessibilidade AA verificada em device real
 
 > **Como** convidado com baixa visão ou leitor de tela, **quero** navegar o
 > convite inteiro, **para** responder sem ajuda.
 
-`SHOULD` · **3 pts** — inclui auditoria com VoiceOver/TalkBack e contraste medido
+`SHOULD` · **3 pts**. Inclui auditoria com VoiceOver/TalkBack e contraste medido
 
 ---
 
-### 📋 PBI-07 — Informar acompanhantes
+### 📋 PBI-07. Informar acompanhantes
 
 > **Como** convidado, **quero** dizer que vou levar meu filho, **para** que a
 > contagem esteja certa.
@@ -289,14 +289,14 @@ mudança em domínio ou caso de uso.
 
 **Notas técnicas:** adiciona o Value Object `PartySize` (1..10) ao agregado
 `Rsvp` + migração. **Não foi feito no Sprint 1 por decisão de escopo explícita**
-— o pedido original era nome + vou/não_vou, e antecipar o campo teria custado
+, o pedido original era nome + vou/não_vou, e antecipar o campo teria custado
 taxa de resposta (ver persona Tia Cida).
 
 ---
 
-### 📋 PBI-09 — Adicionar ao calendário
+### 📋 PBI-09. Adicionar ao calendário
 
-`COULD` · **3 pts** — `.ics` + link do Google Calendar. `CelebrationSchedule` já
+`COULD` · **3 pts**. `.ics` + link do Google Calendar. `CelebrationSchedule` já
 tem tudo que é necessário.
 
 ---
@@ -312,7 +312,7 @@ tem tudo que é necessário.
 | 💭 PBI-16 | Link personalizado por convidado (resolve homônimos)   | `WON'T` (agora) | 13  |
 
 **`WON'T` explícito:** lista de presentes, PIX, galeria de fotos, login de
-convidado, internacionalização, app nativo — ver
+convidado, internacionalização, app nativo. Ver
 [fora de escopo](./product-vision.md#fora-de-escopo-declarado).
 
 ---
@@ -322,4 +322,4 @@ convidado, internacionalização, app nativo — ver
 | Sprint | Comprometido | Entregue   | Observação                                                   |
 | ------ | ------------ | ---------- | ------------------------------------------------------------ |
 | 1      | 29 pts       | **34 pts** | 29 comprometidos + PBI-17 (5 pts) puxado após feedback da PO |
-| 2      | —            | —          | capacidade planejada: ~25 pts                                |
+| 2      |              | ,          | capacidade planejada: ~25 pts                                |

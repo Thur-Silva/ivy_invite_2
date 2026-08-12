@@ -3,7 +3,7 @@ import { Entity } from './entity';
 import type { Identifier } from './identifier';
 
 /**
- * Shared Kernel — Aggregate Root base class.
+ * Shared Kernel. Aggregate Root base class.
  *
  * The Aggregate Root is the only entry point into an aggregate: it guards the
  * consistency boundary and is the unit of persistence (one repository per

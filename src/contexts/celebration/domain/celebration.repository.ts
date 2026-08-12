@@ -1,7 +1,7 @@
 import type { Celebration } from './celebration.aggregate';
 
 /**
- * Port — where the party's details come from.
+ * Port. Where the party's details come from.
  *
  * Backed by a config file today (`StaticCelebrationRepository`); the port exists
  * so that swapping it for a CMS or an admin screen is an Infrastructure change

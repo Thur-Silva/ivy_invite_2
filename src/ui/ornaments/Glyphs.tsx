@@ -9,7 +9,7 @@ import { cn } from '@/ui/cn';
  * densidade de tela e pode ser animado por CSS.
  */
 
-/** Coroa compacta — a opção "Eu vou!". */
+/** Coroa compacta. A opção "Eu vou!". */
 export function CrownGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 26" aria-hidden="true" className={cn('h-5 w-5', className)}>
@@ -26,7 +26,7 @@ export function CrownGlyph({ className }: { className?: string }) {
   );
 }
 
-/** Vitória-régia em flor — a opção "Não vou poder". */
+/** Vitória-régia em flor. A opção "Não vou poder". */
 export function LilyGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden="true" className={cn('h-5 w-5', className)}>
@@ -42,7 +42,7 @@ export function LilyGlyph({ className }: { className?: string }) {
   );
 }
 
-/** Alfinete de mapa — botão do Google Maps. */
+/** Alfinete de mapa. Botão do Google Maps. */
 export function MapPinGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={cn('h-5 w-5', className)}>
@@ -58,7 +58,7 @@ export function MapPinGlyph({ className }: { className?: string }) {
   );
 }
 
-/** Seta de navegação — botão do Waze. */
+/** Seta de navegação. Botão do Waze. */
 export function NavigationGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={cn('h-5 w-5', className)}>

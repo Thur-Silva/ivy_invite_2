@@ -2,14 +2,14 @@
 
 /*
  * ---------------------------------------------------------------------------
- *  Design tokens — "A Princesa e o Sapo"
+ *  Design tokens. "A Princesa e o Sapo"
  * ---------------------------------------------------------------------------
  *  Enchanted pond at dusk: deep emerald water, lily-pad greens, candle gold
  *  and a princess blush. Tokens live here (Tailwind v4 is CSS-first) so the
  *  Presentation layer never hard-codes a hex value.
  */
 @theme {
-  /* Water — page background, from deepest to shallowest */
+  /* Water. Page background, from deepest to shallowest */
   --color-pond-950: #04140f;
   --color-pond-900: #072019;
   --color-pond-800: #0b2e23;
@@ -34,7 +34,7 @@
   /* Moonlight */
   --color-cream: #fff6e8;
 
-  /* Typography — wired to next/font in layout.tsx */
+  /* Typography. Wired to next/font in layout.tsx */
   --font-display: var(--font-cinzel), 'Georgia', serif;
   --font-script: var(--font-vibes), 'Segoe Script', cursive;
   --font-body: var(--font-quicksand), ui-sans-serif, system-ui, sans-serif;
@@ -202,7 +202,7 @@
 
 /*
  * Accessibility: users who ask for less motion get a still, readable
- * invitation. The WebGL pond is disabled at the component level too — this
+ * invitation. The WebGL pond is disabled at the component level too. This
  * only covers CSS-driven motion.
  */
 @media (prefers-reduced-motion: reduce) {

@@ -5,7 +5,7 @@ uma quarta não mudar nenhuma decisão, ela não entra aqui.
 
 ---
 
-## 1. Tia Cida — 58 anos, a convidada majoritária
+## 1. Tia Cida. 58 anos, a convidada majoritária
 
 **Contexto:** recebe o link no grupo da família no WhatsApp. Abre no navegador
 interno do WhatsApp, com uma mão, no ônibus. Android intermediário de 3 anos,
@@ -20,14 +20,14 @@ consegue voltar.
 **Decisões de arquitetura que ela causou:**
 
 - alvos de toque ≥ 52px e coluna única `max-w-md`
-- formulário com **um** campo (nome) — [ADR-0009](../architecture/adr/0009-chave-natural-do-convidado.md)
+- formulário com **um** campo (nome). [ADR-0009](../architecture/adr/0009-chave-natural-do-convidado.md)
 - `maximumScale: 5` (pinch-zoom nunca bloqueado)
-- `<form>` real com Server Action: grava mesmo se o JS não carregar — [ADR-0004](../architecture/adr/0004-server-actions-como-adapter-de-entrada.md)
+- `<form>` real com Server Action: grava mesmo se o JS não carregar. [ADR-0004](../architecture/adr/0004-server-actions-como-adapter-de-entrada.md)
 - fontes com `display: swap` e página estática, para o texto aparecer antes de tudo
 
 ---
 
-## 2. Rafa — 31 anos, primo antenado
+## 2. Rafa. 31 anos, primo antenado
 
 **Contexto:** iPhone recente, 5G. Abre, rola a página inteira, aprecia a
 animação, tira print do card de data e manda para a namorada.
@@ -40,14 +40,14 @@ cai no navegador em vez do app.
 
 **Decisões que ele causou:**
 
-- cena WebGL do lago (nível 3 da degradação) — [ADR-0005](../architecture/adr/0005-stack-de-graficos-e-animacao.md)
+- cena WebGL do lago (nível 3 da degradação). [ADR-0005](../architecture/adr/0005-stack-de-graficos-e-animacao.md)
 - selo real com mola + confete ao confirmar
 - card de data desenhado para ser printado
-- deep link `dir/?api=1` e Waze, que abrem o app nativo — [ADR-0006](../architecture/adr/0006-google-maps-sem-api-key.md)
+- deep link `dir/?api=1` e Waze, que abrem o app nativo. [ADR-0006](../architecture/adr/0006-google-maps-sem-api-key.md)
 
 ---
 
-## 3. Marina — 34 anos, mãe da Ivy (anfitriã / Product Owner)
+## 3. Marina. 34 anos, mãe da Ivy (anfitriã / Product Owner)
 
 **Contexto:** organizando a festa entre trabalho e uma criança de 2 anos.
 Não programa. Precisa fechar o número com o buffet uma semana antes.
@@ -62,7 +62,7 @@ no dia que o endereço no convite estava errado.
 
 - `UNIQUE(guest_key)` + upsert: a lista nunca duplica
 - `celebration.config.ts` como arquivo único, comentado em português, com
-  instruções de como pegar coordenadas — [ADR-0007](../architecture/adr/0007-dados-da-festa-em-arquivo-de-configuracao.md)
+  instruções de como pegar coordenadas. [ADR-0007](../architecture/adr/0007-dados-da-festa-em-arquivo-de-configuracao.md)
 - testes que quebram o build se a config estiver inválida
 - eventos de domínio no log da Vercel: trilha auditável de quem respondeu quando
 - PBI-05 (painel do anfitrião) priorizado logo após o convite ir ao ar
@@ -74,6 +74,6 @@ no dia que o endereço no convite estava errado.
 Não é usuário, mas é ator. Descobre a URL e envia 5.000 respostas.
 
 **Estado atual:** `GuestName` já barra dígitos, emoji e URL, o que elimina spam
-automatizado ingênuo. Não há rate limiting — risco aceito no Sprint 1 porque o
+automatizado ingênuo. Não há rate limiting. Risco aceito no Sprint 1 porque o
 link circula em grupos privados (premissa P1/P2 da
 [visão](./product-vision.md#riscos-e-premissas)) e registrado como **PBI-11**.

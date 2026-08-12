@@ -48,7 +48,7 @@ export function RsvpForm() {
   /**
    * "Mudar minha resposta" stores the state object the guest chose to leave,
    * instead of a boolean that an effect would have to reset. A new submission
-   * produces a new state object, so the seal comes back on its own — derived
+   * produces a new state object, so the seal comes back on its own. Derived
    * state, no synchronisation, no cascading render.
    */
   const [dismissedState, setDismissedState] = useState<RsvpFormState | null>(null);

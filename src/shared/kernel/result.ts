@@ -1,5 +1,5 @@
 /**
- * Shared Kernel — explicit success/failure envelope.
+ * Shared Kernel. Explicit success/failure envelope.
  *
  * Used at the Application layer boundary so that Use Cases never leak
  * exceptions into the Presentation layer: a failure is data, and the caller is

@@ -10,7 +10,7 @@ import type { NewRsvpRow, RsvpRow } from './drizzle/rsvp.schema';
  *
  * This mapper is what keeps the Domain layer free of Drizzle: no decorators, no
  * base classes, no ORM types anywhere inside `domain/`. Swapping Neon for
- * anything else means rewriting this file and the repository — nothing else.
+ * anything else means rewriting this file and the repository. Nothing else.
  */
 export const RsvpMapper = {
   toDomain(row: RsvpRow): Rsvp {

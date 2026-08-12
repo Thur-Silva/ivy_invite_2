@@ -1,5 +1,5 @@
 /**
- * Enchanted pond water — a single full-screen quad.
+ * Enchanted pond water. A single full-screen quad.
  *
  * One draw call, no lights, no textures, no post-processing: the whole
  * atmosphere is arithmetic in the fragment shader. That is what keeps the hero

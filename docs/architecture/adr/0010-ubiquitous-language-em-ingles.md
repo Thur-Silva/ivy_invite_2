@@ -1,4 +1,4 @@
-# ADR-0010 — Ubiquitous Language em inglês no código
+# ADR-0010. Ubiquitous Language em inglês no código
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -17,7 +17,7 @@ Uma leitura literal do livro levaria a `Convidado`, `Confirmacao`,
 
 ## Decisão
 
-**Todo o código em inglês**, incluindo os nomes do domínio — decisão explícita do
+**Todo o código em inglês**, incluindo os nomes do domínio. Decisão explícita do
 time.
 
 Para que isso não custe a linguagem ubíqua, três compromissos obrigatórios:
@@ -26,14 +26,14 @@ Para que isso não custe a linguagem ubíqua, três compromissos obrigatórios:
    [`ubiquitous-language.md`](../ubiquitous-language.md), mapeando cada termo
    PT-BR ↔ código. É o contrato da tradução, e a tradução é 1-para-1: um termo do
    negócio, um tipo no código.
-2. **Tudo que o convidado lê é em português** — mensagens de erro de domínio,
+2. **Tudo que o convidado lê é em português**. Mensagens de erro de domínio,
    textos do convite, comentários voltados aos anfitriões
    (`celebration.config.ts`). `InvalidGuestNameError` carrega
    _"O nome do convidado aceita apenas letras, espaços, hífen e apóstrofo."_
 3. **Documentação e ADRs em português**, porque a audiência é o time e os
    anfitriões.
 
-Sem sinônimo: se o negócio diz "confirmação", o código diz `Rsvp` — não
+Sem sinônimo: se o negócio diz "confirmação", o código diz `Rsvp`. Não
 `Confirmation` em um arquivo e `Attendance` em outro.
 
 ## Consequências
@@ -45,13 +45,13 @@ reconhece; onboarding técnico sem barreira de idioma.
 **Ruins:**
 
 - **existe uma tradução entre a conversa e o código.** O anfitrião diz "muda o
-  local" e o dev vai em `Venue` — só funciona porque o glossário é mantido; se ele
+  local" e o dev vai em `Venue`. Só funciona porque o glossário é mantido; se ele
   apodrecer, a linguagem ubíqua morre e este ADR passa a ser uma desculpa;
 - `rsvp` é sigla inglesa (_répondez s'il vous plaît_) que os anfitriões não usam
   espontaneamente. É o termo mais estabelecido do domínio de eventos, mas exigiu
   entrada explícita no glossário;
 - textos em português dentro de classes em inglês parecem estranhos na primeira
-  leitura — é intencional e está documentado no item 2.
+  leitura. É intencional e está documentado no item 2.
 
 ## Alternativas consideradas
 

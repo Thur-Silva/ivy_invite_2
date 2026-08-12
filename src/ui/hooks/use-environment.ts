@@ -8,7 +8,7 @@ import { useCallback, useSyncExternalStore } from 'react';
  *
  * That is not a lint workaround: the media-query list and the document's
  * visibility genuinely are external state that React does not own, and
- * `useSyncExternalStore` is the API for reading it without tearing — plus it
+ * `useSyncExternalStore` is the API for reading it without tearing. Plus it
  * gives an explicit server snapshot instead of a hydration flash.
  */
 

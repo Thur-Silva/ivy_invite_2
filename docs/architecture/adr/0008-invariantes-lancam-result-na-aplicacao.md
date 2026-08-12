@@ -1,4 +1,4 @@
-# ADR-0008 — Invariantes lançam exceção no domínio; `Result` na camada de aplicação
+# ADR-0008. Invariantes lançam exceção no domínio; `Result` na camada de aplicação
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -7,9 +7,9 @@
 
 Duas escolas convivem em DDD para tratar violação de regra:
 
-1. **Exceção** — `GuestName.create('')` lança. Construtor limpo, invariante
+1. **Exceção**. `GuestName.create('')` lança. Construtor limpo, invariante
    sempre verdadeira, mas o fluxo de erro é invisível na assinatura.
-2. **`Result<T, E>`** — `GuestName.create('')` devolve `Err`. Erro explícito no
+2. **`Result<T, E>`**. `GuestName.create('')` devolve `Err`. Erro explícito no
    tipo, ao custo de `if (!result.ok) return result` em toda cadeia, ou de um
    objeto meio-construído se alguém esquecer de checar.
 
@@ -52,7 +52,7 @@ async execute(command: SubmitRsvpCommand): Promise<Result<SubmitRsvpOutcome, Sub
 ### Consequência para a Presentation
 
 A Server Action faz um `switch` no `Result` e produz `RsvpFormState`. O
-componente não tem `try/catch` e não pode esquecer de tratar falha — o tipo não
+componente não tem `try/catch` e não pode esquecer de tratar falha. O tipo não
 compila sem isso.
 
 ## Consequências
@@ -64,12 +64,12 @@ não decide nada sobre erro.
 
 **Ruins:**
 
-- **duas convenções no mesmo repositório** — precisa deste ADR para não parecer
+- **duas convenções no mesmo repositório**. Precisa deste ADR para não parecer
   incoerência;
 - `parse()` usa `try/catch` internamente para traduzir, o que é feio embora
   contido em um método privado de 6 linhas;
 - se alguém chamar `GuestName.create` direto de um componente, a exceção sobe até
-  o error boundary. O ESLint não bloqueia isso hoje — vale um teste de
+  o error boundary. O ESLint não bloqueia isso hoje. Vale um teste de
   arquitetura se acontecer.
 
 ## Alternativas consideradas
@@ -77,5 +77,5 @@ não decide nada sobre erro.
 | Alternativa                                 | Por que não                                                                                                                 |
 | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | `Result` também no domínio                  | Mais puro, mas encadear 4 VOs vira `flatMap`/`andThen` aninhado, ou um `Rsvp` construído a partir de valores não validados. |
-| Exceção também na aplicação                 | Mais curto, mas obriga a Presentation a saber quais exceções existem — nada no tipo indica isso.                            |
+| Exceção também na aplicação                 | Mais curto, mas obriga a Presentation a saber quais exceções existem. Nada no tipo indica isso.                             |
 | `zod` validando também as regras de negócio | Colocaria regra de domínio numa lib de schema, criando segunda fonte de verdade fora do domínio.                            |

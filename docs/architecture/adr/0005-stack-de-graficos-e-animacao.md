@@ -1,4 +1,4 @@
-# ADR-0005 — Stack de gráficos: React Three Fiber + Motion, com degradação em 3 níveis
+# ADR-0005. Stack de gráficos: React Three Fiber + Motion, com degradação em 3 níveis
 
 - **Status:** aceito
 - **Data:** 2026-08-11
@@ -6,7 +6,7 @@
 ## Contexto
 
 O pedido é explícito: usar os melhores frameworks para gráficos, animação e
-estilização. O tema é "A Princesa e o Sapo" — um lago encantado ao anoitecer,
+estilização. O tema é "A Princesa e o Sapo". Um lago encantado ao anoitecer,
 com vitórias-régias e vaga-lumes.
 
 O conflito é igualmente explícito: **o público é 100% mobile**, incluindo
@@ -48,7 +48,7 @@ Três ferramentas, cada uma no que faz melhor:
 | 2     | `prefers-reduced-motion` **ou** `hardwareConcurrency ≤ 2` | o mesmo gradiente, canvas nunca monta, confete desligado |
 | 3     | demais dispositivos                                       | lago animado completo                                    |
 
-O nível 1 é o **estado base**, sempre pintado atrás do canvas — não é fallback de
+O nível 1 é o **estado base**, sempre pintado atrás do canvas. Não é fallback de
 erro, é a camada de baixo. As capacidades são lidas via `useSyncExternalStore`
 (`src/ui/hooks/use-environment.ts`), o que dá um snapshot de servidor explícito e
 evita flash de hidratação.
@@ -65,8 +65,8 @@ pagar por ela; a cena inteira são ~200 linhas de TSX + GLSL, sem asset binário
 **Ruins:**
 
 - `three` é a maior dependência do projeto (~600KB min+gzip no chunk do cliente);
-  aceito porque o chunk carrega **depois** do conteúdo e nunca em nível 1–2;
-- GLSL cru não tem checagem de tipo nem teste automatizado — quebra visual só
+  aceito porque o chunk carrega **depois** do conteúdo e nunca em nível 1 a 2;
+- GLSL cru não tem checagem de tipo nem teste automatizado. Quebra visual só
   aparece em revisão manual (item no [DoD](../../agile/definition-of-done.md));
 - `hardwareConcurrency` é um proxy grosseiro de "aparelho fraco". Erra para o
   lado seguro.
@@ -75,8 +75,8 @@ pagar por ela; a cena inteira são ~200 linhas de TSX + GLSL, sem asset binário
 
 | Alternativa                 | Por que não                                                                                                                        |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Só CSS/SVG animado          | Mais leve, mas o lago com vaga-lumes e ondulação não sai crível — e a marca visual era requisito.                                  |
+| Só CSS/SVG animado          | Mais leve, mas o lago com vaga-lumes e ondulação não sai crível. E a marca visual era requisito.                                   |
 | Lottie / vídeo de fundo     | Asset binário grande, sem reação a viewport, e vídeo em autoplay é hostil em 4G.                                                   |
 | GSAP em vez de Motion       | Excelente, porém imperativo; Motion integra com o ciclo de vida do React e com `AnimatePresence`, que a troca formulário↔selo usa. |
 | `@react-three/drei`         | Instalado e removido: nenhum helper era necessário depois de escrever os shaders, e dependência sem uso é dívida.                  |
-| `@vis.gl/react-google-maps` | Exigiria API key e SDK JS no caminho crítico — ver [ADR-0006](./0006-google-maps-sem-api-key.md).                                  |
+| `@vis.gl/react-google-maps` | Exigiria API key e SDK JS no caminho crítico. Ver [ADR-0006](./0006-google-maps-sem-api-key.md).                                   |

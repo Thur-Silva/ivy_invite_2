@@ -27,7 +27,7 @@
 - Um lago animado com vaga-lumes, vitórias-régias e um sapo coroado
 - Data e horário num card que dá pra printar e guardar
 - Google Maps e Waze com um toque
-- Mudou de ideia? Responda de novo — a gente atualiza, não duplica
+- Mudou de ideia? Responda de novo. A gente atualiza, não duplica
 - Funciona sem JavaScript, respeita quem prefere menos animação
 - Sem cadastro, sem senha, sem app pra instalar
 
@@ -40,7 +40,7 @@
 ## Objetivo de negócio
 
 O problema real: **saber quantas pessoas vêm**. Sem isso, os anfitriões erram
-comida, lembrancinha e tamanho do espaço. Grupo de WhatsApp não resolve —
+comida, lembrancinha e tamanho do espaço. Grupo de WhatsApp não resolve.
 mensagem se perde, ninguém consegue contar e não se sabe quem faltou responder.
 
 ## Métricas de sucesso
@@ -76,5 +76,5 @@ Para não voltar como "mas seria fácil…":
 | R2  | Celular antigo não renderiza WebGL                                             | convidado vê página quebrada          | degradação em 3 níveis, [ADR-0005](../architecture/adr/0005-stack-de-graficos-e-animacao.md)         |
 | R3  | Homônimos sobrescrevem resposta                                                | lista de convidados errada            | aceito, [ADR-0009](../architecture/adr/0009-chave-natural-do-convidado.md); anfitrião revisa a lista |
 | R4  | Anfitriões não sabem consultar a lista                                         | objetivo do produto não se realiza    | PBI-05 (painel) priorizado para o Sprint 2                                                           |
-| P1  | Todo convidado abre no celular                                                 | —                                     | premissa confirmada com os anfitriões; o desktop é só um bônus centralizado                          |
-| P2  | O link circula apenas em grupos privados                                       | —                                     | justifica ausência de rate limiting no Sprint 1 (PBI-11)                                             |
+| P1  | Todo convidado abre no celular                                                 |                                       | premissa confirmada com os anfitriões; o desktop é só um bônus centralizado                          |
+| P2  | O link circula apenas em grupos privados                                       |                                       | justifica ausência de rate limiting no Sprint 1 (PBI-11)                                             |
